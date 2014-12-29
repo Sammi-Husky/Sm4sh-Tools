@@ -46,7 +46,9 @@ namespace AnimCmd
         {
             get
             {
-                return Lines[CurrentLineIndex];
+                if (Lines.Length > 0)
+                    return Lines[CurrentLineIndex];
+                else return "";
             }
         }
         public int CurrentLineIndex

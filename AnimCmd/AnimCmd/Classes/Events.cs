@@ -46,7 +46,7 @@ namespace AnimCmd.Classes
         }
         public override string GetFormated()
         {
-            return String.Format("0x{0:X8} @{1:X}", _identifier, _offset);
+            return String.Format("0x{0:X8} 0x{1:X}", _identifier, _offset);
         }
     }
 
@@ -83,8 +83,6 @@ namespace AnimCmd.Classes
             return tag == Identifier ? new AddSetMomentum() : null; 
         }
         internal static string GetDictionaryName() { return "Add/Set_Momentum()"; }
-
-        
     }
     #endregion
 
@@ -345,9 +343,7 @@ namespace AnimCmd.Classes
         {
             string Formated = "Hitbox(";
             foreach (var field in typeof(Hitbox).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            {
                 Formated += field.GetValue(Header) + ", ";
-            }
 
             return Formated + ")";
         }
@@ -378,9 +374,7 @@ namespace AnimCmd.Classes
         {
             string Formated = "Special_Hitbox(";
             foreach (var field in typeof(SpecialHitbox).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            {
                 Formated += field.GetValue(Header) + ", ";
-            }
 
             return Formated + ")";
         }

@@ -18,6 +18,7 @@ namespace AnimCmd
         public MainForm()
         {
             InitializeComponent();
+            this.richTextBox1.Settings.Comment = "//";
         }
 
         //================================================================================\\
@@ -106,15 +107,17 @@ namespace AnimCmd
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(String.Format("//=======================================\\\\\n" +
-                                    "                   \t0x{0:X8}                  \n" +
+                                    "//\t\t0x{0:X8}\t\t              \\\\\n" +
                                     "//=======================================\\\\\n",
                                                                             s._flags));
             foreach (Event cmd in s.Events)
                 sb.Append(cmd.CommandName + "\n");
 
             richTextBox1.Text = sb.ToString();
+            richTextBox1.ProcessAllLines();
         }
 #endregion
+
         #region Event Handler Methods
         private void Form1_Load(object sender, EventArgs e)
         {

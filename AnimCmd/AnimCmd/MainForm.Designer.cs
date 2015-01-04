@@ -37,7 +37,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.treeView1 = new System.Windows.Forms.TreeView();
             this.fileSystemWatcher1 = new System.IO.FileSystemWatcher();
-            this.richTextBox1 = new AnimCmd.ITSCodeBox();
+            this.CodeView = new AnimCmd.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).BeginInit();
             this.SuspendLayout();
@@ -109,20 +109,21 @@
             this.fileSystemWatcher1.EnableRaisingEvents = true;
             this.fileSystemWatcher1.SynchronizingObject = this;
             // 
-            // richTextBox1
+            // CodeView
             // 
-            this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.CodeView.AcceptsTab = true;
+            this.CodeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.richTextBox1.BackColor = System.Drawing.SystemColors.Window;
-            this.richTextBox1.Dictionary = ((System.Collections.Generic.List<string>)(resources.GetObject("richTextBox1.Dictionary")));
-            this.richTextBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.55F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.richTextBox1.Location = new System.Drawing.Point(12, 27);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(592, 413);
-            this.richTextBox1.TabIndex = 4;
-            this.richTextBox1.Text = "";
-            this.richTextBox1.WordWrap = false;
+            this.CodeView.BackColor = System.Drawing.SystemColors.Window;
+            this.CodeView.Dictionary = ((System.Collections.Generic.List<string>)(resources.GetObject("CodeView.Dictionary")));
+            this.CodeView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.55F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.CodeView.Location = new System.Drawing.Point(12, 27);
+            this.CodeView.Name = "CodeView";
+            this.CodeView.Size = new System.Drawing.Size(592, 413);
+            this.CodeView.TabIndex = 4;
+            this.CodeView.Text = "";
+            this.CodeView.WordWrap = false;
             // 
             // MainForm
             // 
@@ -130,7 +131,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(826, 566);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.CodeView);
             this.Controls.Add(this.treeView1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -154,7 +155,7 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.TreeView treeView1;
-        private ITSCodeBox richTextBox1;
+        private ITSCodeBox CodeView;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
         private System.IO.FileSystemWatcher fileSystemWatcher1;

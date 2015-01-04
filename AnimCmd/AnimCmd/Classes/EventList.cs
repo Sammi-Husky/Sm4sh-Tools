@@ -4,11 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AnimCmd.Structs;
+using System.IO;
 
 namespace AnimCmd.Classes
 {
     public unsafe class EventList
     {
+        public DataSource WorkingSource { get { return _workingSource; } }
+        public DataSource _workingSource;
+
         public EventList(TableEntry t)
         {
             _flags = t._flags;

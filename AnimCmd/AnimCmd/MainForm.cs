@@ -18,7 +18,24 @@ namespace AnimCmd
         public MainForm()
         {
             InitializeComponent();
-            this.richTextBox1.Settings.Comment = "//";
+
+            if (File.Exists(Application.StartupPath + "/Events.txt")) 
+            {
+                StreamReader stream = new StreamReader(Application.StartupPath + "/Events.txt");
+                List<string> a = stream.ReadToEnd().Split('\n').Select(x=>x.Trim('\r')).ToList();
+                a.RemoveAll(x => String.IsNullOrEmpty(x));
+
+                for (int i = 0; i < a.Count; i+=3)
+                {
+                    EventInfo h = new EventInfo();
+                    h.Identifier = uint.Parse(a[i],System.Globalization.NumberStyles.HexNumber);
+                    h.Name = a[i + 1];
+                    string[] tmp = a[i + 2].Split(',').Where(x => x != "NONE").ToArray();
+                    foreach (string s in tmp)
+                        h.ParamSpecifiers.Add(Int32.Parse(s));
+                    eventDictionary.Add(h);
+                }
+            }
         }
 
         //================================================================================\\
@@ -41,6 +58,7 @@ namespace AnimCmd
 
         // True if in multi file mode.
         bool isRoot = false;
+        public List<EventInfo> eventDictionary = new List<EventInfo>();
 
         #region Parsing
         // Parses an ACMD file, returning a list of EventLists sorted by flags (used as idents)
@@ -107,25 +125,25 @@ namespace AnimCmd
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(String.Format("//=======================================\\\\\n" +
-                                    "//\t\t0x{0:X8}\t\t              \\\\\n" +
+                                    "//\t\t0x{0:X8}\t\t           \\\\\n" +
                                     "//=======================================\\\\\n",
                                                                             s._flags));
             foreach (Event cmd in s.Events)
                 sb.Append(cmd.CommandName + "\n");
 
-            richTextBox1.Text = sb.ToString();
-            richTextBox1.ProcessAllLines();
+            CodeView.Text = sb.ToString();
+            CodeView.ProcessAllLines();
         }
-#endregion
+        #endregion
 
         #region Event Handler Methods
         private void Form1_Load(object sender, EventArgs e)
         {
-            richTextBox1.Dictionary = CommandFactory.GetEventDictionary();
+            CodeView.Dictionary = CommandFactory.GetEventDictionary();
         }
         private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            richTextBox1.Text = String.Empty;
+            CodeView.Text = String.Empty;
             FileEvents.Clear(); treeView1.Nodes.Clear();
             treeView1.ShowLines = treeView1.ShowRootLines = false;
 
@@ -147,7 +165,7 @@ namespace AnimCmd
         }
         private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            richTextBox1.Text = String.Empty;
+            CodeView.Text = String.Empty;
             FileEvents.Clear(); treeView1.Nodes.Clear();
             treeView1.ShowLines = treeView1.ShowRootLines = true;
 
@@ -161,9 +179,11 @@ namespace AnimCmd
                 EventsSound = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/sound.bin")));
                 EventsExpression = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/expression.bin")));
 
+                int counter = 0;
                 foreach (uint u in Mtable)
                 {
-                    TreeNode n = new TreeNode(Mtable.IndexOf(u).ToString("X"));
+                    TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
+
                     if (EventsMain.ContainsKey(u))
                         n.Nodes.Add("Main");
                     if (EventsGFX.ContainsKey(u))
@@ -174,6 +194,7 @@ namespace AnimCmd
                         n.Nodes.Add("Expression");
 
                     treeView1.Nodes.Add(n);
+                    counter++;
                 }
                 isRoot = true;
             }
@@ -207,5 +228,31 @@ namespace AnimCmd
                 }
         }
         #endregion
+    }
+
+    public unsafe class EventInfo
+    {
+        public uint Identifier;
+        public string Name;
+        public List<int> ParamSpecifiers = new List<int>();
+    }
+
+    public unsafe class Command
+    {
+
+        public Command(EventList Owner, int index)
+        {
+            _owner = Owner;
+            _index = index;
+        }
+
+        public EventInfo _commandInfo;
+        public EventList _owner;
+        public int _index;
+
+        public int CalcSize() { return 0x04 + (_commandInfo.ParamSpecifiers.Count * 4); }
+        public void Initialize()
+        {
+        }
     }
 }

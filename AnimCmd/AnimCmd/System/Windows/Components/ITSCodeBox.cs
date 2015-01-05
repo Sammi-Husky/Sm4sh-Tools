@@ -18,7 +18,7 @@ namespace AnimCmd
     {
         #region Members
         private static bool _render = true;
-        private List<string> dictionary;
+        private List<EventInfo> dictionary;
         private ListBox AutocompleteBox;
         #endregion
 
@@ -36,7 +36,7 @@ namespace AnimCmd
             AutocompleteBox.Parent = this;
             AutocompleteBox.KeyUp += OnKeyUp;
             AutocompleteBox.Visible = false;
-            this.dictionary = new List<string>();
+            this.dictionary = new List<EventInfo>();
         }
         #endregion
 
@@ -44,7 +44,7 @@ namespace AnimCmd
         /// <summary>
         /// The autocomplete dictionary.
         /// </summary>
-        public List<string> Dictionary
+        public List<EventInfo> Dictionary
         {
             get { return this.dictionary; }
             set { this.dictionary = value; }
@@ -137,7 +137,7 @@ namespace AnimCmd
             AutocompleteBox.SetBounds(cp.X + this.Left, cp.Y + 10, 280, 70);
 
             List<string> FilteredList =
-                dictionary.Where(s => s.StartsWith(CurrentLineText)).Select(m => m).ToList();
+                dictionary.Where(s => s.Name.StartsWith(CurrentLineText)).Select(m => m.Name).ToList();
 
             if (FilteredList.Count != 0 && !CurrentLineText.EndsWith(")") &&
                 !CurrentLineText.EndsWith("(") && CurrentLineText != "")

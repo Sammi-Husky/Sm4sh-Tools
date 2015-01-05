@@ -116,7 +116,6 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.CodeView.BackColor = System.Drawing.SystemColors.Window;
-            this.CodeView.Dictionary = ((System.Collections.Generic.List<string>)(resources.GetObject("CodeView.Dictionary")));
             this.CodeView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.55F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.CodeView.Location = new System.Drawing.Point(12, 27);
             this.CodeView.Name = "CodeView";
@@ -139,7 +138,6 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Main Form";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();

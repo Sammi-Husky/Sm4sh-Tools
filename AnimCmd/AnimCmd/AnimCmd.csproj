@@ -48,7 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Events.cs" />
+    <None Include="Classes\Events.cs" />
     <Compile Include="Classes\EventList.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -56,7 +56,7 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Classes\CommandFactory.cs" />
+    <None Include="Classes\CommandFactory.cs" />
     <Compile Include="IO\DataSource.cs" />
     <Compile Include="IO\FileMap.cs" />
     <Compile Include="IO\Win32.cs" />

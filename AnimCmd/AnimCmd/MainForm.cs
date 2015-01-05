@@ -36,6 +36,7 @@ namespace AnimCmd
                     EventDictionary.Add(h);
                 }
             }
+            CodeView.Dictionary = EventDictionary;
         }
 
         //================================================================================\\
@@ -93,13 +94,13 @@ namespace AnimCmd
         {
             EventList _cur = new EventList(t);
             Command c = null;
+            EventInfo info = null;
             VoidPtr addr = (FileSource.Address + t._offset);
 
             int i = 0;
-            while (*(uint*)addr != ScriptEnd.Identifier)
+            while (*(uint*)addr != 0x5766F889)
             {
                 uint ident = *(uint*)addr;
-                EventInfo info = null;
                 foreach (EventInfo e in EventDictionary)
                     if (e.Identifier == ident)
                         info = e;
@@ -125,11 +126,16 @@ namespace AnimCmd
                 i++;
             }
 
-            //if (*(uint*)addr == ScriptEnd.Identifier)
-            //{
-            //    e.Init(new DataSource(addr, 0x04));
-            //    _cur.Events.Add(e);
-            //}
+            if (*(uint*)addr == 0x5766F889)
+            {
+                foreach (EventInfo e in EventDictionary)
+                    if (e.Identifier == 0x5766F889)
+                        info = e;
+                DataSource src = new DataSource(addr, 0x04);
+                c = new Command(_cur, ++i, src) { _commandInfo = info };
+                _cur.Events.Add(c);
+                addr += 4;
+            }
             return _cur;
         }
         #endregion
@@ -152,10 +158,6 @@ namespace AnimCmd
         #endregion
 
         #region Event Handler Methods
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            CodeView.Dictionary = CommandFactory.GetEventDictionary();
-        }
         private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             CodeView.Text = String.Empty;

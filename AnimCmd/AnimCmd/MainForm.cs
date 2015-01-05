@@ -23,7 +23,7 @@ namespace AnimCmd
             {
                 StreamReader stream = new StreamReader(Application.StartupPath + "/Events.txt");
                 List<string> a = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
-                a.RemoveAll(x => String.IsNullOrEmpty(x));
+                a.RemoveAll(x => String.IsNullOrEmpty(x) || x.Contains("//"));
 
                 for (int i = 0; i < a.Count; i += 3)
                 {
@@ -94,12 +94,12 @@ namespace AnimCmd
         {
             EventList _cur = new EventList(t);
             Command c = null;
-            EventInfo info = null;
             VoidPtr addr = (FileSource.Address + t._offset);
 
             int i = 0;
             while (*(uint*)addr != 0x5766F889)
             {
+                EventInfo info = null;
                 uint ident = *(uint*)addr;
                 foreach (EventInfo e in EventDictionary)
                     if (e.Identifier == ident)
@@ -111,31 +111,32 @@ namespace AnimCmd
                     c = new Command(_cur, i, src) { _commandInfo = info };
                     _cur.Events.Add(c);
                     addr += c.CalcSize();
+                    c.getparams();
                 }
-
                 else if (info == null)
                 {
                     DataSource src = new DataSource(addr, 0x04);
                     c = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)FileSource.Address, ident = ident, _index = i, WorkingSource = src };
                     _cur.Events.Add(c);
                     addr += 0x04;
-                    i++;
-                    continue;
                 }
-                c.getparams();
+
                 i++;
             }
 
             if (*(uint*)addr == 0x5766F889)
             {
+                EventInfo info = null;
                 foreach (EventInfo e in EventDictionary)
                     if (e.Identifier == 0x5766F889)
                         info = e;
+
                 DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, ++i, src) { _commandInfo = info };
+                c = new Command(_cur, i+1, src) { _commandInfo = info };
                 _cur.Events.Add(c);
                 addr += 4;
             }
+
             return _cur;
         }
         #endregion
@@ -279,9 +280,9 @@ namespace AnimCmd
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
                 if (_commandInfo.ParamSpecifiers[i] == 0)
-                    parameters.Add(*(int*)(0x04 + WorkingSource.Address + (i * 4)));
+                    parameters.Add(*(int*)(0x04 + (WorkingSource.Address + (i * 4))));
                 else if (_commandInfo.ParamSpecifiers[i] == 1)
-                    parameters.Add(*(float*)(0x04 + WorkingSource.Address + (i * 4)));
+                    parameters.Add(*(float*)(0x04 + (WorkingSource.Address + (i * 4))));
             }
         }
         public virtual string GetFormated()
@@ -290,9 +291,9 @@ namespace AnimCmd
             for (int i = 0; i < parameters.Count; i++)
             {
                 if (parameters[i] is int)
-                    Param += String.Format("{0}, ", parameters[i]);
+                    Param += String.Format("0x{0:X}{1}", parameters[i], i+1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float)
-                    Param += String.Format("{0}, ", parameters[i]);
+                    Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
             }
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
             return s;

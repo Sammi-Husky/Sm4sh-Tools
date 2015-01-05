@@ -19,21 +19,21 @@ namespace AnimCmd
         {
             InitializeComponent();
 
-            if (File.Exists(Application.StartupPath + "/Events.txt")) 
+            if (File.Exists(Application.StartupPath + "/Events.txt"))
             {
                 StreamReader stream = new StreamReader(Application.StartupPath + "/Events.txt");
-                List<string> a = stream.ReadToEnd().Split('\n').Select(x=>x.Trim('\r')).ToList();
+                List<string> a = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
                 a.RemoveAll(x => String.IsNullOrEmpty(x));
 
-                for (int i = 0; i < a.Count; i+=3)
+                for (int i = 0; i < a.Count; i += 3)
                 {
                     EventInfo h = new EventInfo();
-                    h.Identifier = uint.Parse(a[i],System.Globalization.NumberStyles.HexNumber);
+                    h.Identifier = uint.Parse(a[i], System.Globalization.NumberStyles.HexNumber);
                     h.Name = a[i + 1];
                     string[] tmp = a[i + 2].Split(',').Where(x => x != "NONE").ToArray();
                     foreach (string s in tmp)
                         h.ParamSpecifiers.Add(Int32.Parse(s));
-                    eventDictionary.Add(h);
+                    EventDictionary.Add(h);
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace AnimCmd
 
         // True if in multi file mode.
         bool isRoot = false;
-        public List<EventInfo> eventDictionary = new List<EventInfo>();
+        public List<EventInfo> EventDictionary = new List<EventInfo>();
 
         #region Parsing
         // Parses an ACMD file, returning a list of EventLists sorted by flags (used as idents)
@@ -92,29 +92,44 @@ namespace AnimCmd
         public EventList ParseEventList(TableEntry t, DataSource FileSource)
         {
             EventList _cur = new EventList(t);
-            Event e;
+            Command c = null;
             VoidPtr addr = (FileSource.Address + t._offset);
 
-            while (!((e = CommandFactory.FromAddress(addr)) is ScriptEnd))
+            int i = 0;
+            while (*(uint*)addr != ScriptEnd.Identifier)
             {
-                if (e == null)
+                uint ident = *(uint*)addr;
+                EventInfo info = null;
+                foreach (EventInfo e in EventDictionary)
+                    if (e.Identifier == ident)
+                        info = e;
+
+                if (info != null)
                 {
-                    (e = new UnknownEvent() { _offset = (int)addr - (int)FileSource.Address }).Init(new DataSource(addr, 0x04));
-                    _cur.Events.Add(e);
-                    addr += 0x04;
-                    continue;
+                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
+                    c = new Command(_cur, i, src) { _commandInfo = info };
+                    _cur.Events.Add(c);
+                    addr += c.CalcSize();
                 }
 
-                e.Init(new DataSource(addr, e.CalcSize()));
-                _cur.Events.Add(e);
-                addr += e.Size;
+                else if (info == null)
+                {
+                    DataSource src = new DataSource(addr, 0x04);
+                    c = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)FileSource.Address, ident = ident, _index = i, WorkingSource = src };
+                    _cur.Events.Add(c);
+                    addr += 0x04;
+                    i++;
+                    continue;
+                }
+                c.getparams();
+                i++;
             }
 
-            if (e is ScriptEnd)
-            {
-                e.Init(new DataSource(addr, 0x04));
-                _cur.Events.Add(e);
-            }
+            //if (*(uint*)addr == ScriptEnd.Identifier)
+            //{
+            //    e.Init(new DataSource(addr, 0x04));
+            //    _cur.Events.Add(e);
+            //}
             return _cur;
         }
         #endregion
@@ -128,8 +143,8 @@ namespace AnimCmd
                                     "//\t\t0x{0:X8}\t\t           \\\\\n" +
                                     "//=======================================\\\\\n",
                                                                             s._flags));
-            foreach (Event cmd in s.Events)
-                sb.Append(cmd.CommandName + "\n");
+            foreach (Command cmd in s.Events)
+                sb.Append(cmd.GetFormated() + "\n");
 
             CodeView.Text = sb.ToString();
             CodeView.ProcessAllLines();
@@ -239,20 +254,57 @@ namespace AnimCmd
 
     public unsafe class Command
     {
+        public DataSource WorkingSource { get { return _workingSource; } set { _workingSource = value; } }
+        private DataSource _workingSource;
 
-        public Command(EventList Owner, int index)
+        public Command(EventList Owner, int index, DataSource source)
         {
             _owner = Owner;
             _index = index;
+            _workingSource = source;
         }
+        public Command() { }
 
         public EventInfo _commandInfo;
         public EventList _owner;
         public int _index;
 
+        public List<object> parameters = new List<object>();
+
         public int CalcSize() { return 0x04 + (_commandInfo.ParamSpecifiers.Count * 4); }
-        public void Initialize()
+        public void getparams()
         {
+            for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
+            {
+                if (_commandInfo.ParamSpecifiers[i] == 0)
+                    parameters.Add(*(int*)(0x04 + WorkingSource.Address + (i * 4)));
+                else if (_commandInfo.ParamSpecifiers[i] == 1)
+                    parameters.Add(*(float*)(0x04 + WorkingSource.Address + (i * 4)));
+            }
+        }
+        public virtual string GetFormated()
+        {
+            string Param = "";
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (parameters[i] is int)
+                    Param += String.Format("0x{0:X}, ", parameters[i]);
+                if (parameters[i] is float)
+                    Param += String.Format("{0}, ", parameters[i]);
+            }
+            string s = String.Format("{0}({1})", _commandInfo.Name, Param);
+            return s;
+        }
+    }
+    public unsafe class UnknownCommand : Command
+    {
+        public uint _offset;
+        public uint ident;
+
+        public override int CalcSize() { return 0x04; }
+        public override string GetFormated()
+        {
+            return String.Format("0x{0:X8} @0x{1:X}", ident, _offset);
         }
     }
 }

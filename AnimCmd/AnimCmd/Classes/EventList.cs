@@ -25,7 +25,7 @@ namespace AnimCmd.Classes
             get
             {
                 int size =0;
-                foreach (Event e in Events)
+                foreach (Command e in Events)
                     size += e.CalcSize();
                 return size;
             }
@@ -33,6 +33,6 @@ namespace AnimCmd.Classes
         public uint _flags;
         public int _offset;
 
-        public List<Event> Events = new List<Event>();
+        public List<Command> Events = new List<Command>();
     }
 }

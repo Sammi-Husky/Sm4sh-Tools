@@ -271,7 +271,7 @@ namespace AnimCmd
 
         public List<object> parameters = new List<object>();
 
-        public int CalcSize() { return 0x04 + (_commandInfo.ParamSpecifiers.Count * 4); }
+        public virtual int CalcSize() { return 0x04 + (_commandInfo.ParamSpecifiers.Count * 4); }
         public void getparams()
         {
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
@@ -288,7 +288,7 @@ namespace AnimCmd
             for (int i = 0; i < parameters.Count; i++)
             {
                 if (parameters[i] is int)
-                    Param += String.Format("0x{0:X}, ", parameters[i]);
+                    Param += String.Format("{0}, ", parameters[i]);
                 if (parameters[i] is float)
                     Param += String.Format("{0}, ", parameters[i]);
             }

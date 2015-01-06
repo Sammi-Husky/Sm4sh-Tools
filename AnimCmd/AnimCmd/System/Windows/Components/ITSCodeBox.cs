@@ -44,6 +44,7 @@ namespace AnimCmd
         /// <summary>
         /// The autocomplete dictionary.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<EventInfo> Dictionary
         {
             get { return this.dictionary; }
@@ -98,7 +99,7 @@ namespace AnimCmd
             {
                 Point cp;
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
-                this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), ((ListBox)sender).SelectedItem.ToString());
+                this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), ((ListBox)sender).SelectedItem.ToString() + "()");
                 GetCaretPos(out cp);
                 this.Select(GetFirstCharIndexFromLine(CurrentLineIndex) + CurrentLineText.Length, 0);
                 AutocompleteBox.Hide();

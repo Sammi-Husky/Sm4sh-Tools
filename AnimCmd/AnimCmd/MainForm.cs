@@ -34,6 +34,9 @@ namespace AnimCmd
                     foreach (string s in tmp)
                         h.ParamSpecifiers.Add(Int32.Parse(s));
                     EventDictionary.Add(h);
+                    ListViewItem lvi = new ListViewItem(h.Identifier.ToString("X"));
+                    lvi.SubItems.Add(h.Name);
+                    listView1.Items.Add(lvi);
                 }
             }
             CodeView.Dictionary = EventDictionary;
@@ -59,6 +62,7 @@ namespace AnimCmd
 
         // True if in multi file mode.
         bool isRoot = false;
+        EventList _linked;
         public List<EventInfo> EventDictionary = new List<EventInfo>();
 
         #region Parsing
@@ -73,20 +77,6 @@ namespace AnimCmd
                 temp.Add(entry._flags, ParseEventList(entry, source));
             }
             return temp;
-        }
-
-        // Parses an MTable file. Basically copies all data into a list of uints.
-        public List<uint> ParseMTable(DataSource source)
-        {
-            VoidPtr addr = source.Address;
-            List<uint> ActionFlags = new List<uint>();
-            int i = 0;
-            while (i * 4 != source.Length)
-            {
-                ActionFlags.Add(*(uint*)(addr + (i * 4)));
-                i++;
-            }
-            return ActionFlags;
         }
 
         // Parses an event list at a specific address specified by the passed in TableEntry, in the passed in file.
@@ -132,12 +122,26 @@ namespace AnimCmd
                         info = e;
 
                 DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, i+1, src) { _commandInfo = info };
+                c = new Command(_cur, i + 1, src) { _commandInfo = info };
                 _cur.Events.Add(c);
                 addr += 4;
             }
 
             return _cur;
+        }
+
+        // Parses an MTable file. Basically copies all data into a list of uints.
+        public List<uint> ParseMTable(DataSource source)
+        {
+            VoidPtr addr = source.Address;
+            List<uint> ActionFlags = new List<uint>();
+            int i = 0;
+            while (i * 4 != source.Length)
+            {
+                ActionFlags.Add(*(uint*)(addr + (i * 4)));
+                i++;
+            }
+            return ActionFlags;
         }
         #endregion
 
@@ -155,6 +159,7 @@ namespace AnimCmd
 
             CodeView.Text = sb.ToString();
             CodeView.ProcessAllLines();
+            _linked = s;
         }
         #endregion
 
@@ -246,6 +251,14 @@ namespace AnimCmd
                 }
         }
         #endregion
+
+        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+                _linked.Export(dlg.FileName);
+        }
     }
 
     public unsafe class EventInfo
@@ -297,6 +310,27 @@ namespace AnimCmd
             }
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
             return s;
+        }
+        public virtual byte[] ToArray()
+        {
+            byte[] tmp = new byte[CalcSize()];
+            Util.SetWord(ref tmp, _commandInfo.Identifier, 0);
+            for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
+            {
+                if (_commandInfo.ParamSpecifiers[i] == 0)
+                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4);
+                else if (_commandInfo.ParamSpecifiers[i] == 1)
+                {
+                    double HEX = Convert.ToDouble(parameters[i]);
+                    float flt = (float)HEX;
+                    byte[] bytes = BitConverter.GetBytes(flt);
+                    int dec = BitConverter.ToInt32(bytes, 0);
+                    string HexVal = dec.ToString("X");
+
+                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4);
+                }
+            }
+            return tmp;
         }
     }
     public unsafe class UnknownCommand : Command

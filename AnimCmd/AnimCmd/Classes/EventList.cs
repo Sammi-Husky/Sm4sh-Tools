@@ -35,14 +35,6 @@ namespace AnimCmd.Classes
         public uint _flags;
         public int _offset;
 
-        public void Rebuild()
-        {
-            FileMap temp = FileMap.FromTempFile(Size);
-            OnRebuild(temp.Address, temp.Length);
-            _replSource.Close();
-            _replSource = new DataSource(temp.Address, temp.Length);
-            _replSource.Map = temp;
-        }
         public void OnRebuild(VoidPtr address, int size)
         {
             VoidPtr addr = address;
@@ -56,12 +48,9 @@ namespace AnimCmd.Classes
                 Win32.MoveMemory(addr, tmp, (uint)a.Length);
                 addr += Events[x].CalcSize();
             }
-                _replSource = new DataSource(address, size);
-            
         }
         public void Export(string path)
         {
-            Rebuild();
             byte[] file = new byte[WorkingSource.Length];
             for (int i = 0; i < WorkingSource.Length; i++)
                 file[i] = *(byte*)(WorkingSource.Address + i);

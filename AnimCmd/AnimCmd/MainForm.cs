@@ -109,7 +109,7 @@ namespace AnimCmd
                     }
             }
 
-            _curFile.Actions[_linked._flags].Rebuild();
+            _curFile.Rebuild();
         }
         #endregion
 
@@ -333,8 +333,8 @@ namespace AnimCmd
     }
     public unsafe class ACMDFile
     {
-        public AnimCmdHeader* Header { get { return (AnimCmdHeader*)WorkingSource.Address; } }
-        public DataSource WorkingSource;
+        public AnimCmdHeader* Header { get { return _replSource != DataSource.Empty ? (AnimCmdHeader*)_replSource.Address : (AnimCmdHeader*)WorkingSource.Address; } }
+        public DataSource WorkingSource, _replSource;
 
         public int CommandCount { get { return _commandCount; } set { _commandCount = value; } }
         private int _commandCount;
@@ -370,6 +370,49 @@ namespace AnimCmd
                 Actions.Add(entry._flags, ParseEventList(entry));
             }
         }
+        public void Rebuild()
+        {
+            FileMap temp = FileMap.FromTempFile(Size);
+
+            OnRebuild(temp.Address, temp.Length);
+
+            _replSource.Close();
+            _replSource = new DataSource(temp.Address, temp.Length);
+            _replSource.Map = temp;
+        }
+        public void OnRebuild(VoidPtr address, int length)
+        {
+            // Rebuild ACMD header.
+            VoidPtr addr = address;
+            AnimCmdHeader* header = (AnimCmdHeader*)address;
+            header->_magic = 0x444D4341;
+            header->_version = 2;
+            header->_subactionCount = Actions.Count;
+            int count = 0;
+            foreach (EventList e in Actions.Values)
+                count += e.Events.Count;
+            header->_commandCount = count;
+            addr += 0x10;
+
+            // Rebuild action offset table.
+            int prev = 0;
+            for (int i = 0; i < Actions.Count; i++)
+            {
+                *(uint*)addr = Actions.Keys[i];
+                *(int*)(addr + 4) = 0x10 +(Actions.Count * 8) + prev;            
+                prev += Actions.Values[i].Size;
+                addr += 8;
+            }
+
+
+            // Write event lists.
+            foreach (EventList e in Actions.Values)
+            {
+                e.OnRebuild(addr, e.Size);
+                addr += e.Size;
+            }
+        }
+
         private EventList ParseEventList(TableEntry t)
         {
             EventList _cur = new EventList(t);
@@ -419,38 +462,14 @@ namespace AnimCmd
 
             return _cur;
         }
-
         public void Export(string path)
         {
-            byte[] file;
-            ACMDFile f = this;
-            int offset = 0x10;
-            file = new byte[f.Size];
-
-            for (int i = 0; i < 0x10; i++)
-                file[i] = *(byte*)(f.WorkingSource.Address + i);
-
-            int prev = 0;
-            for (int i = 0; i < f.ActionCount; i++)
-            {
-                Util.SetWord(ref file, f.Actions.Keys[i], offset);
-                Util.SetWord(ref file, (0x10 + (f.ActionCount * 8)) + prev, offset + 4);
-                prev += f.Actions.Values[i].Size;
-                offset += 8;
-            }
-
-            foreach (EventList e in f.Actions.Values)
-                foreach (Command c in e.Events)
-                {
-                    byte[] temp = c.ToArray();
-                    for (int i = 0; i < temp.Length; i++)
-                    {
-                        file[offset] = temp[i];
-                        offset++;
-                    }
-                }
-
-            File.WriteAllBytes(path, file);
+            DataSource src = _replSource != DataSource.Empty ? _replSource : WorkingSource;
+            byte[] tmp = new byte[Size];
+            for (int i = 0; i < tmp.Length; i++)
+                tmp[i] = *(byte*)(src.Address + i);
+            File.WriteAllBytes(path, tmp);
         }
+
     }
 }

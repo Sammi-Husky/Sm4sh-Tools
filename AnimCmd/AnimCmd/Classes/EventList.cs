@@ -42,7 +42,6 @@ namespace AnimCmd.Classes
             _replSource.Close();
             _replSource = new DataSource(temp.Address, temp.Length);
             _replSource.Map = temp;
-
         }
         public void OnRebuild(VoidPtr address, int size)
         {

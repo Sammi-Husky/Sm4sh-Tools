@@ -45,7 +45,7 @@ namespace AnimCmd
         //================================================================================\\
         // List of action event lists in single file mode. Null if in full directory mode.\\
         //================================================================================\\
-        SortedList<uint, EventList> FileEvents = new SortedList<uint, EventList>();
+        ACMDFile _curFile;
 
         //==================================\\
         // List of motion table identifiers \\
@@ -55,81 +55,14 @@ namespace AnimCmd
         //===========================================================================\\
         // Main, gfx, sound, and expression event lists. Null if in single file mode.\\
         //===========================================================================\\
-        SortedList<uint, EventList> EventsMain = new SortedList<uint, EventList>();
-        SortedList<uint, EventList> EventsGFX = new SortedList<uint, EventList>();
-        SortedList<uint, EventList> EventsSound = new SortedList<uint, EventList>();
-        SortedList<uint, EventList> EventsExpression = new SortedList<uint, EventList>();
+        List<ACMDFile> CharacterFiles = new List<ACMDFile>();
 
-        // True if in multi file mode.
+        // Misc runtime variables.
         bool isRoot = false;
         EventList _linked;
         public List<EventInfo> EventDictionary = new List<EventInfo>();
 
         #region Parsing
-        // Parses an ACMD file, returning a list of EventLists sorted by flags (used as idents)
-        public SortedList<uint, EventList> ParseACMD(DataSource source)
-        {
-            AnimCmdHeader* Header = (AnimCmdHeader*)source.Address;
-            SortedList<uint, EventList> temp = new SortedList<uint, EventList>();
-            for (int i = 0; i < Header->_subactionCount; i++)
-            {
-                TableEntry entry = *(TableEntry*)(source.Address + 0x10 + (i * 8));
-                temp.Add(entry._flags, ParseEventList(entry, source));
-            }
-            return temp;
-        }
-
-        // Parses an event list at a specific address specified by the passed in TableEntry, in the passed in file.
-        public EventList ParseEventList(TableEntry t, DataSource FileSource)
-        {
-            EventList _cur = new EventList(t);
-            Command c = null;
-            VoidPtr addr = (FileSource.Address + t._offset);
-
-            int i = 0;
-            while (*(uint*)addr != 0x5766F889)
-            {
-                EventInfo info = null;
-                uint ident = *(uint*)addr;
-                foreach (EventInfo e in EventDictionary)
-                    if (e.Identifier == ident)
-                        info = e;
-
-                if (info != null)
-                {
-                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                    c = new Command(_cur, i, src) { _commandInfo = info };
-                    _cur.Events.Add(c);
-                    addr += c.CalcSize();
-                    c.getparams();
-                }
-                else if (info == null)
-                {
-                    DataSource src = new DataSource(addr, 0x04);
-                    c = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)FileSource.Address, ident = ident, _index = i, WorkingSource = src };
-                    _cur.Events.Add(c);
-                    addr += 0x04;
-                }
-
-                i++;
-            }
-
-            if (*(uint*)addr == 0x5766F889)
-            {
-                EventInfo info = null;
-                foreach (EventInfo e in EventDictionary)
-                    if (e.Identifier == 0x5766F889)
-                        info = e;
-
-                DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, i + 1, src) { _commandInfo = info };
-                _cur.Events.Add(c);
-                addr += 4;
-            }
-
-            return _cur;
-        }
-
         // Parses an MTable file. Basically copies all data into a list of uints.
         public List<uint> ParseMTable(DataSource source)
         {
@@ -142,6 +75,41 @@ namespace AnimCmd
                 i++;
             }
             return ActionFlags;
+        }
+
+        public void ParseCodeBox()
+        {
+            _curFile.Actions[_linked._flags].Events.Clear();
+            string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
+            if (lines.Length == 0)
+            {
+                _curFile.Actions.Remove(_linked._flags);
+                _curFile.ActionCount--;
+                *(int*)(_curFile.WorkingSource.Address + 0x08) = _curFile.ActionCount;
+                return;
+            }
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                foreach (EventInfo e in EventDictionary)
+                    if (lines[i].Contains(e.Name))
+                    {
+                        string[] temp = lines.Select(x => x.Substring(x.IndexOf('(')).Trim(new char[] { '(', ')' })).ToArray();
+                        List<string[]> Params = temp.Select(x => x.Split(',')).ToList();
+                        Command c = new Command();
+                        c._commandInfo = e;
+                        for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
+                        {
+                            if (e.ParamSpecifiers[counter] == 0)
+                                c.parameters.Add(float.Parse(Params[i][counter]));
+                            else if (e.ParamSpecifiers[counter] == 1)
+                                c.parameters.Add(Int32.Parse(Params[i][counter]));
+                        }
+                        _curFile.Actions[_linked._flags].Events.Add(c);
+                    }
+            }
+
+            _curFile.Actions[_linked._flags].Rebuild();
         }
         #endregion
 
@@ -167,7 +135,7 @@ namespace AnimCmd
         private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             CodeView.Text = String.Empty;
-            FileEvents.Clear(); treeView1.Nodes.Clear();
+            treeView1.Nodes.Clear();
             treeView1.ShowLines = treeView1.ShowRootLines = false;
 
             OpenFileDialog dlg = new OpenFileDialog();
@@ -175,12 +143,12 @@ namespace AnimCmd
             DialogResult result = dlg.ShowDialog();
             if (result == DialogResult.OK)
             {
-                FileEvents = ParseACMD(new DataSource(FileMap.FromFile(dlg.FileName)));
+                _curFile = new ACMDFile(new DataSource(FileMap.FromFile(dlg.FileName)));
 
-                foreach (EventList list in FileEvents.Values)
+                foreach (EventList list in _curFile.Actions.Values)
                     treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
 
-                if (FileEvents.Count == 0)
+                if (_curFile.Actions.Count == 0)
                     MessageBox.Show("There were no actions found");
                 else
                     isRoot = false;
@@ -189,7 +157,7 @@ namespace AnimCmd
         private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CodeView.Text = String.Empty;
-            FileEvents.Clear(); treeView1.Nodes.Clear();
+            treeView1.Nodes.Clear();
             treeView1.ShowLines = treeView1.ShowRootLines = true;
 
             FolderSelectDialog dlg = new FolderSelectDialog();
@@ -197,23 +165,23 @@ namespace AnimCmd
             if (result == DialogResult.OK)
             {
                 Mtable = ParseMTable(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/motion.mtable")));
-                EventsMain = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/game.bin")));
-                EventsGFX = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/effect.bin")));
-                EventsSound = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/sound.bin")));
-                EventsExpression = ParseACMD(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/expression.bin")));
+                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/game.bin"))));
+                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/effect.bin"))));
+                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/sound.bin"))));
+                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/expression.bin"))));
 
                 int counter = 0;
                 foreach (uint u in Mtable)
                 {
                     TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
-                    if (EventsMain.ContainsKey(u))
+                    if (CharacterFiles[0].Actions.ContainsKey(u))
                         n.Nodes.Add("Main");
-                    if (EventsGFX.ContainsKey(u))
+                    if (CharacterFiles[1].Actions.ContainsKey(u))
                         n.Nodes.Add("GFX");
-                    if (EventsSound.ContainsKey(u))
+                    if (CharacterFiles[2].Actions.ContainsKey(u))
                         n.Nodes.Add("Sound");
-                    if (EventsExpression.ContainsKey(u))
+                    if (CharacterFiles[3].Actions.ContainsKey(u))
                         n.Nodes.Add("Expression");
 
                     treeView1.Nodes.Add(n);
@@ -229,7 +197,7 @@ namespace AnimCmd
                 if (e.Node.Level == 0)
                 {
                     uint Ident = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
-                    DisplayScript(FileEvents[Ident]);
+                    DisplayScript(_curFile.Actions[Ident]);
                 }
             }
             else if (isRoot)
@@ -241,23 +209,42 @@ namespace AnimCmd
                     uint ident = Mtable[treeView1.Nodes.IndexOf(n)];
 
                     if (e.Node.Text == "Main")
-                        DisplayScript(EventsMain[ident]);
+                    {
+                        _curFile = CharacterFiles[0];
+                        DisplayScript(CharacterFiles[0].Actions[ident]);
+                    }
                     else if (e.Node.Text == "GFX")
-                        DisplayScript(EventsGFX[ident]);
+                    {
+                        _curFile = CharacterFiles[1];
+                        DisplayScript(CharacterFiles[1].Actions[ident]);
+                    }
                     else if (e.Node.Text == "Sound")
-                        DisplayScript(EventsSound[ident]);
+                    {
+                        _curFile = CharacterFiles[2];
+                        DisplayScript(CharacterFiles[2].Actions[ident]);
+                    }
                     else if (e.Node.Text == "Expression")
-                        DisplayScript(EventsExpression[ident]);
+                    {
+                        _curFile = CharacterFiles[3];
+                        DisplayScript(CharacterFiles[3].Actions[ident]);
+                    }
                 }
         }
         #endregion
 
+
         private void testToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog dlg = new SaveFileDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-                _linked.Export(dlg.FileName);
+            //SaveFileDialog dlg = new SaveFileDialog();
+            //DialogResult result = dlg.ShowDialog();
+            //if (result == DialogResult.OK)
+            //    Export();
+            ParseCodeBox();
+            if (isRoot)
+                foreach (ACMDFile f in CharacterFiles)
+                    f.Export(String.Format("C:/TEST/{0}.bin", CharacterFiles.IndexOf(f)));
+            else
+                _curFile.Export(String.Format("C:/TEST/{0}.bin", "game"));
         }
     }
 
@@ -304,7 +291,7 @@ namespace AnimCmd
             for (int i = 0; i < parameters.Count; i++)
             {
                 if (parameters[i] is int)
-                    Param += String.Format("0x{0:X}{1}", parameters[i], i+1 != parameters.Count ? ", " : "");
+                    Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
             }
@@ -342,6 +329,128 @@ namespace AnimCmd
         public override string GetFormated()
         {
             return String.Format("0x{0:X8} @0x{1:X}", ident, _offset);
+        }
+    }
+    public unsafe class ACMDFile
+    {
+        public AnimCmdHeader* Header { get { return (AnimCmdHeader*)WorkingSource.Address; } }
+        public DataSource WorkingSource;
+
+        public int CommandCount { get { return _commandCount; } set { _commandCount = value; } }
+        private int _commandCount;
+
+        public int ActionCount { get { return _actionCount; } set { _actionCount = value; } }
+        private int _actionCount;
+
+        public SortedList<uint, EventList> Actions = new SortedList<uint, EventList>();
+        public int Size
+        {
+            get
+            {
+                int size = 0x10 + (_actionCount * 8);
+                foreach (EventList e in Actions.Values)
+                    size += e.Size;
+                return size;
+            }
+        }
+
+        public ACMDFile(DataSource source)
+        {
+            WorkingSource = source;
+            _commandCount = *(int*)(source.Address + 0x0C);
+            _actionCount = *(int*)(source.Address + 0x08);
+            Parse();
+        }
+
+        public void Parse()
+        {
+            for (int i = 0; i < Header->_subactionCount; i++)
+            {
+                TableEntry entry = *(TableEntry*)(WorkingSource.Address + 0x10 + (i * 8));
+                Actions.Add(entry._flags, ParseEventList(entry));
+            }
+        }
+        private EventList ParseEventList(TableEntry t)
+        {
+            EventList _cur = new EventList(t);
+            Command c = null;
+            VoidPtr addr = (WorkingSource.Address + t._offset);
+
+            int i = 0;
+            while (*(uint*)addr != 0x5766F889)
+            {
+                EventInfo info = null;
+                uint ident = *(uint*)addr;
+                foreach (EventInfo e in FormProvider.MainWindow.EventDictionary)
+                    if (e.Identifier == ident)
+                        info = e;
+
+                if (info != null)
+                {
+                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
+                    c = new Command(_cur, i, src) { _commandInfo = info };
+                    _cur.Events.Add(c);
+                    addr += c.CalcSize();
+                    c.getparams();
+                }
+                else if (info == null)
+                {
+                    DataSource src = new DataSource(addr, 0x04);
+                    c = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
+                    _cur.Events.Add(c);
+                    addr += 0x04;
+                }
+
+                i++;
+            }
+
+            if (*(uint*)addr == 0x5766F889)
+            {
+                EventInfo info = null;
+                foreach (EventInfo e in FormProvider.MainWindow.EventDictionary)
+                    if (e.Identifier == 0x5766F889)
+                        info = e;
+
+                DataSource src = new DataSource(addr, 0x04);
+                c = new Command(_cur, i + 1, src) { _commandInfo = info };
+                _cur.Events.Add(c);
+                addr += 4;
+            }
+
+            return _cur;
+        }
+
+        public void Export(string path)
+        {
+            byte[] file;
+            ACMDFile f = this;
+            int offset = 0x10;
+            file = new byte[f.Size];
+
+            for (int i = 0; i < 0x10; i++)
+                file[i] = *(byte*)(f.WorkingSource.Address + i);
+
+            int prev = 0;
+            for (int i = 0; i < f.ActionCount; i++)
+            {
+                Util.SetWord(ref file, f.Actions.Keys[i], offset);
+                Util.SetWord(ref file, (0x10 + (f.ActionCount * 8)) + prev, offset + 4);
+                prev += f.Actions.Values[i].Size;
+                offset += 8;
+            }
+
+            foreach (EventList e in f.Actions.Values)
+                foreach (Command c in e.Events)
+                {
+                    byte[] temp = c.ToArray();
+                    for (int i = 0; i < temp.Length; i++)
+                    {
+                        file[offset] = temp[i];
+                        offset++;
+                    }
+                }
+
+            File.WriteAllBytes(path, file);
         }
     }
 }

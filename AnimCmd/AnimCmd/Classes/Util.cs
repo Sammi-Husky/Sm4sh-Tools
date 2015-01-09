@@ -57,4 +57,19 @@ namespace AnimCmd
                 + (long)mantissa);
         }
     }
+    public class FormProvider
+    {
+        public static MainForm MainWindow
+        {
+            get
+            {
+                if (_mainForm == null)
+                {
+                    _mainForm= new MainForm();
+                }
+                return _mainForm;
+            }
+        }
+        private static MainForm _mainForm;
+    }
 }

@@ -30,7 +30,7 @@ namespace AnimCmd.Classes
                 return size;
             }
         }
-        public bool _dirty;
+        public bool _empty;
 
         public uint _flags;
         public int _offset;

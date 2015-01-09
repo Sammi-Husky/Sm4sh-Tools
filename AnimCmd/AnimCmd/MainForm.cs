@@ -61,6 +61,8 @@ namespace AnimCmd
         bool isRoot = false;
         EventList _linked;
         public List<EventInfo> EventDictionary = new List<EventInfo>();
+        string FileName;
+        string rootPath;
 
         #region Parsing
         // Parses an MTable file. Basically copies all data into a list of uints.
@@ -79,37 +81,42 @@ namespace AnimCmd
 
         public void ParseCodeBox()
         {
+            // Don't bother selectively processing events, just clear and repopulate the whole thing.
             _curFile.Actions[_linked._flags].Events.Clear();
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
             if (lines.Length == 0)
             {
-                _curFile.Actions.Remove(_linked._flags);
-                _curFile.ActionCount--;
-                *(int*)(_curFile.WorkingSource.Address + 0x08) = _curFile.ActionCount;
+                _curFile.Actions[_linked._flags]._empty = true;
                 return;
             }
-
+            _curFile.Actions[_linked._flags]._empty = false;
             for (int i = 0; i < lines.Length; i++)
             {
+                if (lines[i].StartsWith("0x"))
+                {
+                    UnknownCommand unkC = new UnknownCommand();
+                    unkC._commandInfo = new EventInfo() { Identifier = UInt32.Parse(lines[i].Substring(2,8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
+                    unkC._owner = _curFile.Actions[_linked._flags];
+                    _curFile.Actions[_linked._flags].Events.Add(unkC);
+                    continue;
+                }
                 foreach (EventInfo e in EventDictionary)
-                    if (lines[i].Contains(e.Name))
+                    if (lines[i].StartsWith(e.Name))
                     {
-                        string[] temp = lines.Select(x => x.Substring(x.IndexOf('(')).Trim(new char[] { '(', ')' })).ToArray();
-                        List<string[]> Params = temp.Select(x => x.Split(',')).ToList();
+                        string[] temp = lines.Where(m=>m.StartsWith(e.Name)).Select(x => x.Substring(x.IndexOf('(')).Trim(new char[] { '(', ')' })).ToArray();
+                        List<string[]> Params = temp.Select(x => x.Replace("0x", "").Split(',')).ToList();
                         Command c = new Command();
                         c._commandInfo = e;
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
-                            if (e.ParamSpecifiers[counter] == 0)
+                            if (e.ParamSpecifiers[counter] == 1)
                                 c.parameters.Add(float.Parse(Params[i][counter]));
-                            else if (e.ParamSpecifiers[counter] == 1)
-                                c.parameters.Add(Int32.Parse(Params[i][counter]));
+                            else if (e.ParamSpecifiers[counter] == 0)
+                                c.parameters.Add(Int32.Parse(Params[i][counter], System.Globalization.NumberStyles.HexNumber));
                         }
                         _curFile.Actions[_linked._flags].Events.Add(c);
                     }
             }
-
-            _curFile.Rebuild();
         }
         #endregion
 
@@ -117,6 +124,9 @@ namespace AnimCmd
         // Displays the list of scripts as plain text in the code editor.
         public void DisplayScript(EventList s)
         {
+            if (_linked != null)
+                ParseCodeBox();
+
             StringBuilder sb = new StringBuilder();
             sb.Append(String.Format("//=======================================\\\\\n" +
                                     "//\t\t0x{0:X8}\t\t           \\\\\n" +
@@ -134,36 +144,88 @@ namespace AnimCmd
         #region Event Handler Methods
         private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            CodeView.Text = String.Empty;
-            treeView1.Nodes.Clear();
-            treeView1.ShowLines = treeView1.ShowRootLines = false;
 
             OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = ".bin | *.bin";
+            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
             DialogResult result = dlg.ShowDialog();
             if (result == DialogResult.OK)
             {
-                _curFile = new ACMDFile(new DataSource(FileMap.FromFile(dlg.FileName)));
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); Mtable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+                treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                foreach (EventList list in _curFile.Actions.Values)
-                    treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+                try
+                {
+                    _curFile = new ACMDFile(new DataSource(FileMap.FromFile(dlg.FileName)));
 
-                if (_curFile.Actions.Count == 0)
-                    MessageBox.Show("There were no actions found");
-                else
-                    isRoot = false;
+                    foreach (EventList list in _curFile.Actions.Values)
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                    if (_curFile.Actions.Count == 0)
+                        MessageBox.Show("There were no actions found");
+                    else
+                        isRoot = false;
+                    FileName = dlg.FileName;
+                }
+                catch (Exception x) { MessageBox.Show(x.Message); }
+            }
+        }
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ParseCodeBox();
+            if (isRoot)
+            {
+                CharacterFiles[0].Export(rootPath + "/game.bin");
+                CharacterFiles[1].Export(rootPath + "/effect.bin");
+                CharacterFiles[2].Export(rootPath + "/sound.bin");
+                CharacterFiles[3].Export(rootPath + "/expression.bin");
+            }
+            else
+                _curFile.Export(FileName);
+        }
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ParseCodeBox();
+            if (isRoot)
+            {
+                FolderSelectDialog dlg = new FolderSelectDialog();
+                DialogResult result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    CharacterFiles[0].Export(dlg.SelectedPath + "/game.bin");
+                    CharacterFiles[1].Export(dlg.SelectedPath + "/effect.bin");
+                    CharacterFiles[2].Export(dlg.SelectedPath + "/sound.bin");
+                    CharacterFiles[3].Export(dlg.SelectedPath + "/expression.bin");
+                }
+            }
+            else
+            {
+                SaveFileDialog dlg = new SaveFileDialog();
+                dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
+                DialogResult result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
+                    _curFile.Export(dlg.FileName);
             }
         }
         private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CodeView.Text = String.Empty;
-            treeView1.Nodes.Clear();
-            treeView1.ShowLines = treeView1.ShowRootLines = true;
-
             FolderSelectDialog dlg = new FolderSelectDialog();
             DialogResult result = dlg.ShowDialog();
             if (result == DialogResult.OK)
             {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); Mtable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+
                 Mtable = ParseMTable(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/motion.mtable")));
                 CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/game.bin"))));
                 CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/effect.bin"))));
@@ -188,6 +250,7 @@ namespace AnimCmd
                     counter++;
                 }
                 isRoot = true;
+                rootPath = dlg.SelectedPath;
             }
         }
         private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -232,20 +295,6 @@ namespace AnimCmd
         }
         #endregion
 
-
-        private void testToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //SaveFileDialog dlg = new SaveFileDialog();
-            //DialogResult result = dlg.ShowDialog();
-            //if (result == DialogResult.OK)
-            //    Export();
-            ParseCodeBox();
-            if (isRoot)
-                foreach (ACMDFile f in CharacterFiles)
-                    f.Export(String.Format("C:/TEST/{0}.bin", CharacterFiles.IndexOf(f)));
-            else
-                _curFile.Export(String.Format("C:/TEST/{0}.bin", "game"));
-        }
     }
 
     public unsafe class EventInfo
@@ -339,15 +388,15 @@ namespace AnimCmd
         public int CommandCount { get { return _commandCount; } set { _commandCount = value; } }
         private int _commandCount;
 
-        public int ActionCount { get { return _actionCount; } set { _actionCount = value; } }
-        private int _actionCount;
+        public int ActionCount { get { return Actions.Count; } }
+
 
         public SortedList<uint, EventList> Actions = new SortedList<uint, EventList>();
         public int Size
         {
             get
             {
-                int size = 0x10 + (_actionCount * 8);
+                int size = 0x10 + (Actions.Count * 8);
                 foreach (EventList e in Actions.Values)
                     size += e.Size;
                 return size;
@@ -358,7 +407,6 @@ namespace AnimCmd
         {
             WorkingSource = source;
             _commandCount = *(int*)(source.Address + 0x0C);
-            _actionCount = *(int*)(source.Address + 0x08);
             Parse();
         }
 
@@ -382,6 +430,9 @@ namespace AnimCmd
         }
         public void OnRebuild(VoidPtr address, int length)
         {
+            for (int i = 0; i < Actions.Count; i++)
+                if (Actions.Values[i]._empty)
+                    Actions.Remove(Actions.Keys[i]);
             // Rebuild ACMD header.
             VoidPtr addr = address;
             AnimCmdHeader* header = (AnimCmdHeader*)address;
@@ -391,6 +442,7 @@ namespace AnimCmd
             int count = 0;
             foreach (EventList e in Actions.Values)
                 count += e.Events.Count;
+            
             header->_commandCount = count;
             addr += 0x10;
 
@@ -464,12 +516,22 @@ namespace AnimCmd
         }
         public void Export(string path)
         {
-            DataSource src = _replSource != DataSource.Empty ? _replSource : WorkingSource;
-            byte[] tmp = new byte[Size];
-            for (int i = 0; i < tmp.Length; i++)
-                tmp[i] = *(byte*)(src.Address + i);
-            File.WriteAllBytes(path, tmp);
-        }
+            Rebuild();
+            if (_replSource != DataSource.Empty)
+            {
+                WorkingSource.Close();
+                WorkingSource = _replSource;
+                _replSource = DataSource.Empty;
 
+
+                DataSource src = WorkingSource;
+                byte[] tmp = new byte[Size];
+                for (int i = 0; i < tmp.Length; i++)
+                    tmp[i] = *(byte*)(src.Address + i);
+                File.WriteAllBytes(path, tmp);
+            }
+            else
+                MessageBox.Show("No changes have been made.");
+        }
     }
 }

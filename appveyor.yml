@@ -2,6 +2,7 @@ configuration: Release
 
 artifacts:
   - path: AnimCmd/bin/Release
+    name: AnimCmd
     
 build:
   verbosity: minimal

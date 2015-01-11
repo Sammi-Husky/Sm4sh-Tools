@@ -1,4 +1,4 @@
-﻿namespace AnimCmd
+﻿namespace Sm4shCommand
 {
     partial class MainForm
     {
@@ -42,7 +42,7 @@
             this.commandHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.nameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.syntaxHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.CodeView = new AnimCmd.ITSCodeBox();
+            this.CodeView = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 

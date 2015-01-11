@@ -8,10 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using AnimCmd.Structs;
-using AnimCmd.Classes;
+using Sm4shCommand.Structs;
+using Sm4shCommand.Classes;
 
-namespace AnimCmd
+namespace Sm4shCommand
 {
     public unsafe partial class MainForm : Form
     {
@@ -168,6 +168,7 @@ namespace AnimCmd
                     else
                         isRoot = false;
                     FileName = dlg.FileName;
+                    this.Text += String.Format("Main Form - {0}", FileName);
                 }
                 catch (Exception x) { MessageBox.Show(x.Message); }
             }
@@ -249,6 +250,7 @@ namespace AnimCmd
                 }
                 isRoot = true;
                 rootPath = dlg.SelectedPath;
+                this.Text += String.Format("Main Form - {0}", dlg.SelectedPath);
             }
         }
         private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimCmd", "AnimCmd\AnimCmd.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4shCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSBTView", "MSBTView\MSBTView.csproj", "{A14213E5-1270-428A-98DA-AB1BBD9ED78C}"
 EndProject

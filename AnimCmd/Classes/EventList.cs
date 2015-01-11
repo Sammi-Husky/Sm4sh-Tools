@@ -4,10 +4,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using AnimCmd.Structs;
+using Sm4shCommand.Structs;
 using System.IO;
 
-namespace AnimCmd.Classes
+namespace Sm4shCommand.Classes
 {
     public unsafe class EventList
     {

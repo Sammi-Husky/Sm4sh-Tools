@@ -7,9 +7,9 @@
     <ProjectGuid>{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AnimCmd</RootNamespace>
+    <RootNamespace>Sm4shCommand</RootNamespace>
     <AssemblyName>AnimCmd</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>

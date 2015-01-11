@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 
-namespace AnimCmd
+namespace Sm4shCommand
 {
     /// <summary>
     /// Provides an extended RichTextBox with Intellisense like code completion and syntax highlighting.

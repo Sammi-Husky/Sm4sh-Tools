@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AnimCmd
+namespace Sm4shCommand
 {
     public static class Util
     {

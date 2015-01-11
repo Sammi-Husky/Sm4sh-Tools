@@ -1,5 +1,5 @@
 configuration: Release
 
 build:
-verbosity: minimal
-publish_wap: true
+  verbosity: minimal
+  publish_wap: true

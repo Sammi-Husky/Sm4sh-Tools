@@ -5,3 +5,6 @@ artifacts:
     
 build:
   verbosity: minimal
+  
+deploy:
+- provider: Local

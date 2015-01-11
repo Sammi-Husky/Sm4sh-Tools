@@ -1,5 +1,10 @@
 configuration: Release
 
+artifacts:
+  - path: AnimCmd/bin/Release/
+    name: Test
+    type: zip
+    
 build:
   verbosity: minimal
   publish_wap: true

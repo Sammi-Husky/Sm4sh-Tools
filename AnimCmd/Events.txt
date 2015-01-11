@@ -43,11 +43,11 @@ Script_End
 NONE
 
 9126EBA2
-External_Subroutine
+Subroutine
 0
 
 FA1BC28A
-Subroutine
+External_Subroutine
 0
 
 FC061097
@@ -68,7 +68,7 @@ Hitbox
 
 14FCC7E4
 Special_Hitbox
-0,0,0,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 9245E1A8
 Remove_All_Hitboxes
@@ -156,7 +156,7 @@ Unknown_326
 
 F1FBEFEE
 Unknown_F1F
-0,1
+1,1
 
 95794508
 Unknown_957
@@ -176,7 +176,7 @@ Throw_Specifier
 
 7075DC5A
 Extended_Special_Hitbox
-0,0,0,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1
+0,0,0,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1
 
 2988D50F
 Extended_Hitbox
@@ -273,3 +273,99 @@ Unknown_3D1
 89CE242B
 Unknown_8CE
 1,1,1,1
+
+37ED7029
+Unknown_37E
+0,0
+
+0F39EC70
+Unknown_0F3
+0
+
+E74D94EE
+Unknown_E74
+0
+
+C436BF6E
+Unknown_C43
+0
+
+7A34BE78
+Unknown_7A3
+0,0,1,1
+
+46396A70 
+Unknown_463
+0,0,1,1
+
+395DA2D1
+Unknown_395
+0,0,0,1
+
+AC811479
+Unknown_AC8
+0,0
+
+5F4CF775
+Unknown_5F4
+NONE
+
+A5303662
+Unknown_A53
+NONE
+
+E940DCC2
+Unknown_E94
+0,0,1,0,0
+
+425848C8
+Unknown_425
+0,0
+
+0202C138
+Unknown_020
+0,0
+
+A1B6E607
+Unknown_A1B
+0,0,0,1,1
+
+86EB40DD
+Unknown_86E
+NONE
+
+522DBA37
+Unknown_522
+NONE
+
+1D09E516
+Unknown_1D0
+0
+
+501A7157
+Unknown_501
+0
+
+D3D9401B
+Unknown_D3D
+1,1
+
+42D70BB3
+Unknown_42D
+0
+
+692BBCFA
+Unknown_692
+NONE
+
+37CA2121
+Unknown_37C
+1
+
+979D8828
+Unknown_979
+0
+
+5DCECD64
+Unknown_5DC
+NONE

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AnimCmd.Structs;
@@ -30,6 +31,7 @@ namespace AnimCmd.Classes
                 return size;
             }
         }
+
         public bool _empty;
 
         public uint _flags;

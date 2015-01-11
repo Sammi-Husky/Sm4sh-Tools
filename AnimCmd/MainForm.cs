@@ -36,7 +36,7 @@ namespace AnimCmd
                     EventDictionary.Add(h);
                     ListViewItem lvi = new ListViewItem(h.Identifier.ToString("X"));
                     lvi.SubItems.Add(h.Name);
-                    listView1.Items.Add(lvi);
+                    cmdDetailsList.Items.Add(lvi);
                 }
             }
             CodeView.Dictionary = EventDictionary;
@@ -79,17 +79,12 @@ namespace AnimCmd
             return ActionFlags;
         }
 
+        // Crawls the code box and applies changes to the linked event list.
         public void ParseCodeBox()
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
-            _curFile.Actions[_linked._flags].Events.Clear();
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            if (lines.Length == 0)
-            {
-                _curFile.Actions[_linked._flags]._empty = true;
-                return;
-            }
-            _curFile.Actions[_linked._flags]._empty = false;
+            _curFile.Actions[_linked._flags].Events.Clear();
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("0x"))
@@ -97,22 +92,25 @@ namespace AnimCmd
                     UnknownCommand unkC = new UnknownCommand();
                     unkC._commandInfo = new EventInfo() { Identifier = UInt32.Parse(lines[i].Substring(2,8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
                     unkC._owner = _curFile.Actions[_linked._flags];
+                    unkC._index = i;                   
+                    unkC.ident = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber);
+                    unkC._offset = UInt32.Parse(lines[i].Substring(lines[i].IndexOf('@') + 3), System.Globalization.NumberStyles.HexNumber);
                     _curFile.Actions[_linked._flags].Events.Add(unkC);
                     continue;
                 }
                 foreach (EventInfo e in EventDictionary)
                     if (lines[i].StartsWith(e.Name))
                     {
-                        string[] temp = lines.Where(m=>m.StartsWith(e.Name)).Select(x => x.Substring(x.IndexOf('(')).Trim(new char[] { '(', ')' })).ToArray();
-                        List<string[]> Params = temp.Select(x => x.Replace("0x", "").Split(',')).ToList();
+                        string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
+                        List<string> Params = temp.Replace("0x", "").Split(',').ToList();
                         Command c = new Command();
                         c._commandInfo = e;
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
                             if (e.ParamSpecifiers[counter] == 1)
-                                c.parameters.Add(float.Parse(Params[i][counter]));
+                                c.parameters.Add(float.Parse(Params[counter]));
                             else if (e.ParamSpecifiers[counter] == 0)
-                                c.parameters.Add(Int32.Parse(Params[i][counter], System.Globalization.NumberStyles.HexNumber));
+                                c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
                         }
                         _curFile.Actions[_linked._flags].Events.Add(c);
                     }
@@ -294,7 +292,6 @@ namespace AnimCmd
                 }
         }
         #endregion
-
     }
 
     public unsafe class EventInfo
@@ -433,6 +430,7 @@ namespace AnimCmd
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
                     Actions.Remove(Actions.Keys[i]);
+
             // Rebuild ACMD header.
             VoidPtr addr = address;
             AnimCmdHeader* header = (AnimCmdHeader*)address;
@@ -491,8 +489,9 @@ namespace AnimCmd
                 else if (info == null)
                 {
                     DataSource src = new DataSource(addr, 0x04);
-                    c = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
-                    _cur.Events.Add(c);
+                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
+                    unkC._commandInfo = new EventInfo() { Identifier = ident, Name = String.Format("0x{0}", ident.ToString("X")) };
+                    _cur.Events.Add(unkC);
                     addr += 0x04;
                 }
 

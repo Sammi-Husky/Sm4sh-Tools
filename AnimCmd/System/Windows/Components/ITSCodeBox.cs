@@ -18,8 +18,10 @@ namespace Sm4shCommand
     {
         #region Members
         private static bool _render = true;
-        private List<EventInfo> dictionary;
+        private List<CommandDefinition> commandDictionary;
         private ListBox AutocompleteBox;
+        private ITSToolTip ITSToolTip;
+        private eDictionary EventDescriptions;
         #endregion
 
         #region External Methods
@@ -36,7 +38,12 @@ namespace Sm4shCommand
             AutocompleteBox.Parent = this;
             AutocompleteBox.KeyUp += OnKeyUp;
             AutocompleteBox.Visible = false;
-            this.dictionary = new List<EventInfo>();
+            ITSToolTip = new ITSToolTip();
+            this.commandDictionary = new List<CommandDefinition>();
+
+            ITSToolTip.RichTextBox = this;
+            EventDescriptions = new eDictionary();
+            ITSToolTip.Dictionary = EventDescriptions;
         }
         #endregion
 
@@ -45,10 +52,19 @@ namespace Sm4shCommand
         /// The autocomplete dictionary.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public List<EventInfo> Dictionary
+        public List<CommandDefinition> CommandDictionary
         {
-            get { return this.dictionary; }
-            set { this.dictionary = value; }
+            get { return this.commandDictionary; }
+            set { this.commandDictionary = value; }
+        }
+        /// <summary>
+        /// The autocomplete dictionary.
+        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ITSToolTip Tooltip
+        {
+            get { return this.ITSToolTip; }
+            set { this.ITSToolTip = value; }
         }
         /// <summary>
         /// The text of the current line.
@@ -138,7 +154,7 @@ namespace Sm4shCommand
             AutocompleteBox.SetBounds(cp.X + this.Left, cp.Y + 10, 280, 70);
 
             List<string> FilteredList =
-                dictionary.Where(s => s.Name.StartsWith(CurrentLineText)).Select(m => m.Name).ToList();
+                commandDictionary.Where(s => s.Name.StartsWith(CurrentLineText)).Select(m => m.Name).ToList();
 
             if (FilteredList.Count != 0 && !CurrentLineText.EndsWith(")") &&
                 !CurrentLineText.EndsWith("(") && CurrentLineText != "")
@@ -218,6 +234,5 @@ namespace Sm4shCommand
                 FormatLine(i);
         }
         #endregion
-
     }
 }

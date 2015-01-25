@@ -20,26 +20,17 @@ namespace Sm4shCommand
             InitializeComponent();
 
             if (File.Exists(Application.StartupPath + "/Events.txt"))
-            {
-                StreamReader stream = new StreamReader(Application.StartupPath + "/Events.txt");
-                List<string> a = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
-                a.RemoveAll(x => String.IsNullOrEmpty(x) || x.Contains("//"));
+                CommandDictionary = Runtime.GetCommandDictionary(Application.StartupPath + "/Events.txt");
 
-                for (int i = 0; i < a.Count; i += 3)
-                {
-                    EventInfo h = new EventInfo();
-                    h.Identifier = uint.Parse(a[i], System.Globalization.NumberStyles.HexNumber);
-                    h.Name = a[i + 1];
-                    string[] tmp = a[i + 2].Split(',').Where(x => x != "NONE").ToArray();
-                    foreach (string s in tmp)
-                        h.ParamSpecifiers.Add(Int32.Parse(s));
-                    EventDictionary.Add(h);
-                    ListViewItem lvi = new ListViewItem(h.Identifier.ToString("X"));
-                    lvi.SubItems.Add(h.Name);
-                    cmdDetailsList.Items.Add(lvi);
-                }
-            }
-            CodeView.Dictionary = EventDictionary;
+            //ListViewItem lvi = new ListViewItem(h.Identifier.ToString("X"));
+            //lvi.SubItems.Add(h.Name);
+            //cmdDetailsList.Items.Add(lvi);
+            eDictionary dict = new eDictionary();
+            foreach (CommandDefinition cd in CommandDictionary)
+                if(!String.IsNullOrEmpty(cd.EventDescription))
+                    dict.Add(cd.Name, cd.EventDescription);
+            CodeView.CommandDictionary = CommandDictionary;
+            CodeView.Tooltip.Dictionary = dict;
         }
 
         //================================================================================\\
@@ -59,8 +50,8 @@ namespace Sm4shCommand
 
         // Misc runtime variables.
         bool isRoot = false;
-        EventList _linked;
-        public List<EventInfo> EventDictionary = new List<EventInfo>();
+        CommandList _linked;
+        public List<CommandDefinition> CommandDictionary = new List<CommandDefinition>();
         string FileName;
         string rootPath;
 
@@ -79,7 +70,7 @@ namespace Sm4shCommand
             return ActionFlags;
         }
 
-        // Crawls the code box and applies changes to the linked event list.
+        // Crawls the code box and applies changes to the linked command list.
         public void ParseCodeBox()
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
@@ -90,15 +81,15 @@ namespace Sm4shCommand
                 if (lines[i].StartsWith("0x"))
                 {
                     UnknownCommand unkC = new UnknownCommand();
-                    unkC._commandInfo = new EventInfo() { Identifier = UInt32.Parse(lines[i].Substring(2,8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
                     unkC._owner = _curFile.Actions[_linked._flags];
-                    unkC._index = i;                   
+                    unkC._index = i;
                     unkC.ident = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber);
                     unkC._offset = UInt32.Parse(lines[i].Substring(lines[i].IndexOf('@') + 3), System.Globalization.NumberStyles.HexNumber);
                     _curFile.Actions[_linked._flags].Events.Add(unkC);
                     continue;
                 }
-                foreach (EventInfo e in EventDictionary)
+                foreach (CommandDefinition e in CommandDictionary)
                     if (lines[i].StartsWith(e.Name))
                     {
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
@@ -119,8 +110,8 @@ namespace Sm4shCommand
         #endregion
 
         #region Display related methods
-        // Displays the list of scripts as plain text in the code editor.
-        public void DisplayScript(EventList s)
+        // Displays the list of commands as plain text in the code editor.
+        public void DisplayScript(CommandList s)
         {
             if (_linked != null)
                 ParseCodeBox();
@@ -160,7 +151,7 @@ namespace Sm4shCommand
                 {
                     _curFile = new ACMDFile(new DataSource(FileMap.FromFile(dlg.FileName)));
 
-                    foreach (EventList list in _curFile.Actions.Values)
+                    foreach (CommandList list in _curFile.Actions.Values)
                         treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
 
                     if (_curFile.Actions.Count == 0)
@@ -296,10 +287,13 @@ namespace Sm4shCommand
         #endregion
     }
 
-    public unsafe class EventInfo
+    public unsafe class CommandDefinition
     {
         public uint Identifier;
         public string Name;
+        public string EventDescription;
+
+
         public List<int> ParamSpecifiers = new List<int>();
     }
 
@@ -308,7 +302,7 @@ namespace Sm4shCommand
         public DataSource WorkingSource { get { return _workingSource; } set { _workingSource = value; } }
         private DataSource _workingSource;
 
-        public Command(EventList Owner, int index, DataSource source)
+        public Command(CommandList Owner, int index, DataSource source)
         {
             _owner = Owner;
             _index = index;
@@ -316,8 +310,8 @@ namespace Sm4shCommand
         }
         public Command() { }
 
-        public EventInfo _commandInfo;
-        public EventList _owner;
+        public CommandDefinition _commandInfo;
+        public CommandList _owner;
         public int _index;
 
         public List<object> parameters = new List<object>();
@@ -390,13 +384,13 @@ namespace Sm4shCommand
         public int ActionCount { get { return Actions.Count; } }
 
 
-        public SortedList<uint, EventList> Actions = new SortedList<uint, EventList>();
+        public SortedList<uint, CommandList> Actions = new SortedList<uint, CommandList>();
         public int Size
         {
             get
             {
                 int size = 0x10 + (Actions.Count * 8);
-                foreach (EventList e in Actions.Values)
+                foreach (CommandList e in Actions.Values)
                     size += e.Size;
                 return size;
             }
@@ -440,9 +434,9 @@ namespace Sm4shCommand
             header->_version = 2;
             header->_subactionCount = Actions.Count;
             int count = 0;
-            foreach (EventList e in Actions.Values)
+            foreach (CommandList e in Actions.Values)
                 count += e.Events.Count;
-            
+
             header->_commandCount = count;
             addr += 0x10;
 
@@ -451,32 +445,32 @@ namespace Sm4shCommand
             for (int i = 0; i < Actions.Count; i++)
             {
                 *(uint*)addr = Actions.Keys[i];
-                *(int*)(addr + 4) = 0x10 +(Actions.Count * 8) + prev;            
+                *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;
                 prev += Actions.Values[i].Size;
                 addr += 8;
             }
 
 
             // Write event lists.
-            foreach (EventList e in Actions.Values)
+            foreach (CommandList e in Actions.Values)
             {
                 e.OnRebuild(addr, e.Size);
                 addr += e.Size;
             }
         }
 
-        private EventList ParseEventList(TableEntry t)
+        private CommandList ParseEventList(TableEntry t)
         {
-            EventList _cur = new EventList(t);
+            CommandList _cur = new CommandList(t);
             Command c = null;
             VoidPtr addr = (WorkingSource.Address + t._offset);
 
             int i = 0;
             while (*(uint*)addr != 0x5766F889)
             {
-                EventInfo info = null;
+                CommandDefinition info = null;
                 uint ident = *(uint*)addr;
-                foreach (EventInfo e in FormProvider.MainWindow.EventDictionary)
+                foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
                     if (e.Identifier == ident)
                         info = e;
 
@@ -492,7 +486,7 @@ namespace Sm4shCommand
                 {
                     DataSource src = new DataSource(addr, 0x04);
                     UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
-                    unkC._commandInfo = new EventInfo() { Identifier = ident, Name = String.Format("0x{0}", ident.ToString("X")) };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0}", ident.ToString("X")) };
                     _cur.Events.Add(unkC);
                     addr += 0x04;
                 }
@@ -502,8 +496,8 @@ namespace Sm4shCommand
 
             if (*(uint*)addr == 0x5766F889)
             {
-                EventInfo info = null;
-                foreach (EventInfo e in FormProvider.MainWindow.EventDictionary)
+                CommandDefinition info = null;
+                foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
                     if (e.Identifier == 0x5766F889)
                         info = e;
 

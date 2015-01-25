@@ -6,20 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Sm4shCommand.Structs;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class EventList
+    public unsafe class CommandList
     {
         public DataSource WorkingSource { get { return _replSource != DataSource.Empty ? _replSource : _workingSource; } }
         public DataSource _workingSource, _replSource;
 
-        public EventList(TableEntry t)
+        public CommandList(TableEntry t)
         {
             _flags = t._flags;
             _offset = t._offset;
         }
-        public EventList() { }
+        public CommandList() { }
 
         public int Size
         {
@@ -33,6 +34,7 @@ namespace Sm4shCommand.Classes
         }
 
         public bool _empty;
+
 
         public uint _flags;
         public int _offset;

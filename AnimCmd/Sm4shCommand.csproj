@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\EventList.cs" />
+    <Compile Include="Classes\Runtime.cs" />
     <Compile Include="Classes\Util.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -70,6 +71,9 @@
       <DependentUpon>FolderSelectDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="System\Windows\Components\ITSCodeBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Components\ITSToolTip.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
@@ -119,6 +123,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4shCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSBTView", "MSBTView\MSBTView.csproj", "{A14213E5-1270-428A-98DA-AB1BBD9ED78C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unPACKer", "unPACKer\unPACKer.csproj", "{6EB31A51-9898-49FF-A541-7AC576C5297D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A14213E5-1270-428A-98DA-AB1BBD9ED78C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A14213E5-1270-428A-98DA-AB1BBD9ED78C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A14213E5-1270-428A-98DA-AB1BBD9ED78C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

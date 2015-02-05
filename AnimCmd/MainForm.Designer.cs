@@ -38,10 +38,7 @@
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.treeView1 = new System.Windows.Forms.TreeView();
-            this.cmdDetailsList = new System.Windows.Forms.ListView();
-            this.commandHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.nameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.syntaxHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.CodeView = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -129,41 +126,16 @@
             this.treeView1.TabIndex = 6;
             this.treeView1.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseDoubleClick);
             // 
-            // cmdDetailsList
+            // richTextBox1
             // 
-            this.cmdDetailsList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdDetailsList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.commandHeader,
-            this.nameHeader,
-            this.syntaxHeader});
-            this.cmdDetailsList.FullRowSelect = true;
-            this.cmdDetailsList.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.cmdDetailsList.HoverSelection = true;
-            this.cmdDetailsList.LabelWrap = false;
-            this.cmdDetailsList.Location = new System.Drawing.Point(5, 469);
-            this.cmdDetailsList.MultiSelect = false;
-            this.cmdDetailsList.Name = "cmdDetailsList";
-            this.cmdDetailsList.Size = new System.Drawing.Size(626, 134);
-            this.cmdDetailsList.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.cmdDetailsList.TabIndex = 7;
-            this.cmdDetailsList.UseCompatibleStateImageBehavior = false;
-            this.cmdDetailsList.View = System.Windows.Forms.View.Details;
-            // 
-            // commandHeader
-            // 
-            this.commandHeader.Text = "Command";
-            this.commandHeader.Width = 72;
-            // 
-            // nameHeader
-            // 
-            this.nameHeader.Text = "Name";
-            this.nameHeader.Width = 160;
-            // 
-            // syntaxHeader
-            // 
-            this.syntaxHeader.Text = "Syntax";
-            this.syntaxHeader.Width = 390;
+            this.richTextBox1.Enabled = false;
+            this.richTextBox1.Location = new System.Drawing.Point(4, 468);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(627, 135);
+            this.richTextBox1.TabIndex = 8;
+            this.richTextBox1.Text = "";
             // 
             // CodeView
             // 
@@ -186,7 +158,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(844, 628);
-            this.Controls.Add(this.cmdDetailsList);
+            this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.treeView1);
             this.Controls.Add(this.CodeView);
             this.Controls.Add(this.statusStrip1);
@@ -212,13 +184,10 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
         private System.Windows.Forms.TreeView treeView1;
-        private System.Windows.Forms.ListView cmdDetailsList;
-        private System.Windows.Forms.ColumnHeader commandHeader;
-        private System.Windows.Forms.ColumnHeader nameHeader;
-        private System.Windows.Forms.ColumnHeader syntaxHeader;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.RichTextBox richTextBox1;
 
     }
 }

@@ -120,7 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Events.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup />

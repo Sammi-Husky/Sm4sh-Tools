@@ -31,8 +31,12 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.directoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.directoryToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.wIIUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.directoryToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -68,42 +72,74 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem1,
-            this.directoryToolStripMenuItem});
+            this.dsToolStripMenuItem,
+            this.wIIUToolStripMenuItem});
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
-            // fileToolStripMenuItem1
+            // dsToolStripMenuItem
             // 
-            this.fileToolStripMenuItem1.Name = "fileToolStripMenuItem1";
-            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
-            this.fileToolStripMenuItem1.Text = "File";
-            this.fileToolStripMenuItem1.Click += new System.EventHandler(this.fileToolStripMenuItem1_Click);
+            this.dsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem2,
+            this.directoryToolStripMenuItem1});
+            this.dsToolStripMenuItem.Name = "dsToolStripMenuItem";
+            this.dsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.dsToolStripMenuItem.Text = "3ds";
             // 
-            // directoryToolStripMenuItem
+            // fileToolStripMenuItem2
             // 
-            this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
-            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
-            this.directoryToolStripMenuItem.Text = "Directory";
-            this.directoryToolStripMenuItem.Click += new System.EventHandler(this.directoryToolStripMenuItem_Click);
+            this.fileToolStripMenuItem2.Name = "fileToolStripMenuItem2";
+            this.fileToolStripMenuItem2.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem2.Text = "File";
+            this.fileToolStripMenuItem2.Click += new System.EventHandler(this.fileToolStripMenuItem2_Click);
+            // 
+            // directoryToolStripMenuItem1
+            // 
+            this.directoryToolStripMenuItem1.Name = "directoryToolStripMenuItem1";
+            this.directoryToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.directoryToolStripMenuItem1.Text = "Directory";
+            this.directoryToolStripMenuItem1.Click += new System.EventHandler(this.directoryToolStripMenuItem1_Click);
+            // 
+            // wIIUToolStripMenuItem
+            // 
+            this.wIIUToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem3,
+            this.directoryToolStripMenuItem2});
+            this.wIIUToolStripMenuItem.Name = "wIIUToolStripMenuItem";
+            this.wIIUToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.wIIUToolStripMenuItem.Text = "WIIU";
+            // 
+            // fileToolStripMenuItem3
+            // 
+            this.fileToolStripMenuItem3.Name = "fileToolStripMenuItem3";
+            this.fileToolStripMenuItem3.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem3.Text = "File";
+            this.fileToolStripMenuItem3.Click += new System.EventHandler(this.fileToolStripMenuItem3_Click);
+            // 
+            // directoryToolStripMenuItem2
+            // 
+            this.directoryToolStripMenuItem2.Name = "directoryToolStripMenuItem2";
+            this.directoryToolStripMenuItem2.Size = new System.Drawing.Size(152, 22);
+            this.directoryToolStripMenuItem2.Text = "Directory";
+            this.directoryToolStripMenuItem2.Click += new System.EventHandler(this.directoryToolStripMenuItem2_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(115, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveAsToolStripMenuItem.Text = "Save as..";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
@@ -181,13 +217,17 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private ITSCodeBox CodeView;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
         private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.ToolStripMenuItem dsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem wIIUToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem2;
 
     }
 }

@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Sm4shCommand.Structs;
 using System.IO;
-using System.Security.Cryptography;
 
 namespace Sm4shCommand.Classes
 {
@@ -14,11 +13,13 @@ namespace Sm4shCommand.Classes
     {
         public DataSource WorkingSource { get { return _replSource != DataSource.Empty ? _replSource : _workingSource; } }
         public DataSource _workingSource, _replSource;
+        public Endianness _endian;
 
-        public CommandList(TableEntry t)
+        public CommandList(uint flags, int offset, Endianness endian)
         {
-            _flags = t._flags;
-            _offset = t._offset;
+            _flags = flags;
+            _offset = offset;
+            _endian = endian;
         }
         public CommandList() { }
 

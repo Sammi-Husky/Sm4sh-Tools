@@ -426,7 +426,6 @@ namespace Sm4shCommand
                                               '=','*','$','#','@','\'','\"','<','>','^','(',')',
                                               '[',']','{','}','°','&','|',' ' };
 
-        private bool _init = false;
         private bool _isVisible = false;
 
 

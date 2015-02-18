@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using Sm4shCommand.Structs;
 using Sm4shCommand.Classes;
 
 namespace Sm4shCommand
@@ -290,8 +289,7 @@ namespace Sm4shCommand
                     }
                 }
         }
-        #endregion
-
+        // 3ds Menu
         private void fileToolStripMenuItem2_Click(object sender, EventArgs e)
         {
             OpenFile(Endianness.Little);
@@ -300,7 +298,7 @@ namespace Sm4shCommand
         {
             OpenDirectory(Endianness.Little);
         }
-
+        //WIIU Menu
         private void fileToolStripMenuItem3_Click(object sender, EventArgs e)
         {
             OpenFile(Endianness.Big);
@@ -309,6 +307,7 @@ namespace Sm4shCommand
         {
             OpenDirectory(Endianness.Big);
         }
+        #endregion
     }
 
     public unsafe class CommandDefinition
@@ -413,7 +412,6 @@ namespace Sm4shCommand
         public VoidPtr Header { get { return _replSource != DataSource.Empty ? _replSource.Address : WorkingSource.Address; } }
         public DataSource WorkingSource, _replSource;
         int temp = 0;
-
         public int CommandCount { get { return _commandCount; } set { _commandCount = value; } }
         private int _commandCount;
 
@@ -479,66 +477,81 @@ namespace Sm4shCommand
         {
             FileMap temp = FileMap.FromTempFile(Size);
 
+            // Write changes to the new filemap.
             OnRebuild(temp.Address, temp.Length);
 
+            // Close backing source.
             _replSource.Close();
+            // set backing source to new source from temp map.
             _replSource = new DataSource(temp.Address, temp.Length);
+            // Set backing source's map to the temp map.
             _replSource.Map = temp;
         }
         public void OnRebuild(VoidPtr address, int length)
         {
+            //  Remove empty event lists.
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
                     Actions.Remove(Actions.Keys[i]);
 
-            // Rebuild ACMD header.
-            VoidPtr addr = address;
-            *(uint*)address = 0x444D4341;
+            VoidPtr addr = address; // Base address. (0x00)
+            *(uint*)address = 0x444D4341; // ACMD     
+            
+            //=========================================================================//   
+            //                      Rebuilding Header and offsets                       //
+            //==========================================================================//
+            if (_endian == Endianness.Little)                                           //
+            {                                                                           //
+                *(int*)(address + 0x04) = 2; // Version (2)                             //
+                *(int*)(address + 0x08) = Actions.Count; // Event list Count            //
+                                                                                        //
+                int count = 0;                                                          //
+                foreach (CommandList e in Actions.Values)                               //
+                    count += e.Events.Count;                                            //
+                                                                                        //
+                *(int*)(address + 0x0C) = count;// Unk field. (Command Count?)          //
+                addr += 0x10;                                                           //
+                                                                                        //
+                //=======Write Event List offsets and flags===============//            //
+                int prev = 0;                                             //            //
+                for (int i = 0; i < Actions.Count; i++)                   //            //
+                {                                                         //            //
+                    *(uint*)addr = Actions.Keys[i];                       //            //
+                    *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
+                    prev += Actions.Values[i].Size;                       //            //
+                    addr += 8;                                            //            //
+                }                                                         //            //
+                //========================================================//            //
+            }                                                                           //
+                                                                                        //
+                                                                                        //
+                                                                                        //
+            else if (_endian == Endianness.Big)                                         //
+            {                                                                           //
+                *(bint*)(address + 0x04) = 2;// Version (2)                             //
+                *(bint*)(address + 0x08) = Actions.Count;// Event List Count            //
+                                                                                        //
+                int count = 0;                                                          //
+                foreach (CommandList e in Actions.Values)                               //
+                    count += e.Events.Count;                                            //
+                                                                                        //
+                *(bint*)(address + 0x0C) = count;// Unk field. (Command Count?)         //
+                addr += 0x10;                                                           //
+                                                                                        //
+                //=======Write Event List offsets and flags===============//            //
+                int prev = 0;                                             //            //
+                for (int i = 0; i < Actions.Count; i++)                   //            //
+                {                                                         //            //
+                    *(uint*)addr = Actions.Keys[i];                       //            //
+                    *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
+                    prev += Actions.Values[i].Size;                       //            //
+                    addr += 8;                                            //            //
+                }                                                         //            //
+                //========================================================//            //                                                 //
+            }                                                                           //
+            //========================================================================//
 
-            if (_endian == Endianness.Little)
-            {
-                *(int*)(address + 0x04) = 2;
-                *(int*)(address + 0x08) = Actions.Count;
-
-                int count = 0;
-                foreach (CommandList e in Actions.Values)
-                    count += e.Events.Count;
-
-                *(int*)(address + 0x0C) = count;
-                addr += 0x10;
-
-                int prev = 0;
-                for (int i = 0; i < Actions.Count; i++)
-                {
-                    *(uint*)addr = Actions.Keys[i];
-                    *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;
-                    prev += Actions.Values[i].Size;
-                    addr += 8;
-                }
-            }
-            else if (_endian == Endianness.Big)
-            {
-                *(bint*)(address + 0x04) = 2;
-                *(bint*)(address + 0x08) = Actions.Count;
-
-                int count = 0;
-                foreach (CommandList e in Actions.Values)
-                    count += e.Events.Count;
-
-                *(bint*)(address + 0x0C) = count;
-                addr += 0x10;
-
-                int prev = 0;
-                for (bint i = 0; i < Actions.Count; i++)
-                {
-                    *(buint*)addr = Actions.Keys[i];
-                    *(bint*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;
-                    prev += Actions.Values[i].Size;
-                    addr += 8;
-                }
-            }
-
-            // Write event lists.
+            // Write event lists at final address.
             foreach (CommandList e in Actions.Values)
             {
                 e.OnRebuild(addr, e.Size);
@@ -556,12 +569,8 @@ namespace Sm4shCommand
             int i = 0;
             while (*(uint*)addr != endingCommand)
             {
-                uint ident = 0;
+                uint ident = _endian == Endianness.Little ? *(uint*)addr : (uint)*(buint*)addr; 
                 CommandDefinition info = null;
-                if (_endian == Endianness.Little)
-                    ident = *(uint*)addr;
-                else if (_endian == Endianness.Big)
-                    ident = *(buint*)addr;
 
                 foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
                     if (e.Identifier == ident)
@@ -579,14 +588,14 @@ namespace Sm4shCommand
                 {
                     DataSource src = new DataSource(addr, 0x04);
                     UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
-                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0}", ident.ToString("X")) };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
                     _cur.Events.Add(unkC);
                     addr += 0x04;
                 }
 
                 i++;
                 temp++;
-            }
+            }   
 
             if (*(uint*)addr == endingCommand)
             {

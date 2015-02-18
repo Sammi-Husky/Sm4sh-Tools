@@ -8,17 +8,26 @@ namespace Sm4shCommand
 {
     public static class Util
     {
-
         //  Retrieve a word from the specified array of bytes.
-        public static long GetWord(byte[] data, long offset)
+        public static long GetWord(byte[] data, long offset, Endianness endian)
         {
-            if (offset % 4 != 0) throw new Exception("Odd word offset");
-            if (offset >= data.Length) throw new Exception("Offset out of range.");
+            if (offset % 4 != 0) throw new Exception("Odd word offset.");
+            if (offset >= data.Length) throw new Exception("Offset outside of expected value range.");
 
-            return (uint)(data[offset + 0] * 0x1000000)
-                 + (uint)(data[offset + 1] * 0x10000)
-                 + (uint)(data[offset + 2] * 0x100)
-                 + (uint)(data[offset + 3] * 0x1);
+            if (endian == Endianness.Little)
+            {
+                return (uint)(data[offset + 3] * 0x1000000)
+                     + (uint)(data[offset + 2] * 0x10000)
+                     + (uint)(data[offset + 1] * 0x100)
+                     + (uint)(data[offset + 0] * 0x1);
+            }
+            else
+            {
+                return (uint)(data[offset + 0] * 0x1000000)
+                     + (uint)(data[offset + 1] * 0x10000)
+                     + (uint)(data[offset + 2] * 0x100)
+                     + (uint)(data[offset + 3] * 0x1);
+            }
         }
 
         //  Set a word into an array of bytes. Resize the array if needed.
@@ -45,6 +54,8 @@ namespace Sm4shCommand
                 data[offset + 3] = (byte)((value & 0xFF) / 0x1);
             }
         }
+
+        // Returns the hexadecimal representation of the passed in float value.
         public static long FloatToHex(float val)
         {
             if (val == 0) return 0;

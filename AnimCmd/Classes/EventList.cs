@@ -4,12 +4,11 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Sm4shCommand.Structs;
 using System.IO;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class CommandList
+    public unsafe class CommandList : IDisposable
     {
         public DataSource WorkingSource { get { return _replSource != DataSource.Empty ? _replSource : _workingSource; } }
         public DataSource _workingSource, _replSource;
@@ -22,6 +21,7 @@ namespace Sm4shCommand.Classes
             _endian = endian;
         }
         public CommandList() { }
+        ~CommandList() { Dispose(); }
 
         public int Size
         {
@@ -64,5 +64,11 @@ namespace Sm4shCommand.Classes
         }
 
         public List<Command> Events = new List<Command>();
+        public void Dispose()
+        {
+            _workingSource.Close();
+            _replSource.Close();
+            GC.SuppressFinalize(this);
+        }
     }
 }

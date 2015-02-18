@@ -36,7 +36,7 @@ Inverse of Brawl: higher numbers mean slower animation, and lower numbers mean f
 F13BFE8D
 Set_Bone_Intangability
 0,0
-Sets the specified bone's intangability level. 0 = normal, 1 = invinvible, 2 = intangible.
+Sets the specified bone's intangability level. 0 = normal, 1 = invincible, 2 = intangible.
 
 A4DE708D
 Add/Set_Momentum

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using Sm4shCommand.Classes;
+using System.Collections;
 
 namespace Sm4shCommand
 {
@@ -37,7 +38,7 @@ namespace Sm4shCommand
         //==================================\\
         // List of motion table identifiers \\
         //==================================\\
-        List<uint> Mtable = new List<uint>();
+        MTable MotionTable = new MTable();
 
         //===========================================================================\\
         // Main, gfx, sound, and expression event lists. Null if in single file mode.\\
@@ -50,23 +51,27 @@ namespace Sm4shCommand
         public List<CommandDefinition> CommandDictionary = new List<CommandDefinition>();
         string FileName;
         string rootPath;
+        Endianness workingEndian;
 
         #region Parsing
         // Parses an MTable file. Basically copies all data into a list of uints.
-        public List<uint> ParseMTable(DataSource source, Endianness endian)
+        public MTable ParseMTable(DataSource source, Endianness endian)
         {
             VoidPtr addr = source.Address;
             List<uint> ActionFlags = new List<uint>();
             int i = 0;
             while (i * 4 != source.Length)
             {
-                if(endian == Endianness.Little)
+                if (endian == Endianness.Little)
                     ActionFlags.Add(*(uint*)(addr + (i * 4)));
-                else if(endian == Endianness.Big)
+                else if (endian == Endianness.Big)
                     ActionFlags.Add(*(buint*)(addr + (i * 4)));
                 i++;
             }
-            return ActionFlags;
+            MTable m = new MTable(ActionFlags, endian);
+
+
+            return m;
         }
 
         // Crawls the code box and applies changes to the linked command list.
@@ -108,81 +113,63 @@ namespace Sm4shCommand
             }
         }
 
-        public void OpenFile(Endianness endian)
+        public bool OpenFile(string Filepath)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); Mtable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = false;
-                treeView1.ShowLines = treeView1.ShowRootLines = false;
+                DataSource source = new DataSource(FileMap.FromFile(Filepath));
 
-                try
+                if (*(byte*)(source.Address + 0x04) == 0x02)
+                    workingEndian = Endianness.Little;
+                else if ((*(byte*)(source.Address + 0x04) == 0x00))
+                    workingEndian = Endianness.Big;
+                else
                 {
-                    _curFile = new ACMDFile(new DataSource(FileMap.FromFile(dlg.FileName)), endian);
-
-                    foreach (CommandList list in _curFile.Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
-
-                    if (_curFile.Actions.Count == 0)
-                        MessageBox.Show("There were no actions found");
-                    else
-                        isRoot = false;
-                    FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
+                    MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
+                    return false;
                 }
-                catch (Exception x) { MessageBox.Show(x.Message); }
+
+                CharacterFiles.Add(new ACMDFile(source, workingEndian));
+                if (CharacterFiles[0].Actions.Count == 0)
+                {
+                    MessageBox.Show("There were no actions found");
+                    return false;
+                }
+                return true;
             }
+            catch (Exception x) { MessageBox.Show(x.Message); return false; }
         }
-        public void OpenDirectory(Endianness endian)
+
+        public void OpenDirectory(string dirPath)
         {
-            FolderSelectDialog dlg = new FolderSelectDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            OpenFile(dirPath + "/game.bin");
+            OpenFile(dirPath + "/effect.bin");
+            OpenFile(dirPath + "/sound.bin");
+            OpenFile(dirPath + "/expression.bin");
+            MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
+
+            int counter = 0;
+            foreach (uint u in MotionTable)
             {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); Mtable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = false;
+                TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                if (CharacterFiles[0].Actions.ContainsKey(u))
+                    n.Nodes.Add("Main");
+                if (CharacterFiles[1].Actions.ContainsKey(u))
+                    n.Nodes.Add("GFX");
+                if (CharacterFiles[2].Actions.ContainsKey(u))
+                    n.Nodes.Add("Sound");
+                if (CharacterFiles[3].Actions.ContainsKey(u))
+                    n.Nodes.Add("Expression");
 
-                Mtable = ParseMTable(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/motion.mtable")), endian);
-                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/game.bin")), endian));
-                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/effect.bin")), endian));
-                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/sound.bin")), endian));
-                CharacterFiles.Add(new ACMDFile(new DataSource(FileMap.FromFile(dlg.SelectedPath + "/expression.bin")), endian));
-
-                int counter = 0;
-                foreach (uint u in Mtable)
-                {
-                    TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
-
-                    if (CharacterFiles[0].Actions.ContainsKey(u))
-                        n.Nodes.Add("Main");
-                    if (CharacterFiles[1].Actions.ContainsKey(u))
-                        n.Nodes.Add("GFX");
-                    if (CharacterFiles[2].Actions.ContainsKey(u))
-                        n.Nodes.Add("Sound");
-                    if (CharacterFiles[3].Actions.ContainsKey(u))
-                        n.Nodes.Add("Expression");
-
-                    treeView1.Nodes.Add(n);
-                    counter++;
-                }
-                isRoot = true;
-                rootPath = dlg.SelectedPath;
-                this.Text = String.Format("Main Form - {0}", dlg.SelectedPath);
+                treeView1.Nodes.Add(n);
+                counter++;
             }
+            isRoot = true;
+            rootPath = dirPath;
+            this.Text = String.Format("Main Form - {0}", dirPath);
         }
+
         #endregion
 
         #region Display related methods
@@ -216,6 +203,7 @@ namespace Sm4shCommand
                 CharacterFiles[1].Export(rootPath + "/effect.bin");
                 CharacterFiles[2].Export(rootPath + "/sound.bin");
                 CharacterFiles[3].Export(rootPath + "/expression.bin");
+                MotionTable.Export(rootPath + "/Motion.mtable");
             }
             else
                 _curFile.Export(FileName);
@@ -233,6 +221,7 @@ namespace Sm4shCommand
                     CharacterFiles[1].Export(dlg.SelectedPath + "/effect.bin");
                     CharacterFiles[2].Export(dlg.SelectedPath + "/sound.bin");
                     CharacterFiles[3].Export(dlg.SelectedPath + "/expression.bin");
+                    MotionTable.Export(dlg.SelectedPath + "/Motion.mtable");
                 }
             }
             else
@@ -244,10 +233,7 @@ namespace Sm4shCommand
                     _curFile.Export(dlg.FileName);
             }
         }
-        private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
 
-        }
         private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (!isRoot)
@@ -255,7 +241,8 @@ namespace Sm4shCommand
                 if (e.Node.Level == 0)
                 {
                     uint Ident = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
-                    DisplayScript(_curFile.Actions[Ident]);
+                    DisplayScript(CharacterFiles[0].Actions[Ident]);
+                    _curFile = CharacterFiles[0];
                 }
             }
             else if (isRoot)
@@ -264,7 +251,7 @@ namespace Sm4shCommand
                     TreeNode n = e.Node;
                     while (n.Level != 0)
                         n = n.Parent;
-                    uint ident = Mtable[treeView1.Nodes.IndexOf(n)];
+                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
 
                     if (e.Node.Text == "Main")
                     {
@@ -289,25 +276,49 @@ namespace Sm4shCommand
                     }
                 }
         }
-        // 3ds Menu
-        private void fileToolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            OpenFile(Endianness.Little);
-        }
-        private void directoryToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            OpenDirectory(Endianness.Little);
-        }
-        //WIIU Menu
-        private void fileToolStripMenuItem3_Click(object sender, EventArgs e)
-        {
-            OpenFile(Endianness.Big);
-        }
-        private void directoryToolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            OpenDirectory(Endianness.Big);
-        }
         #endregion
+
+        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
+
+                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                {
+                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                    FileName = dlg.FileName;
+                    this.Text = String.Format("Main Form - {0}", FileName);
+                }
+            }
+        }
+        private void directoryToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                OpenDirectory(dlg.SelectedPath);
+            }
+        }
     }
 
     public unsafe class CommandDefinition
@@ -373,6 +384,7 @@ namespace Sm4shCommand
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
             //string s = (*(buint*)WorkingSource.Address)._data.ToString("x");
             return s;
+
         }
         public virtual byte[] ToArray()
         {
@@ -471,7 +483,6 @@ namespace Sm4shCommand
 
                 Actions.Add(_flags, ParseEventList(_flags, _offset));
             }
-            MessageBox.Show(temp.ToString("X"));
         }
         public void Rebuild()
         {
@@ -496,7 +507,7 @@ namespace Sm4shCommand
 
             VoidPtr addr = address; // Base address. (0x00)
             *(uint*)address = 0x444D4341; // ACMD     
-            
+
             //=========================================================================//   
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
@@ -504,14 +515,14 @@ namespace Sm4shCommand
             {                                                                           //
                 *(int*)(address + 0x04) = 2; // Version (2)                             //
                 *(int*)(address + 0x08) = Actions.Count; // Event list Count            //
-                                                                                        //
+                //
                 int count = 0;                                                          //
                 foreach (CommandList e in Actions.Values)                               //
                     count += e.Events.Count;                                            //
-                                                                                        //
+                //
                 *(int*)(address + 0x0C) = count;// Unk field. (Command Count?)          //
                 addr += 0x10;                                                           //
-                                                                                        //
+                //
                 //=======Write Event List offsets and flags===============//            //
                 int prev = 0;                                             //            //
                 for (int i = 0; i < Actions.Count; i++)                   //            //
@@ -523,27 +534,27 @@ namespace Sm4shCommand
                 }                                                         //            //
                 //========================================================//            //
             }                                                                           //
-                                                                                        //
-                                                                                        //
-                                                                                        //
+            //
+            //
+            //
             else if (_endian == Endianness.Big)                                         //
             {                                                                           //
                 *(bint*)(address + 0x04) = 2;// Version (2)                             //
                 *(bint*)(address + 0x08) = Actions.Count;// Event List Count            //
-                                                                                        //
+                //
                 int count = 0;                                                          //
                 foreach (CommandList e in Actions.Values)                               //
                     count += e.Events.Count;                                            //
-                                                                                        //
+                //
                 *(bint*)(address + 0x0C) = count;// Unk field. (Command Count?)         //
                 addr += 0x10;                                                           //
-                                                                                        //
+                //
                 //=======Write Event List offsets and flags===============//            //
                 int prev = 0;                                             //            //
                 for (int i = 0; i < Actions.Count; i++)                   //            //
                 {                                                         //            //
-                    *(uint*)addr = Actions.Keys[i];                       //            //
-                    *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
+                    *(buint*)addr = Actions.Keys[i];                       //            //
+                    *(bint*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
                     prev += Actions.Values[i].Size;                       //            //
                     addr += 8;                                            //            //
                 }                                                         //            //
@@ -564,12 +575,12 @@ namespace Sm4shCommand
             CommandList _cur = new CommandList(_flags, _offset, _endian);
             Command c = null;
             VoidPtr addr = (WorkingSource.Address + _offset);
-            uint endingCommand = _endian == Endianness.Little ? 0x5766F889 : 0x89F86657;
+
 
             int i = 0;
-            while (*(uint*)addr != endingCommand)
+            while (*(uint*)addr != 0x5766F889 && *(uint*)addr != 0x89F86657)
             {
-                uint ident = _endian == Endianness.Little ? *(uint*)addr : (uint)*(buint*)addr; 
+                uint ident = _endian == Endianness.Little ? *(uint*)addr : (uint)*(buint*)addr;
                 CommandDefinition info = null;
 
                 foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
@@ -595,13 +606,13 @@ namespace Sm4shCommand
 
                 i++;
                 temp++;
-            }   
+            }
 
-            if (*(uint*)addr == endingCommand)
+            if (*(uint*)addr == 0x5766F889 || *(uint*)addr == 0x89F86657)
             {
                 CommandDefinition info = null;
                 foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
-                    if (e.Identifier ==  0x5766F889 | e.Identifier == 0x89F86657)
+                    if (e.Identifier == 0x5766F889 || e.Identifier == 0x89F86657)
                         info = e;
 
                 DataSource src = new DataSource(addr, 0x04);
@@ -633,6 +644,112 @@ namespace Sm4shCommand
                 MessageBox.Show("No changes have been made.");
         }
     }
+    public unsafe class MTable : IEnumerable
+    {
+        public Endianness _endian;
+        private List<uint> _baseList = new List<uint>();
+        public uint this[int i]
+        {
+            get { return _baseList[i];}
+            set { _baseList[i] = value; }
+        }
+        public MTable(List<uint> ActionFlags, Endianness endian)
+        {
+            _endian = endian;
+            _baseList = ActionFlags;
+        }
+        public MTable() { }
+
+        public void Export(string path)
+        {
+            byte[] mtable = new byte[_baseList.Count * 4];
+            int p = 0;
+            foreach (uint val in _baseList)
+            {
+                byte[] tmp = BitConverter.GetBytes(val);
+                if (_endian == Endianness.Big)
+                    Array.Reverse(tmp);
+
+                for (int i = 0; i < 4; i++)
+                    mtable[p + i] = tmp[i];
+                p += 4;
+            }
+
+            File.WriteAllBytes(path, mtable);
+        }
+        public void Clear()
+        {
+                _baseList = new List<uint>();
+        }
+        public void Add(uint var)
+        {
+            _baseList.Add(var);
+        }
+        public void Remove(uint var)
+        {
+            _baseList.Remove(var);
+        }
+        public void Remove(int index)
+        {
+            _baseList.RemoveAt(index);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator)GetEnumerator();
+        }
+
+        public MTableEnumerator GetEnumerator()
+        {
+            return new MTableEnumerator(_baseList.ToArray());
+        }
+
+        public class MTableEnumerator : IEnumerator
+        {
+            public uint[] _data;
+            int position = -1;
+            public MTableEnumerator(uint[] data)
+            {
+                _data = data;
+            }
+
+            public bool MoveNext()
+            {
+                position++;
+                return (position < _data.Length);
+            }
+
+            public void Reset()
+            {
+                position = -1;
+            }
+
+            object IEnumerator.Current
+            {
+                get
+                {
+                    return Current;
+                }
+            }
+
+            public uint Current
+            {
+                get
+                {
+                    try
+                    {
+                        return _data[position];
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+            }
+        }
+
+    }
+
     public enum Endianness
     {
         Little = 0,

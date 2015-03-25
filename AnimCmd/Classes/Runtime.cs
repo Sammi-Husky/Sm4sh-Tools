@@ -8,9 +8,9 @@ namespace Sm4shCommand
 {
     public class Runtime
     {
-        public static List<CommandDefinition> GetCommandDictionary(string path)
+        public static void GetCommandDictionary(string path)
         {
-            List<CommandDefinition> CommandDictionary = new List<CommandDefinition>();
+            commandDictionary = new List<CommandDefinition>();
             using (StreamReader stream = new StreamReader(path))
             {
                 List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
@@ -18,19 +18,25 @@ namespace Sm4shCommand
 
                 for (int i = 0; i < raw.Count; i += 4)
                 {
+ 
                     CommandDefinition h = new CommandDefinition();
                     h.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
                     h.Name = raw[i + 1];
                     string[] tmp = raw[i + 2].Split(',').Where(x => x != "NONE").ToArray();
                     foreach (string s in tmp)
                         h.ParamSpecifiers.Add(Int32.Parse(s));
-                    if(raw[i+3] != "NONE")
+                    if (raw[i + 3] != "NONE")
                         h.EventDescription = raw[i + 3];
-                    CommandDictionary.Add(h);
+                    if (h.Identifier == 0x5766F889 || h.Identifier == 0x89F86657)
+                        _endingCommand = h;
+
+                    commandDictionary.Add(h);
                 }
             }
-            return CommandDictionary;
         }
+
+        public static List<CommandDefinition> commandDictionary;
+        public static CommandDefinition _endingCommand;
 
         //public static eDictionary GetSyntaxInfo(string path)
         //{

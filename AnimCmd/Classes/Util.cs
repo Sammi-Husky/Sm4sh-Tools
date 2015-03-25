@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sm4shCommand
 {
-    public static class Util
+    public unsafe static class Util
     {
         //  Retrieve a word from the specified array of bytes.
         public static long GetWord(byte[] data, long offset, Endianness endian)
@@ -28,6 +28,16 @@ namespace Sm4shCommand
                      + (uint)(data[offset + 2] * 0x100)
                      + (uint)(data[offset + 3] * 0x1);
             }
+        }
+        public static int GetWordUnsafe(VoidPtr Address, Endianness endian)
+        {
+            if (Address % 4 != 0)
+                return 0;
+
+            if (endian == Endianness.Big)
+                return *(bint*)Address;
+            else
+                return *(int*)Address;
         }
 
         //  Set a word into an array of bytes. Resize the array if needed.
@@ -53,6 +63,31 @@ namespace Sm4shCommand
                 data[offset + 2] = (byte)((value & 0xFF00) / 0x100);
                 data[offset + 3] = (byte)((value & 0xFF) / 0x1);
             }
+        }
+        public static void SetWordUnsafe(VoidPtr Address, int value, Endianness endian)
+        {
+            if (Address % 4 != 0)
+                return;
+
+            if (endian == Endianness.Big)
+                *(bint*)Address = (bint)value;
+            else
+                *(int*)Address = value;
+        }
+
+        public static void SetFloat(ref byte[] data, float value, long offset, Endianness endian)
+        {
+            SetWord(ref data, FloatToHex(value), offset, endian);
+        }
+        public static void SetFloatUnsafe(VoidPtr Address, float value, Endianness endian)
+        {
+            if (Address % 4 != 0)
+                return;
+
+            if (endian == Endianness.Big)
+                *(bfloat*)Address = value;
+            else
+                *(float*)Address = value;
         }
 
         // Returns the hexadecimal representation of the passed in float value.

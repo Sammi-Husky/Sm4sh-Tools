@@ -28,12 +28,12 @@ namespace Sm4shCommand
             synChecking.RTBTT = this;
         }
 
-        private eDictionary _dict = new eDictionary();
+        private TooltipDictionary _dict = new TooltipDictionary();
 
         /// <summary>
         /// Gets or sets a specified dictionary to use with the specified RichTextBox control.
         /// </summary>
-        public eDictionary Dictionary
+        public TooltipDictionary Dictionary
         {
             get { return _dict; }
             set { synChecking.Dictionary = value; _dict = value; }
@@ -252,7 +252,7 @@ namespace Sm4shCommand
     /// Contains methods for manipulating the dictionary used for our RichTextBox
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Always)]
-    public class eDictionary 
+    public class TooltipDictionary 
     {
         private List<DictionaryInfo> dicList = new List<DictionaryInfo>();
 
@@ -416,7 +416,7 @@ namespace Sm4shCommand
     public class SyntaxChecking
     {
 
-        public eDictionary Dictionary = new eDictionary();
+        public TooltipDictionary Dictionary = new TooltipDictionary();
         
         /// <summary>
         /// An already set character-list that contains characters used as word boundaries.

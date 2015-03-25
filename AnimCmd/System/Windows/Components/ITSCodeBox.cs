@@ -19,7 +19,7 @@ namespace Sm4shCommand
         private List<CommandDefinition> commandDictionary;
         private ListBox AutocompleteBox;
         private ITSToolTip ITSToolTip;
-        private eDictionary EventDescriptions;
+        private TooltipDictionary EventDescriptions;
         #endregion
 
         #region External Methods
@@ -40,7 +40,7 @@ namespace Sm4shCommand
             this.commandDictionary = new List<CommandDefinition>();
 
             ITSToolTip.RichTextBox = this;
-            EventDescriptions = new eDictionary();
+            EventDescriptions = new TooltipDictionary();
             ITSToolTip.Dictionary = EventDescriptions;
         }
         #endregion

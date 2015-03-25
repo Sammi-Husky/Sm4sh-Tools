@@ -20,19 +20,20 @@ namespace Sm4shCommand
             InitializeComponent();
 
             if (File.Exists(Application.StartupPath + "/Events.txt"))
-                CommandDictionary = Runtime.GetCommandDictionary(Application.StartupPath + "/Events.txt");
+                 Runtime.GetCommandDictionary(Application.StartupPath + "/Events.txt");
 
-            eDictionary dict = new eDictionary();
-            foreach (CommandDefinition cd in CommandDictionary)
+            TooltipDictionary dict = new TooltipDictionary();
+            foreach (CommandDefinition cd in Runtime.commandDictionary)
                 if (!String.IsNullOrEmpty(cd.EventDescription))
                     dict.Add(cd.Name, cd.EventDescription);
-            CodeView.CommandDictionary = CommandDictionary;
+
+            CodeView.CommandDictionary = Runtime.commandDictionary;
             CodeView.Tooltip.Dictionary = dict;
         }
 
-        //================================================================================\\
-        // List of action event lists in single file mode. Null if in full directory mode.\\
-        //================================================================================\\
+        //=================================================\\
+        // Current file that is open and free for editing. \\
+        //=================================================\\
         ACMDFile _curFile;
 
         //==================================\\
@@ -48,12 +49,11 @@ namespace Sm4shCommand
         // Misc runtime variables.
         bool isRoot = false;
         CommandList _linked;
-        public List<CommandDefinition> CommandDictionary = new List<CommandDefinition>();
         string FileName;
         string rootPath;
         Endianness workingEndian;
 
-        #region Parsing
+
         // Parses an MTable file. Basically copies all data into a list of uints.
         public MTable ParseMTable(DataSource source, Endianness endian)
         {
@@ -93,7 +93,7 @@ namespace Sm4shCommand
                     _curFile.Actions[_linked._flags].Events.Add(unkC);
                     continue;
                 }
-                foreach (CommandDefinition e in CommandDictionary)
+                foreach (CommandDefinition e in Runtime.commandDictionary)
                     if (lines[i].StartsWith(e.Name))
                     {
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
@@ -170,7 +170,6 @@ namespace Sm4shCommand
             this.Text = String.Format("Main Form - {0}", dirPath);
         }
 
-        #endregion
 
         #region Display related methods
         // Displays the list of commands as plain text in the code editor.
@@ -233,7 +232,47 @@ namespace Sm4shCommand
                     _curFile.Export(dlg.FileName);
             }
         }
+        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
+                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                {
+                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                    FileName = dlg.FileName;
+                    this.Text = String.Format("Main Form - {0}", FileName);
+                }
+            }
+        }
+        private void directoryToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                OpenDirectory(dlg.SelectedPath);
+            }
+        }
         private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (!isRoot)
@@ -277,48 +316,6 @@ namespace Sm4shCommand
                 }
         }
         #endregion
-
-        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
-
-                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
-                {
-                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
-
-                    FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
-                }
-            }
-        }
-        private void directoryToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-            FolderSelectDialog dlg = new FolderSelectDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = false;
-
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
-                OpenDirectory(dlg.SelectedPath);
-            }
-        }
     }
 
     public unsafe class CommandDefinition
@@ -423,7 +420,7 @@ namespace Sm4shCommand
     {
         public VoidPtr Header { get { return _replSource != DataSource.Empty ? _replSource.Address : WorkingSource.Address; } }
         public DataSource WorkingSource, _replSource;
-        int temp = 0;
+
         public int CommandCount { get { return _commandCount; } set { _commandCount = value; } }
         private int _commandCount;
 
@@ -449,16 +446,8 @@ namespace Sm4shCommand
             WorkingSource = source;
             _endian = endian;
 
-            if (endian == Endianness.Little)
-            {
-                _actionCount = *(int*)(source.Address + 0x08);
-                _commandCount = *(int*)(source.Address + 0x0C);
-            }
-            else if (endian == Endianness.Big)
-            {
-                _actionCount = *(bint*)(source.Address + 0x08);
-                _commandCount = *(bint*)(source.Address + 0x0C);
-            }
+            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, endian);
+            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, endian);
 
             Parse();
         }
@@ -470,16 +459,10 @@ namespace Sm4shCommand
                 uint _flags = 0;
                 int _offset = 0;
 
-                if (_endian == Endianness.Little)
-                {
-                    _flags = *(uint*)(WorkingSource.Address + 0x10 + (i * 8));
-                    _offset = *(int*)((WorkingSource.Address + 0x10 + (i * 8)) + 0x04);
-                }
-                else if (_endian == Endianness.Big)
-                {
-                    _flags = *(buint*)(WorkingSource.Address + 0x10 + (i * 8));
-                    _offset = *(bint*)((WorkingSource.Address + 0x10 + (i * 8)) + 0x04);
-                }
+
+                _flags = (uint)Util.GetWordUnsafe(WorkingSource.Address + 0x10 + (i * 8), _endian);
+                _offset = Util.GetWordUnsafe((WorkingSource.Address + 0x10 + (i * 8)) + 0x04, _endian);
+
 
                 Actions.Add(_flags, ParseEventList(_flags, _offset));
             }
@@ -503,63 +486,36 @@ namespace Sm4shCommand
             //  Remove empty event lists.
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
-                    Actions.Remove(Actions.Keys[i]);
+                    Actions.Values[i].Events.Add(new Command() { _commandInfo = Runtime._endingCommand });
 
             VoidPtr addr = address; // Base address. (0x00)
-            *(uint*)address = 0x444D4341; // ACMD     
+            Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
 
             //=========================================================================//   
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
-            if (_endian == Endianness.Little)                                           //
-            {                                                                           //
-                *(int*)(address + 0x04) = 2; // Version (2)                             //
-                *(int*)(address + 0x08) = Actions.Count; // Event list Count            //
-                //
+                                                                                        //
+                Util.SetWordUnsafe(address + 0x04, 2, _endian); // Version (2)          //
+                Util.SetWordUnsafe(address + 0x08, Actions.Count, _endian);             //
+                                                                                        //
                 int count = 0;                                                          //
                 foreach (CommandList e in Actions.Values)                               //
                     count += e.Events.Count;                                            //
-                //
-                *(int*)(address + 0x0C) = count;// Unk field. (Command Count?)          //
+                                                                                        //
+                Util.SetWordUnsafe(address + 0x0C, count, _endian);                     //
                 addr += 0x10;                                                           //
-                //
-                //=======Write Event List offsets and flags===============//            //
-                int prev = 0;                                             //            //
-                for (int i = 0; i < Actions.Count; i++)                   //            //
-                {                                                         //            //
-                    *(uint*)addr = Actions.Keys[i];                       //            //
-                    *(int*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
-                    prev += Actions.Values[i].Size;                       //            //
-                    addr += 8;                                            //            //
-                }                                                         //            //
-                //========================================================//            //
-            }                                                                           //
-            //
-            //
-            //
-            else if (_endian == Endianness.Big)                                         //
-            {                                                                           //
-                *(bint*)(address + 0x04) = 2;// Version (2)                             //
-                *(bint*)(address + 0x08) = Actions.Count;// Event List Count            //
-                //
-                int count = 0;                                                          //
-                foreach (CommandList e in Actions.Values)                               //
-                    count += e.Events.Count;                                            //
-                //
-                *(bint*)(address + 0x0C) = count;// Unk field. (Command Count?)         //
-                addr += 0x10;                                                           //
-                //
-                //=======Write Event List offsets and flags===============//            //
-                int prev = 0;                                             //            //
-                for (int i = 0; i < Actions.Count; i++)                   //            //
-                {                                                         //            //
-                    *(buint*)addr = Actions.Keys[i];                       //            //
-                    *(bint*)(addr + 4) = 0x10 + (Actions.Count * 8) + prev;//            //
-                    prev += Actions.Values[i].Size;                       //            //
-                    addr += 8;                                            //            //
-                }                                                         //            //
-                //========================================================//            //                                                 //
-            }                                                                           //
+                                                                                        //
+                //=======Write Event List offsets and flags=================//          //                                        //            //
+                for (int i = 0, prev = 0; i < Actions.Count; i++)           //          //
+                {                                                           //          //
+                    int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //          //
+                    Util.SetWordUnsafe(addr, (int)Actions.Keys[i], _endian);//          //
+                    Util.SetWordUnsafe(addr + 4, dataOffset, _endian);      //          //
+                    prev += Actions.Values[i].Size;                         //          //
+                    addr += 8;                                              //          //
+                }                                                           //          //
+                //=========================================================//           //
+                                                                                        //                                                                         //
             //========================================================================//
 
             // Write event lists at final address.
@@ -578,12 +534,12 @@ namespace Sm4shCommand
 
 
             int i = 0;
-            while (*(uint*)addr != 0x5766F889 && *(uint*)addr != 0x89F86657)
+            while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
-                uint ident = _endian == Endianness.Little ? *(uint*)addr : (uint)*(buint*)addr;
+                uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
                 CommandDefinition info = null;
 
-                foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
+                foreach (CommandDefinition e in Runtime.commandDictionary)
                     if (e.Identifier == ident)
                         info = e;
 
@@ -605,21 +561,19 @@ namespace Sm4shCommand
                 }
 
                 i++;
-                temp++;
             }
 
-            if (*(uint*)addr == 0x5766F889 || *(uint*)addr == 0x89F86657)
+            if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
             {
                 CommandDefinition info = null;
-                foreach (CommandDefinition e in FormProvider.MainWindow.CommandDictionary)
-                    if (e.Identifier == 0x5766F889 || e.Identifier == 0x89F86657)
+                foreach (CommandDefinition e in Runtime.commandDictionary)
+                    if (e.Identifier == Runtime._endingCommand.Identifier)
                         info = e;
 
                 DataSource src = new DataSource(addr, 0x04);
                 c = new Command(_cur, i + 1, src) { _commandInfo = info };
                 _cur.Events.Add(c);
                 addr += 4;
-                temp++;
             }
 
             return _cur;
@@ -650,7 +604,7 @@ namespace Sm4shCommand
         private List<uint> _baseList = new List<uint>();
         public uint this[int i]
         {
-            get { return _baseList[i];}
+            get { return _baseList[i]; }
             set { _baseList[i] = value; }
         }
         public MTable(List<uint> ActionFlags, Endianness endian)
@@ -679,7 +633,7 @@ namespace Sm4shCommand
         }
         public void Clear()
         {
-                _baseList = new List<uint>();
+            _baseList = new List<uint>();
         }
         public void Add(uint var)
         {
@@ -698,12 +652,10 @@ namespace Sm4shCommand
         {
             return (IEnumerator)GetEnumerator();
         }
-
         public MTableEnumerator GetEnumerator()
         {
             return new MTableEnumerator(_baseList.ToArray());
         }
-
         public class MTableEnumerator : IEnumerator
         {
             public uint[] _data;

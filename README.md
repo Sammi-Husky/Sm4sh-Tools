@@ -32,7 +32,4 @@ Miscellaneous tools for dealing with Smash 4 files.
     - Does not warn on exiting before saving.
     - Saving with incorrect parameters in a command will crash the tool.
 
-- MSBTView
-  - A simple editor / viewer for messages and other string data that is contained within smash4's .MSBT files. The messages contained within range anywhere from taunt messages such as palutena's guidance, to trophy descriptions.
-
 [![Build status](https://ci.appveyor.com/api/projects/status/e6q6vbdgjs4eoop5?svg=true)](https://ci.appveyor.com/project/Sammi-Husky/sm4sh-tools)

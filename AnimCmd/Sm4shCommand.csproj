@@ -36,6 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>s4.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,6 +55,12 @@
     <Compile Include="Classes\EventList.cs" />
     <Compile Include="Classes\Runtime.cs" />
     <Compile Include="Classes\Util.cs" />
+    <Compile Include="Event Library.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Event Library.Designer.cs">
+      <DependentUpon>Event Library.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -88,6 +97,9 @@
     <Compile Include="Type Extensions\UInt16Extension.cs" />
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
+    <EmbeddedResource Include="Event Library.resx">
+      <DependentUpon>Event Library.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -118,9 +130,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Events.txt">
+    <Content Include="s4.ico" />
+    <None Include="Events.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Structs\" />

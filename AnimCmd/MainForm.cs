@@ -19,16 +19,20 @@ namespace Sm4shCommand
         {
             InitializeComponent();
 
-            if (File.Exists(Application.StartupPath + "/Events.txt"))
-                 Runtime.GetCommandDictionary(Application.StartupPath + "/Events.txt");
+            if (File.Exists(Application.StartupPath + "/Events.cfg"))
+            {
+                Runtime.GetCommandDictionary(Application.StartupPath + "/Events.cfg");
 
-            TooltipDictionary dict = new TooltipDictionary();
-            foreach (CommandDefinition cd in Runtime.commandDictionary)
-                if (!String.IsNullOrEmpty(cd.EventDescription))
-                    dict.Add(cd.Name, cd.EventDescription);
+                TooltipDictionary dict = new TooltipDictionary();
+                foreach (CommandDefinition cd in Runtime.commandDictionary)
+                    if (!String.IsNullOrEmpty(cd.EventDescription))
+                        dict.Add(cd.Name, cd.EventDescription);
 
-            CodeView.CommandDictionary = Runtime.commandDictionary;
-            CodeView.Tooltip.Dictionary = dict;
+                CodeView.CommandDictionary = Runtime.commandDictionary;
+                CodeView.Tooltip.Dictionary = dict;
+            }
+            else
+                MessageBox.Show("Could not load one or more resources! (Events.cfg, Syntax.cfg)");
         }
 
         //=================================================\\
@@ -128,13 +132,14 @@ namespace Sm4shCommand
                     MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
                     return false;
                 }
-
-                CharacterFiles.Add(new ACMDFile(source, workingEndian));
-                if (CharacterFiles[0].Actions.Count == 0)
+                ACMDFile file = new ACMDFile(source, workingEndian);
+                if (file.Actions.Count == 0 && isRoot == false)
                 {
                     MessageBox.Show("There were no actions found");
                     return false;
                 }
+                CharacterFiles.Add(file);
+
                 return true;
             }
             catch (Exception x) { MessageBox.Show(x.Message); return false; }
@@ -316,6 +321,12 @@ namespace Sm4shCommand
                 }
         }
         #endregion
+
+        private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EventLibrary dlg = new EventLibrary();
+            dlg.Show();
+        }
     }
 
     public unsafe class CommandDefinition

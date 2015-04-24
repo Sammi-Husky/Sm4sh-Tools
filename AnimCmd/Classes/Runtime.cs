@@ -10,7 +10,6 @@ namespace Sm4shCommand
     {
         public static void GetCommandDictionary(string path)
         {
-            commandDictionary = new List<CommandDefinition>();
             using (StreamReader stream = new StreamReader(path))
             {
                 List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
@@ -35,7 +34,7 @@ namespace Sm4shCommand
             }
         }
 
-        public static List<CommandDefinition> commandDictionary;
+        public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();
         public static CommandDefinition _endingCommand;
 
         //public static eDictionary GetSyntaxInfo(string path)

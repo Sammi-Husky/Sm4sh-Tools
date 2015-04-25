@@ -115,12 +115,10 @@ namespace Sm4shCommand
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
                 this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), ((ListBox)sender).SelectedItem.ToString() + "()");
                 GetCaretPos(out cp);
-                this.Select(GetFirstCharIndexFromLine(CurrentLineIndex) + CurrentLineText.Length, 0);
+                this.Select(GetFirstCharIndexFromLine(CurrentLineIndex) + CurrentLineText.Length -1, 0);
                 AutocompleteBox.Hide();
                 this.Focus();
-                ProcessAllLines();
             }
-
         }
         /// <summary>
         /// WndProc
@@ -163,14 +161,14 @@ namespace Sm4shCommand
             else
                 AutocompleteBox.Hide();
 
-            // Process this line.
-            FormatLine(CurrentLineIndex);
+            // Process lines.
+            ProcessAllLines();
         }
         /// <summary>
         /// Process a line.
         /// <param name="LineIndex"> The index of the line to process.</param>
         /// </summary>
-        private void FormatLine(int LineIndex)
+        public void FormatLine(int LineIndex)
         {
             if (Lines.Length == 0)
                 return;
@@ -188,17 +186,14 @@ namespace Sm4shCommand
             Format(LineIndex, @"\b0x[a-fA-F\d]+\b", Color.DarkCyan); // Hexadecimal
             // Process parenthesis
             Format(LineIndex, "[\x28-\x2c]", Color.Blue);
-            // Process strings
-            Format(LineIndex, "\"[^\"\\\\\\r\\n]*(?:\\\\.[^\"\\\\\\r\\n]*)*\"", Color.DarkRed);
             // Process comments
-            Format(LineIndex, "//.*$", Color.DarkGreen);
+            Format(LineIndex, "//.*$", Color.DarkRed);
 
             SelectionStart = nPosition;
             SelectionLength = 0;
             SelectionColor = Color.Black;
 
             _render = true;
-            this.Invalidate();
         }
         /// <summary>
         /// Process a regular expression, painting the matched syntax.
@@ -231,6 +226,7 @@ namespace Sm4shCommand
             for (int i = 0; i < Lines.Length; i++)
                 FormatLine(i);
         }
+
         #endregion
     }
 }

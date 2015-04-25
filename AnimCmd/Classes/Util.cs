@@ -8,7 +8,13 @@ namespace Sm4shCommand
 {
     public unsafe static class Util
     {
-        //  Retrieve a word from the specified array of bytes.
+        /// <summary>
+        /// Retrieves a word from an array of bytes.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
         public static long GetWord(byte[] data, long offset, Endianness endian)
         {
             if (offset % 4 != 0) throw new Exception("Odd word offset.");
@@ -29,6 +35,12 @@ namespace Sm4shCommand
                      + (uint)(data[offset + 3] * 0x1);
             }
         }
+        /// <summary>
+        /// Retrieves an 32 bit integer from the specified address.
+        /// </summary>
+        /// <param name="Address"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
         public static int GetWordUnsafe(VoidPtr Address, Endianness endian)
         {
             if (Address % 4 != 0)
@@ -40,7 +52,13 @@ namespace Sm4shCommand
                 return *(int*)Address;
         }
 
-        //  Set a word into an array of bytes. Resize the array if needed.
+        /// <summary>
+        /// Sets a value into an array of bytes, resizing if necessary.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <param name="endian"></param>
         public static void SetWord(ref byte[] data, long value, long offset, Endianness endian)
         {
             if (offset % 4 != 0) throw new Exception("Odd word offset");
@@ -64,6 +82,12 @@ namespace Sm4shCommand
                 data[offset + 3] = (byte)((value & 0xFF) / 0x1);
             }
         }
+        /// <summary>
+        /// Sets a value into memory at the specified address.
+        /// </summary>
+        /// <param name="Address"></param>
+        /// <param name="value"></param>
+        /// <param name="endian"></param>
         public static void SetWordUnsafe(VoidPtr Address, int value, Endianness endian)
         {
             if (Address % 4 != 0)
@@ -75,10 +99,23 @@ namespace Sm4shCommand
                 *(int*)Address = value;
         }
 
+        /// <summary>
+        /// Sets a floating point value into an array of bytes, resizing if necessary.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <param name="endian"></param>
         public static void SetFloat(ref byte[] data, float value, long offset, Endianness endian)
         {
             SetWord(ref data, FloatToHex(value), offset, endian);
         }
+        /// <summary>
+        /// Sets a floating point value into memory at the specified address.
+        /// </summary>
+        /// <param name="Address"></param>
+        /// <param name="value"></param>
+        /// <param name="endian"></param>
         public static void SetFloatUnsafe(VoidPtr Address, float value, Endianness endian)
         {
             if (Address % 4 != 0)
@@ -90,7 +127,11 @@ namespace Sm4shCommand
                 *(float*)Address = value;
         }
 
-        // Returns the hexadecimal representation of the passed in float value.
+        /// <summary>
+        /// Returns the hexadecimal representation of the passed in float value.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
         public static long FloatToHex(float val)
         {
             if (val == 0) return 0;
@@ -111,6 +152,28 @@ namespace Sm4shCommand
                   sign * 0x10000000
                 + exponent * 0x800000
                 + (long)mantissa);
+        }
+        /// <summary>
+        /// Returns the floating point value of the passed in hexadecimal value.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        public static float HexToFloat(long val)
+        {
+            if (val == 0) return 0;
+            float sign = ((val & 0x80000000) == 0 ? 1 : -1);
+            int exponent = ((int)(val & 0x7F800000) / 0x800000) - 0x7F;
+            float mantissa = (val & 0x7FFFFF);
+            long mantissaBits = 23;
+
+            if (mantissa != 0)
+                while (((long)mantissa & 0x1) != 1)
+                { mantissa /= 2; mantissaBits--; }
+            mantissa /= (float)Math.Pow(2, mantissaBits);
+            mantissa += 1;
+
+            mantissa *= (float)Math.Pow(2, exponent);
+            return mantissa *= sign;
         }
     }
     public class FormProvider

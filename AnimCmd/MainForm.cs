@@ -91,7 +91,6 @@ namespace Sm4shCommand
                     UnknownCommand unkC = new UnknownCommand();
                     unkC._commandInfo = new CommandDefinition() { Identifier = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
                     unkC._owner = _curFile.Actions[_linked._flags];
-                    unkC._index = i;
                     unkC.ident = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber);
                     unkC._offset = UInt32.Parse(lines[i].Substring(lines[i].IndexOf('@') + 3), System.Globalization.NumberStyles.HexNumber);
                     _curFile.Actions[_linked._flags].Events.Add(unkC);
@@ -115,8 +114,8 @@ namespace Sm4shCommand
                         _curFile.Actions[_linked._flags].Events.Add(c);
                     }
             }
-        }
 
+        }
         public bool OpenFile(string Filepath)
         {
             try
@@ -344,17 +343,16 @@ namespace Sm4shCommand
         public DataSource WorkingSource { get { return _workingSource; } set { _workingSource = value; } }
         private DataSource _workingSource;
 
-        public Command(CommandList Owner, int index, DataSource source)
+        public Command(CommandList Owner, DataSource source)
         {
             _owner = Owner;
-            _index = index;
             _workingSource = source;
         }
         public Command() { }
 
         public CommandDefinition _commandInfo;
         public CommandList _owner;
-        public int _index;
+
 
         public List<object> parameters = new List<object>();
 
@@ -390,7 +388,6 @@ namespace Sm4shCommand
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
             }
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
-            //string s = (*(buint*)WorkingSource.Address)._data.ToString("x");
             return s;
 
         }
@@ -505,28 +502,28 @@ namespace Sm4shCommand
             //=========================================================================//   
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
-                                                                                        //
-                Util.SetWordUnsafe(address + 0x04, 2, _endian); // Version (2)          //
-                Util.SetWordUnsafe(address + 0x08, Actions.Count, _endian);             //
-                                                                                        //
-                int count = 0;                                                          //
-                foreach (CommandList e in Actions.Values)                               //
-                    count += e.Events.Count;                                            //
-                                                                                        //
-                Util.SetWordUnsafe(address + 0x0C, count, _endian);                     //
-                addr += 0x10;                                                           //
-                                                                                        //
-                //=======Write Event List offsets and flags=================//          //                                        //            //
-                for (int i = 0, prev = 0; i < Actions.Count; i++)           //          //
-                {                                                           //          //
-                    int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //          //
-                    Util.SetWordUnsafe(addr, (int)Actions.Keys[i], _endian);//          //
-                    Util.SetWordUnsafe(addr + 4, dataOffset, _endian);      //          //
-                    prev += Actions.Values[i].Size;                         //          //
-                    addr += 8;                                              //          //
-                }                                                           //          //
-                //=========================================================//           //
-                                                                                        //                                                                         //
+            //
+            Util.SetWordUnsafe(address + 0x04, 2, _endian); // Version (2)          //
+            Util.SetWordUnsafe(address + 0x08, Actions.Count, _endian);             //
+            //
+            int count = 0;                                                          //
+            foreach (CommandList e in Actions.Values)                               //
+                count += e.Events.Count;                                            //
+            //
+            Util.SetWordUnsafe(address + 0x0C, count, _endian);                     //
+            addr += 0x10;                                                           //
+            //
+            //=======Write Event List offsets and flags=================//          //                                        //            //
+            for (int i = 0, prev = 0; i < Actions.Count; i++)           //          //
+            {                                                           //          //
+                int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //          //
+                Util.SetWordUnsafe(addr, (int)Actions.Keys[i], _endian);//          //
+                Util.SetWordUnsafe(addr + 4, dataOffset, _endian);      //          //
+                prev += Actions.Values[i].Size;                         //          //
+                addr += 8;                                              //          //
+            }                                                           //          //
+            //=========================================================//           //
+            //                                                                         //
             //========================================================================//
 
             // Write event lists at final address.
@@ -544,7 +541,6 @@ namespace Sm4shCommand
             VoidPtr addr = (WorkingSource.Address + _offset);
 
 
-            int i = 0;
             while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
                 uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
@@ -557,7 +553,7 @@ namespace Sm4shCommand
                 if (info != null)
                 {
                     DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                    c = new Command(_cur, i, src) { _commandInfo = info };
+                    c = new Command(_cur, src) { _commandInfo = info };
                     _cur.Events.Add(c);
                     addr += c.CalcSize();
                     c.getparams();
@@ -565,13 +561,12 @@ namespace Sm4shCommand
                 else if (info == null)
                 {
                     DataSource src = new DataSource(addr, 0x04);
-                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, _index = i, WorkingSource = src };
+                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
                     unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
                     _cur.Events.Add(unkC);
                     addr += 0x04;
                 }
 
-                i++;
             }
 
             if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
@@ -582,7 +577,7 @@ namespace Sm4shCommand
                         info = e;
 
                 DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, i + 1, src) { _commandInfo = info };
+                c = new Command(_cur, src) { _commandInfo = info };
                 _cur.Events.Add(c);
                 addr += 4;
             }

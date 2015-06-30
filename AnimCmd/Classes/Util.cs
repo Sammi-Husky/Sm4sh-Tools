@@ -98,7 +98,6 @@ namespace Sm4shCommand
             else
                 *(int*)Address = value;
         }
-
         /// <summary>
         /// Sets a floating point value into an array of bytes, resizing if necessary.
         /// </summary>
@@ -125,6 +124,22 @@ namespace Sm4shCommand
                 *(bfloat*)Address = value;
             else
                 *(float*)Address = value;
+        }
+        /// <summary>
+        /// Gets a floating point value from a specified adress.
+        /// </summary>
+        /// <param name="Address"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
+        public static float GetFloatUnsafe(VoidPtr Address, Endianness endian)
+        {
+            if (Address % 4 != 0)
+                return 0;
+
+            if (endian == Endianness.Big)
+                return *(bfloat*)Address;
+            else
+                return *(float*)Address;
         }
 
         /// <summary>

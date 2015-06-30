@@ -252,7 +252,7 @@ namespace Sm4shCommand
     /// Contains methods for manipulating the dictionary used for our RichTextBox
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Always)]
-    public class TooltipDictionary 
+    public class TooltipDictionary
     {
         private List<DictionaryInfo> dicList = new List<DictionaryInfo>();
 
@@ -372,7 +372,7 @@ namespace Sm4shCommand
                 throw new Exception("ElementNotFoundException");
             };
         }
-        
+
         /// <summary>
         /// Returns a value indicating the capacity of this dictionary
         /// </summary>
@@ -388,7 +388,7 @@ namespace Sm4shCommand
         public List<DictionaryInfo> Dictionary
         {
             get { return dicList; }
-            set 
+            set
             {
                 foreach (var x in value)
                 {
@@ -417,7 +417,7 @@ namespace Sm4shCommand
     {
 
         public TooltipDictionary Dictionary = new TooltipDictionary();
-        
+
         /// <summary>
         /// An already set character-list that contains characters used as word boundaries.
         /// You can reset this list to your own one.
@@ -437,7 +437,7 @@ namespace Sm4shCommand
         {
             var cPosIndex = RTBTT.RichTextBox.GetCharIndexFromPosition(RTBTT.RichTextBox.PointToClient(Control.MousePosition));
             string hWord = GetWordFromCharIndex(cPosIndex);
-            
+
             if (Dictionary.Contains(hWord))
             {
                 var mp = Control.MousePosition;
@@ -491,10 +491,11 @@ namespace Sm4shCommand
 
                     try
                     {
-                        while (!Chars.Contains(lineStr[tmpCS - 1]))
-                        {
-                            tmpCS--;
-                        }
+                        if (tmpCS > 0)
+                            while (!Chars.Contains(lineStr[tmpCS - 1]))
+                            {
+                                tmpCS--;
+                            }
                     }
                     catch { };
 
@@ -502,10 +503,11 @@ namespace Sm4shCommand
 
                     try
                     {
-                        while (!Chars.Contains(lineStr[tmpCE]))
-                        {
-                            tmpCE++;
-                        }
+                        if (tmpCE > 0)
+                            while (!Chars.Contains(lineStr[tmpCE]))
+                            {
+                                tmpCE++;
+                            }
                     }
                     catch { };
                     try
@@ -513,7 +515,7 @@ namespace Sm4shCommand
                         tmp = lineStr.Substring(tmpCS, tmpCE - tmpCS);
                     }
                     catch { };
-                };
+                }
             }
             return tmp.Trim();
         }
@@ -565,10 +567,10 @@ namespace Sm4shCommand
 
             try
             {
-                while (!Chars.Contains(lineStr[tmpCS - 1]))
-                {
-                    tmpCS--;
-                }
+                    while (!Chars.Contains(lineStr[tmpCS - 1]))
+                    {
+                        tmpCS--;
+                    }
             }
             catch { };
 
@@ -576,10 +578,10 @@ namespace Sm4shCommand
 
             try
             {
-                while (!Chars.Contains(lineStr[tmpCE]))
-                {
-                    tmpCE++;
-                }
+                    while (!Chars.Contains(lineStr[tmpCE]))
+                    {
+                        tmpCE++;
+                    }
             }
             catch { };
             try
@@ -642,7 +644,7 @@ namespace Sm4shCommand
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         new public bool IsBalloon { get { return base.IsBalloon; } set { base.IsBalloon = value; } }
-         
+
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         new public bool OwnerDraw { get { return base.OwnerDraw; } set { base.OwnerDraw = value; } }
@@ -883,7 +885,7 @@ namespace Sm4shCommand
         [EditorBrowsable(EditorBrowsableState.Never)]
         private void OnPopup(object sender, PopupEventArgs e)
         {
-            
+
             //MessageBox.Show(RichTextBoxToolTip.TitlePrefix);
             if (!AutoSize)
             {
@@ -893,7 +895,7 @@ namespace Sm4shCommand
             {
                 var r = new Bitmap(e.ToolTipSize.Width, e.ToolTipSize.Height);
                 var g = Graphics.FromImage(r);
-                var szT = g.MeasureString(Prefix+this.ToolTipTitle+Suffix, this.TitleFont);
+                var szT = g.MeasureString(Prefix + this.ToolTipTitle + Suffix, this.TitleFont);
                 var szD = g.MeasureString(this.ToolTipDescription, this.DescriptionFont);
 
                 MinWidth = (int)szT.Width + 10;
@@ -956,7 +958,7 @@ namespace Sm4shCommand
             var n = BackgroundImage.Clone() as Bitmap;
             var rectSz = e.Bounds.Size;
             n = ResizeBitmap(n, rectSz.Width, rectSz.Height);
-            g.Clear(Color.FromArgb(50,50,50));
+            g.Clear(Color.FromArgb(50, 50, 50));
             g.DrawImage(n, 0, 0);
             e.DrawBorder();
 

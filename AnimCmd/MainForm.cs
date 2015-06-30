@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.IO;
 using Sm4shCommand.Classes;
 using System.Collections;
+using Be.Windows.Forms;
 
 namespace Sm4shCommand
 {
@@ -83,7 +84,7 @@ namespace Sm4shCommand
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            _curFile.Actions[_linked._flags].Events.Clear();
+            _curFile.Actions[_linked._flags].Commands.Clear();
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("0x"))
@@ -93,7 +94,7 @@ namespace Sm4shCommand
                     unkC._owner = _curFile.Actions[_linked._flags];
                     unkC.ident = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber);
                     unkC._offset = UInt32.Parse(lines[i].Substring(lines[i].IndexOf('@') + 3), System.Globalization.NumberStyles.HexNumber);
-                    _curFile.Actions[_linked._flags].Events.Add(unkC);
+                    _curFile.Actions[_linked._flags].Commands.Add(unkC);
                     continue;
                 }
                 foreach (CommandDefinition e in Runtime.commandDictionary)
@@ -106,12 +107,14 @@ namespace Sm4shCommand
                         c._commandInfo = e;
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
-                            if (e.ParamSpecifiers[counter] == 1)
-                                c.parameters.Add(float.Parse(Params[counter]));
-                            else if (e.ParamSpecifiers[counter] == 0)
+                            if (e.ParamSpecifiers[counter] == 0)
                                 c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
+                            else if (e.ParamSpecifiers[counter] == 1)
+                                c.parameters.Add(float.Parse(Params[counter]));
+                            else if (e.ParamSpecifiers[counter] == 2)
+                                c.parameters.Add(decimal.Parse(Params[counter]));
                         }
-                        _curFile.Actions[_linked._flags].Events.Add(c);
+                        _curFile.Actions[_linked._flags].Commands.Add(c);
                     }
             }
 
@@ -183,15 +186,10 @@ namespace Sm4shCommand
                 ParseCodeBox();
 
             StringBuilder sb = new StringBuilder();
-            sb.Append(String.Format("//=======================================\\\\\n" +
-                                    "//\t\t0x{0:X8}\t\t           \\\\\n" +
-                                    "//=======================================\\\\\n",
-                                                                            s._flags));
-            foreach (Command cmd in s.Events)
+            foreach (Command cmd in s.Commands)
                 sb.Append(cmd.GetFormated() + "\n");
 
             CodeView.Text = sb.ToString();
-            CodeView.ProcessAllLines();
             _linked = s;
         }
         #endregion
@@ -277,7 +275,15 @@ namespace Sm4shCommand
                 OpenDirectory(dlg.SelectedPath);
             }
         }
-        private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        #endregion
+
+        private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EventLibrary dlg = new EventLibrary();
+            dlg.Show();
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (!isRoot)
             {
@@ -319,12 +325,62 @@ namespace Sm4shCommand
                     }
                 }
         }
-        #endregion
-
-        private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
+        private void btnHexView_Click(object sender, EventArgs e)
         {
-            EventLibrary dlg = new EventLibrary();
-            dlg.Show();
+
+            if (!isRoot)
+            {
+                if (treeView1.SelectedNode.Level == 0)
+                {
+                    //byte[] data = _curFile.GetArray();
+                    byte[] data = CharacterFiles[0].Actions[uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber)].GetArray();
+                    HexView f = new HexView(data);
+                    f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                    f.Show();
+                }
+            }
+            else if (isRoot)
+                if (treeView1.SelectedNode.Level == 1)
+                {
+                    TreeNode n = treeView1.SelectedNode;
+                    while (n.Level != 0)
+                        n = n.Parent;
+                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
+
+                    if (treeView1.SelectedNode.Text == "Main")
+                    {
+                        byte[] data = CharacterFiles[0].Actions[ident].GetArray();
+                        HexView f = new HexView(data);
+                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Show();
+                    }
+                    else if (treeView1.SelectedNode.Text == "GFX")
+                    {
+
+                        byte[] data = CharacterFiles[1].Actions[ident].GetArray();
+                        HexView f = new HexView(data);
+                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Show();
+                    }
+                    else if (treeView1.SelectedNode.Text == "Sound")
+                    {
+                        byte[] data = CharacterFiles[2].Actions[ident].GetArray();
+                        HexView f = new HexView(data);
+                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Show();
+                    }
+                    else if (treeView1.SelectedNode.Text == "Expression")
+                    {
+                        byte[] data = CharacterFiles[3].Actions[ident].GetArray();
+                        HexView f = new HexView(data);
+                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Show();
+                    }
+                }
+
+
+
+            
         }
     }
 
@@ -361,20 +417,12 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
-                if (_owner._endian == Endianness.Little)
-                {
                     if (_commandInfo.ParamSpecifiers[i] == 0)
-                        parameters.Add(*(int*)(0x04 + (WorkingSource.Address + (i * 4))));
+                        parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
                     else if (_commandInfo.ParamSpecifiers[i] == 1)
-                        parameters.Add(*(float*)(0x04 + (WorkingSource.Address + (i * 4))));
-                }
-                else if (_owner._endian == Endianness.Big)
-                {
-                    if (_commandInfo.ParamSpecifiers[i] == 0)
-                        parameters.Add((int)*(bint*)(0x04 + (WorkingSource.Address + (i * 4))));
-                    else if (_commandInfo.ParamSpecifiers[i] == 1)
-                        parameters.Add((float)*(bfloat*)(0x04 + (WorkingSource.Address + (i * 4))));
-                }
+                        parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
+                    else if (_commandInfo.ParamSpecifiers[i] == 2)
+                        parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
             }
         }
         public virtual string GetFormated()
@@ -383,9 +431,12 @@ namespace Sm4shCommand
             for (int i = 0; i < parameters.Count; i++)
             {
                 if (parameters[i] is int | parameters[i] is bint)
-                    Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                    Param += String.Format("0x{0:X}{1}",parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float | parameters[i] is bfloat)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                if (parameters[i] is decimal)
+                    Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                
             }
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
             return s;
@@ -421,7 +472,7 @@ namespace Sm4shCommand
         public override int CalcSize() { return 0x04; }
         public override string GetFormated()
         {
-            return String.Format("0x{0:X8} @0x{1:X}", ident, _offset);
+            return String.Format("0x{0:X8}", ident, _offset);
         }
     }
     public unsafe class ACMDFile
@@ -494,7 +545,7 @@ namespace Sm4shCommand
             //  Remove empty event lists.
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
-                    Actions.Values[i].Events.Add(new Command() { _commandInfo = Runtime._endingCommand });
+                    Actions.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand });
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
@@ -508,7 +559,7 @@ namespace Sm4shCommand
             //
             int count = 0;                                                          //
             foreach (CommandList e in Actions.Values)                               //
-                count += e.Events.Count;                                            //
+                count += e.Commands.Count;                                            //
             //
             Util.SetWordUnsafe(address + 0x0C, count, _endian);                     //
             addr += 0x10;                                                           //
@@ -554,7 +605,7 @@ namespace Sm4shCommand
                 {
                     DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
                     c = new Command(_cur, src) { _commandInfo = info };
-                    _cur.Events.Add(c);
+                    _cur.Commands.Add(c);
                     addr += c.CalcSize();
                     c.getparams();
                 }
@@ -563,7 +614,7 @@ namespace Sm4shCommand
                     DataSource src = new DataSource(addr, 0x04);
                     UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
                     unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
-                    _cur.Events.Add(unkC);
+                    _cur.Commands.Add(unkC);
                     addr += 0x04;
                 }
 
@@ -578,7 +629,7 @@ namespace Sm4shCommand
 
                 DataSource src = new DataSource(addr, 0x04);
                 c = new Command(_cur, src) { _commandInfo = info };
-                _cur.Events.Add(c);
+                _cur.Commands.Add(c);
                 addr += 4;
             }
 
@@ -602,6 +653,14 @@ namespace Sm4shCommand
             }
             else
                 MessageBox.Show("No changes have been made.");
+        }
+        public byte[] GetArray()
+        {
+            DataSource src = WorkingSource;
+            byte[] tmp = new byte[Size];
+            for (int i = 0; i < tmp.Length; i++)
+                tmp[i] = *(byte*)(src.Address + i);
+            return tmp;
         }
     }
     public unsafe class MTable : IEnumerable

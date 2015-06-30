@@ -28,7 +28,7 @@ namespace Sm4shCommand.Classes
             get
             {
                 int size = 0;
-                foreach (Command e in Events)
+                foreach (Command e in Commands)
                     size += e.CalcSize();
                 return size;
             }
@@ -43,27 +43,40 @@ namespace Sm4shCommand.Classes
         public void OnRebuild(VoidPtr address, int size)
         {
             VoidPtr addr = address;
-            for (int x = 0; x < Events.Count; x++)
+            for (int x = 0; x < Commands.Count; x++)
             {
-                byte[] a = Events[x].ToArray();
+                byte[] a = Commands[x].ToArray();
                 byte* tmp = stackalloc byte[a.Length];
                 for (int i = 0; i < a.Length; i++)
                     tmp[i] = a[i];
 
                 Win32.MoveMemory(addr, tmp, (uint)a.Length);
-                addr += Events[x].CalcSize();
+                addr += Commands[x].CalcSize();
             }
         }
         public void Export(string path)
         {
-            byte[] file = new byte[WorkingSource.Length];
-            for (int i = 0; i < WorkingSource.Length; i++)
-                file[i] = *(byte*)(WorkingSource.Address + i);
+            byte[] file = GetArray();
             File.WriteAllBytes(path, file);
+        }
+        public byte[] GetArray()
+        {
+            VoidPtr addr = WorkingSource.Address;
+
+            byte[] file = new byte[Size];
+
+            int i = 0;
+            foreach (Command c in Commands)
+            {
+                byte[] command = c.ToArray();
+                for (int x = 0; x < command.Length; x++, i++)
+                    file[i] = command[x];
+            }
+
+            return file;
 
         }
-
-        public List<Command> Events = new List<Command>();
+        public List<Command> Commands = new List<Command>();
         public void Dispose()
         {
             _workingSource.Close();

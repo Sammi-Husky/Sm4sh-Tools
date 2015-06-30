@@ -84,6 +84,32 @@
     <Compile Include="System\Windows\Components\ITSToolTip.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="System\Windows\Forms\HexBox\BuiltInContextMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Forms\HexBox\ByteCollection.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\BytePositionInfo.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\DataBlock.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\DataMap.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\DynamicByteProvider.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\DynamicFileByteProvider.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\FileByteProvider.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\FileDataBlock.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\Forms\GotoDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Forms\HexBox\Forms\GotoDialog.Designer.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\HexBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Forms\HexBox\HexCasing.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\IByteProvider.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\MemoryDataBlock.cs" />
+    <Compile Include="System\Windows\Forms\HexBox\NativeMethods.cs" />
+    <Compile Include="System\Windows\Forms\HexView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Forms\HexView.Designer.cs" />
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
     <Compile Include="Type Extensions\ByteExtension.cs" />
     <Compile Include="Type Extensions\DoubleExtension.cs" />
@@ -116,6 +142,9 @@
     <EmbeddedResource Include="System\Windows\Components\ITSCodeBox.resx">
       <DependentUpon>ITSCodeBox.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="System\Windows\Forms\HexBox\Forms\GotoDialog.resx" />
+    <EmbeddedResource Include="System\Windows\Forms\HexBox\HexBox.resx" />
+    <EmbeddedResource Include="System\Windows\Forms\HexView.resx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

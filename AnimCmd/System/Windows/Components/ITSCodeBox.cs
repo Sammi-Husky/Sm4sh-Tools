@@ -83,16 +83,18 @@ namespace Sm4shCommand
         {
             get
             {
+
                 Point cp;
                 GetCaretPos(out cp);
                 return GetLineFromCharIndex(GetCharIndexFromPosition(cp));
+
             }
         }
         #endregion
 
         #region Methods
         protected override void OnKeyDown(KeyEventArgs e)
-        {   
+        {
             if ((e.KeyCode == Keys.Enter | e.KeyCode == Keys.Down | e.KeyCode == Keys.Space) && AutocompleteBox.Visible == true)
             {
                 AutocompleteBox.Focus();
@@ -124,27 +126,13 @@ namespace Sm4shCommand
         /// WndProc
         /// </summary>
         /// <param name="m"></param>
-        protected override void WndProc(ref Message m)
-        {
-            if (m.Msg == 0x00f)
-            {
-                if (_render)
-                    base.WndProc(ref m);
-                else
-                    m.Result = IntPtr.Zero;
-            }
-            else
-                base.WndProc(ref m);
-        }
+
         /// <summary>
         /// OnTextChanged event.
         /// </summary>
         /// <param name="e"></param>
         protected override void OnTextChanged(EventArgs e)
         {
-            if (!_render)
-                return;
-
             Point cp;
             GetCaretPos(out cp);
             AutocompleteBox.SetBounds(cp.X + this.Left, cp.Y + 10, 280, 70);
@@ -163,6 +151,7 @@ namespace Sm4shCommand
 
             // Process lines.
             ProcessAllLines();
+
         }
         /// <summary>
         /// Process a line.
@@ -173,41 +162,42 @@ namespace Sm4shCommand
             if (Lines.Length == 0)
                 return;
 
-            _render = false;
+            string line = Lines[LineIndex];
 
             // Save the position and make the whole line black
             int nPosition = SelectionStart;
             SelectionStart = GetFirstCharIndexFromLine(LineIndex);
-            SelectionLength = Lines[LineIndex].Length;
+            SelectionLength = line.Length;
             SelectionColor = Color.Black;
 
             // Process numbers
-            Format(LineIndex, "\\b(?:[0-9]*\\.)?[0-9]+\\b", Color.Red); // Decimal
-            Format(LineIndex, @"\b0x[a-fA-F\d]+\b", Color.DarkCyan); // Hexadecimal
-            // Process parenthesis
-            Format(LineIndex, "[\x28-\x2c]", Color.Blue);
-            // Process comments
-            Format(LineIndex, "//.*$", Color.DarkRed);
+            Format(line, LineIndex, "\\b(?:[0-9]*\\.)?[0-9]+\\b", Color.Red); // Decimal
+            Format(line, LineIndex, @"\b0x[a-fA-F\d]+\b", Color.DarkCyan); // Hexadecimal
+            
+            // Don't need to process these, they just slow everything down.
+
+            //// Process parenthesis
+            //Format(line, LineIndex, "[\x28-\x2c]", Color.Blue);
+            //// Process comments
+            //Format(line, LineIndex, "//.*$", Color.DarkRed);
 
             SelectionStart = nPosition;
             SelectionLength = 0;
             SelectionColor = Color.Black;
-
-            _render = true;
         }
         /// <summary>
         /// Process a regular expression, painting the matched syntax.
         /// </summary>
+        /// <param name="line"> The line of text to process.</param>
         /// <param name="LineIndex"> The index of the line to process.</param>
         /// <param name="Regex">The regular expression to use in evaluation.</param>
         /// <param name="color">The color to paint matches.</param>
-        private void Format(int LineIndex, string strRegex, Color color)
+        private void Format(string line, int LineIndex, string strRegex, Color color)
         {
             Regex regKeywords = new Regex(strRegex, RegexOptions.IgnoreCase);
             Match regMatch;
 
-
-            for (regMatch = regKeywords.Match(Lines[LineIndex]); regMatch.Success; regMatch = regMatch.NextMatch())
+            for (regMatch = regKeywords.Match(line); regMatch.Success; regMatch = regMatch.NextMatch())
             {
                 // Process the words
                 int nStart = GetFirstCharIndexFromLine(LineIndex) + regMatch.Index;

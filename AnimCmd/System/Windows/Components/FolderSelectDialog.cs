@@ -308,7 +308,7 @@ namespace System.Windows.Forms
         /// <param name="obj">The object containing 'prop'</param>
         /// <param name="prop">The property name</param>
         /// <returns>The property value</returns>
-        public object GetAs(Type type, object obj, string prop)
+        public static object GetAs(Type type, object obj, string prop)
         {
             PropertyInfo propInfo = type.GetProperty(prop, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             return propInfo.GetValue(obj, null);

@@ -6,7 +6,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     public struct bint : IConvertible
     {
-        public int _data;
+        public int Data { get { return _data; } set { _data = value; } }
+        private int _data;
         public static implicit operator int(bint val) { return val._data.Reverse(); }
         public static implicit operator bint(int val) { return new bint { _data = val.Reverse() }; }
         public static explicit operator uint(bint val) { return (uint)val._data.Reverse(); }
@@ -105,7 +106,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     public struct buint : IConvertible
     {
-        public uint _data;
+        public uint Data { get { return _data; } set { _data = value; } }
+        private uint _data; 
         public static implicit operator uint(buint val) { return val._data.Reverse(); }
         public static implicit operator buint(uint val) { return new buint { _data = val.Reverse() }; }
         public static explicit operator int(buint val) { return (int)val._data.Reverse(); }
@@ -204,7 +206,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     public struct bfloat : IConvertible
     {
-        public float _data;
+        public float Data { get { return _data; } set { _data = value; } }
+        private float _data;
         public static implicit operator float(bfloat val) { return val._data.Reverse(); }
         public static implicit operator bfloat(float val) { return new bfloat { _data = val.Reverse() }; }
 
@@ -301,7 +304,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct bshort : IConvertible
     {
-        public short _data;
+        public short Data { get { return _data; } set { _data = value; } }
+        private short _data;
         public static implicit operator short(bshort val) { return val._data.Reverse(); }
         public static implicit operator bshort(short val) { return new bshort { _data = val.Reverse() }; }
         public static explicit operator ushort(bshort val) { return (ushort)val._data.Reverse(); }
@@ -400,7 +404,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct bushort : IConvertible
     {
-        public ushort _data;
+        public ushort Data { get { return _data; } set { _data = value; } }
+        private ushort _data;
         public static implicit operator ushort(bushort val) { return val._data.Reverse(); }
         public static implicit operator bushort(ushort val) { return new bushort { _data = val.Reverse() }; }
         public static explicit operator short(bushort val) { return (short)val._data.Reverse(); }

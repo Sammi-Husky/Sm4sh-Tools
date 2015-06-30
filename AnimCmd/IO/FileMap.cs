@@ -52,15 +52,16 @@ namespace System.IO
                 stream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 8, options | FileOptions.DeleteOnClose);
             }
             try { map = FromStreamInternal(stream, prot, offset, length); }
-            catch (Exception x) { stream.Dispose(); throw x; }
+            catch (Exception x) { stream.Dispose(); throw; }
             map._path = path; //In case we're using a temp file
+            stream.Dispose();
             return map;
         }
         public static FileMap FromTempFile(int length)
         {
             FileStream stream = new FileStream(Path.GetTempFileName(), FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 8, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
-            try { return FromStreamInternal(stream, FileMapProtect.ReadWrite, 0, length); }
-            catch (Exception x) { stream.Dispose(); throw x; }
+            try { FileMap m = FromStreamInternal(stream, FileMapProtect.ReadWrite, 0, length); stream.Dispose(); return m; }
+            catch (Exception x) { stream.Dispose(); throw; }
         }
 
         public static FileMap FromStream(FileStream stream) { return FromStream(stream, FileMapProtect.ReadWrite, 0, 0); }

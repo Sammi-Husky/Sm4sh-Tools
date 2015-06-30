@@ -14,7 +14,7 @@ namespace System
         };
 
 
-        public static float Unquantize(byte* data, bool pair, int scale)
+        public static float Unquantize(byte* data, int scale)
         {
             float value;
 

@@ -9,7 +9,6 @@ using System.Text;
 using System.Windows.Forms;
 using Be.Windows.Forms;
 using System.IO;
-using SmashAttacks.src.HexBox.Forms;
 
 namespace Sm4shCommand
 {
@@ -26,27 +25,19 @@ namespace Sm4shCommand
 
         private void gotoAdressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GotoDialog dlg = new GotoDialog();
-            DialogResult result = dlg.ShowDialog(this);
-            if (result == DialogResult.OK)
-            {
-                if (dlg.radioBegin.Checked)
-                    hexBox.ScrollByteIntoView(dlg.offset);
-                else if (dlg.radioHere.Checked)
-                    hexBox.ScrollByteIntoView(hexBox._bytePos + dlg.offset);
-                else if (dlg.radioEnd.Checked)
-                    hexBox.ScrollByteIntoView(hexBox.ByteProvider.Length - dlg.offset);
-            }
+            GotoDialog dlg = new GotoDialog(this.hexBox);
+            dlg.ShowDialog(this);
         }
 
-        private void hexBox_CurrentPositionInLineChanged(object sender, EventArgs e)
-        {
-            statusOffset.Text = "0x" + hexBox._bytePos.ToString("x");
-        }
 
         private void hexBox_SelectionLengthChanged(object sender, EventArgs e)
         {
             statusSelLength.Text = "0x" + hexBox.SelectionLength.ToString("x");
+        }
+
+        private void hexBox_SelectionStartChanged(object sender, EventArgs e)
+        {
+            statusOffset.Text = "0x" + hexBox.SelectionStart.ToString("x");
         }
     }
 }

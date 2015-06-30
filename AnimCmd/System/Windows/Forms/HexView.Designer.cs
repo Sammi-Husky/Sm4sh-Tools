@@ -74,43 +74,49 @@
             // copyToolStripMenuItem
             // 
             this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.copyToolStripMenuItem.Text = "Copy";
             // 
             // pasteWriteToolStripMenuItem
             // 
             this.pasteWriteToolStripMenuItem.Name = "pasteWriteToolStripMenuItem";
-            this.pasteWriteToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.pasteWriteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
+            this.pasteWriteToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.pasteWriteToolStripMenuItem.Text = "Paste Write";
             // 
             // pasteInsertToolStripMenuItem
             // 
             this.pasteInsertToolStripMenuItem.Name = "pasteInsertToolStripMenuItem";
-            this.pasteInsertToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.pasteInsertToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
+            this.pasteInsertToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.pasteInsertToolStripMenuItem.Text = "Paste Insert";
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(141, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(183, 6);
             // 
             // gotoAdressToolStripMenuItem
             // 
             this.gotoAdressToolStripMenuItem.Name = "gotoAdressToolStripMenuItem";
-            this.gotoAdressToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.gotoAdressToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
+            this.gotoAdressToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.gotoAdressToolStripMenuItem.Text = "Goto Adress..";
             this.gotoAdressToolStripMenuItem.Click += new System.EventHandler(this.gotoAdressToolStripMenuItem_Click);
             // 
             // selectBlockToolStripMenuItem
             // 
             this.selectBlockToolStripMenuItem.Name = "selectBlockToolStripMenuItem";
-            this.selectBlockToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.selectBlockToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
+            this.selectBlockToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.selectBlockToolStripMenuItem.Text = "Select Block..";
             // 
             // insertBytesToolStripMenuItem
             // 
             this.insertBytesToolStripMenuItem.Name = "insertBytesToolStripMenuItem";
-            this.insertBytesToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.insertBytesToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.insertBytesToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.insertBytesToolStripMenuItem.Text = "Insert bytes..";
             // 
             // statusStrip1
@@ -156,6 +162,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.hexBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.hexBox.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.hexBox.Font = new System.Drawing.Font("Courier New", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.hexBox.ForeColor = System.Drawing.Color.Black;
             this.hexBox.LineInfoForeColor = System.Drawing.Color.Empty;
@@ -168,8 +175,8 @@
             this.hexBox.TabIndex = 0;
             this.hexBox.UseFixedBytesPerLine = true;
             this.hexBox.VScrollBarVisible = true;
+            this.hexBox.SelectionStartChanged += new System.EventHandler(this.hexBox_SelectionStartChanged);
             this.hexBox.SelectionLengthChanged += new System.EventHandler(this.hexBox_SelectionLengthChanged);
-            this.hexBox.CurrentPositionInLineChanged += new System.EventHandler(this.hexBox_CurrentPositionInLineChanged);
             // 
             // HexView
             // 

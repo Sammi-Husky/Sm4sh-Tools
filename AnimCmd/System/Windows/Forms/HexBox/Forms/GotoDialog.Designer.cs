@@ -1,4 +1,4 @@
-﻿namespace SmashAttacks.src.HexBox.Forms
+﻿namespace Be.Windows.Forms
 {
     partial class GotoDialog
     {
@@ -31,20 +31,25 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnDecimal = new System.Windows.Forms.RadioButton();
+            this.btnHex = new System.Windows.Forms.RadioButton();
             this.radioEnd = new System.Windows.Forms.RadioButton();
             this.radioHere = new System.Windows.Forms.RadioButton();
             this.radioBegin = new System.Windows.Forms.RadioButton();
             this.btnOkay = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(68, 25);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(205, 20);
+            this.textBox1.Size = new System.Drawing.Size(127, 20);
             this.textBox1.TabIndex = 0;
+            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // label1
             // 
@@ -58,43 +63,73 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.groupBox2);
             this.groupBox1.Controls.Add(this.radioEnd);
             this.groupBox1.Controls.Add(this.radioHere);
             this.groupBox1.Controls.Add(this.radioBegin);
             this.groupBox1.Location = new System.Drawing.Point(12, 55);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(261, 98);
+            this.groupBox1.Size = new System.Drawing.Size(183, 98);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Offset Relative To";
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.btnDecimal);
+            this.groupBox2.Controls.Add(this.btnHex);
+            this.groupBox2.Location = new System.Drawing.Point(95, 20);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(73, 67);
+            this.groupBox2.TabIndex = 3;
+            this.groupBox2.TabStop = false;
+            // 
+            // btnDecimal
+            // 
+            this.btnDecimal.AutoSize = true;
+            this.btnDecimal.Location = new System.Drawing.Point(6, 37);
+            this.btnDecimal.Name = "btnDecimal";
+            this.btnDecimal.Size = new System.Drawing.Size(63, 17);
+            this.btnDecimal.TabIndex = 1;
+            this.btnDecimal.Text = "Decimal";
+            this.btnDecimal.UseVisualStyleBackColor = true;
+            // 
+            // btnHex
+            // 
+            this.btnHex.AutoSize = true;
+            this.btnHex.Checked = true;
+            this.btnHex.Location = new System.Drawing.Point(6, 13);
+            this.btnHex.Name = "btnHex";
+            this.btnHex.Size = new System.Drawing.Size(44, 17);
+            this.btnHex.TabIndex = 0;
+            this.btnHex.TabStop = true;
+            this.btnHex.Text = "Hex";
+            this.btnHex.UseVisualStyleBackColor = true;
+            // 
             // radioEnd
             // 
-            this.radioEnd.AutoCheck = false;
             this.radioEnd.AutoSize = true;
             this.radioEnd.Location = new System.Drawing.Point(7, 66);
             this.radioEnd.Name = "radioEnd";
             this.radioEnd.Size = new System.Drawing.Size(44, 17);
             this.radioEnd.TabIndex = 2;
-            this.radioEnd.TabStop = true;
             this.radioEnd.Text = "End";
             this.radioEnd.UseVisualStyleBackColor = true;
             // 
             // radioHere
             // 
-            this.radioHere.AutoCheck = false;
             this.radioHere.AutoSize = true;
             this.radioHere.Location = new System.Drawing.Point(7, 43);
             this.radioHere.Name = "radioHere";
             this.radioHere.Size = new System.Drawing.Size(48, 17);
             this.radioHere.TabIndex = 1;
-            this.radioHere.TabStop = true;
             this.radioHere.Text = "Here";
             this.radioHere.UseVisualStyleBackColor = true;
             // 
             // radioBegin
             // 
             this.radioBegin.AutoSize = true;
+            this.radioBegin.Checked = true;
             this.radioBegin.Location = new System.Drawing.Point(7, 20);
             this.radioBegin.Name = "radioBegin";
             this.radioBegin.Size = new System.Drawing.Size(72, 17);
@@ -106,11 +141,11 @@
             // btnOkay
             // 
             this.btnOkay.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOkay.Location = new System.Drawing.Point(184, 177);
+            this.btnOkay.Location = new System.Drawing.Point(105, 177);
             this.btnOkay.Name = "btnOkay";
-            this.btnOkay.Size = new System.Drawing.Size(89, 24);
-            this.btnOkay.TabIndex = 3;
-            this.btnOkay.Text = "Okay";
+            this.btnOkay.Size = new System.Drawing.Size(90, 24);
+            this.btnOkay.TabIndex = 0;
+            this.btnOkay.Text = "Go";
             this.btnOkay.UseVisualStyleBackColor = true;
             this.btnOkay.Click += new System.EventHandler(this.btnOkay_Click);
             // 
@@ -129,7 +164,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(287, 213);
+            this.ClientSize = new System.Drawing.Size(205, 213);
             this.ControlBox = false;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOkay);
@@ -143,6 +178,8 @@
             this.Text = "Goto";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -158,5 +195,8 @@
         public System.Windows.Forms.RadioButton radioEnd;
         public System.Windows.Forms.RadioButton radioHere;
         public System.Windows.Forms.RadioButton radioBegin;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.RadioButton btnDecimal;
+        private System.Windows.Forms.RadioButton btnHex;
     }
 }

@@ -15,7 +15,6 @@ namespace Sm4shCommand
     class ITSCodeBox : RichTextBox
     {
         #region Members
-        private static bool _render = true;
         private List<CommandDefinition> commandDictionary;
         private ListBox AutocompleteBox;
         private ITSToolTip ITSToolTip;
@@ -103,7 +102,7 @@ namespace Sm4shCommand
                 e.SuppressKeyPress = true;
                 e.Handled = true;
             }
-            else if (e.KeyCode == Keys.Escape | CurrentLineText == "" && AutocompleteBox.Visible == true)
+            else if (e.KeyCode == Keys.Escape | String.IsNullOrEmpty(CurrentLineText) && AutocompleteBox.Visible == true)
             {
                 AutocompleteBox.Visible = false;
                 e.Handled = true;
@@ -141,7 +140,7 @@ namespace Sm4shCommand
                 commandDictionary.Where(s => s.Name.StartsWith(CurrentLineText)).Select(m => m.Name).ToList();
 
             if (FilteredList.Count != 0 && !CurrentLineText.EndsWith(")") &&
-                !CurrentLineText.EndsWith("(") && CurrentLineText != "")
+                !CurrentLineText.EndsWith("(") && !String.IsNullOrEmpty(CurrentLineText))
             {
                 AutocompleteBox.DataSource = FilteredList;
                 AutocompleteBox.Show();
@@ -157,12 +156,12 @@ namespace Sm4shCommand
         /// Process a line.
         /// <param name="LineIndex"> The index of the line to process.</param>
         /// </summary>
-        public void FormatLine(int LineIndex)
+        public void FormatLine(string[] lines, int LineIndex)
         {
-            if (Lines.Length == 0)
+            if (lines.Length == 0)
                 return;
 
-            string line = Lines[LineIndex];
+            string line = lines[LineIndex];
 
             // Save the position and make the whole line black
             int nPosition = SelectionStart;
@@ -213,8 +212,9 @@ namespace Sm4shCommand
         /// </summary>
         public void ProcessAllLines()
         {
-            for (int i = 0; i < Lines.Length; i++)
-                FormatLine(i);
+            string[] lines = Lines;
+            for (int i = 0; i < lines.Length; i++)
+                FormatLine(lines, i);
         }
 
         #endregion

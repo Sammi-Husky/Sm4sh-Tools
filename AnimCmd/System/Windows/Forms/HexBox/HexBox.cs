@@ -1195,9 +1195,11 @@ namespace Be.Windows.Forms
         /// </summary>
         public HexBox()
         {
-            _highlights = new List<HexboxHighlight>();
+            Cursor = Cursors.IBeam;
+            //_highlights = new List<HexboxHighlight>();
             _vScrollBar = new VScrollBar();
             _vScrollBar.Scroll += VScrollBarScroll;
+            _vScrollBar.Cursor = Cursors.Default;
             _builtInContextMenu = new BuiltInContextMenu(this);
             base.BackColor = Color.White;
             base.Font = new Font("Courier New", 9F, FontStyle.Regular, GraphicsUnit.Point, ((0)));
@@ -1986,8 +1988,8 @@ namespace Be.Windows.Forms
             endByte = Math.Min(_byteProvider.Length - 1, endByte);
             var brush = SystemBrushes.ControlText;
             var maxLine = GetGridBytePoint(endByte - startByte, true).Y + 1;
-            g.FillRectangle(SystemBrushes.ControlLight, new Rectangle(0, 0, 80, Height));
-            g.DrawRectangle(SystemPens.ControlDark, new Rectangle(0, 0, 80, Height));
+            g.FillRectangle(SystemBrushes.ControlLight, new Rectangle(0, 0, _recHex.X - 10, Height));
+            g.DrawRectangle(SystemPens.ControlDark, new Rectangle(0, 0, _recHex.X -10, Height));
             for (var i = 0; i < maxLine; i++)
             {
                 var firstLineByte = startByte + (HorizontalByteCount) * i;
@@ -1998,7 +2000,7 @@ namespace Be.Windows.Forms
                 string formattedInfo;
                 if (nulls > -1) formattedInfo = new string('0', 8 - info.Length) + info;
                 else formattedInfo = new string('~', 8);
-                g.DrawString(formattedInfo, Font, brush, new PointF(_recLineInfo.X, bytePointF.Y), _stringFormat);
+                g.DrawString("0x"+formattedInfo, Font, brush, new PointF(_recLineInfo.X, bytePointF.Y), _stringFormat);
             }
         }
 
@@ -2071,7 +2073,6 @@ namespace Be.Windows.Forms
 
                 var StringGridPoint = GetGridBytePoint(counter, false);
                 var HexGridPoint = GetGridBytePoint(counter, true);
-                var HexBytePointF = GetBytePointF(HexGridPoint);
                 var byteStringPointF = GetByteStringPointF(StringGridPoint);
                 var b = _byteProvider.ReadByte(i);
 
@@ -2322,7 +2323,7 @@ namespace Be.Windows.Forms
             if (_lineInfoVisible)
                 _recLineInfo = new Rectangle(_recContent.X + marginLeft,
                                              _recContent.Y,
-                                             (int)(_charSize.Width * 10),
+                                             (int)(_charSize.Width * 12),
                                              _recContent.Height - _recColumnInfo.Height);
             else
             {
@@ -2441,12 +2442,13 @@ namespace Be.Windows.Forms
 
         private Color _backColorDisabled = Color.FromName("WhiteSmoke");
 
-        public List<HexboxHighlight> Highlights
-        {
-            get { return _highlights; }
-            set { _highlights = value; }
-        }
-        private List<HexboxHighlight> _highlights;
+        //[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        //public List<HexboxHighlight> Highlights
+        //{
+        //    get { return _highlights; }
+        //    set { _highlights = value; }
+        //}
+        //private List<HexboxHighlight> _highlights;
 
         /// <summary>
         ///   Gets or sets if the count of bytes in one line is fix.

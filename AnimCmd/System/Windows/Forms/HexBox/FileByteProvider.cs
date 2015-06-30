@@ -114,7 +114,7 @@ namespace Be.Windows.Forms {
         /// </summary>
         public void ApplyChanges() {
             if (_readOnly)
-                throw new Exception("File is in read-only mode.");
+                throw new FieldAccessException("File is in read-only mode.");
             if (!HasChanges())
                 return;
             var en = _writes.GetEnumerator();

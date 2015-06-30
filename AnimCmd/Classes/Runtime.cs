@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Sm4shCommand
 {
-    public class Runtime
+    public static class Runtime
     {
         public static void GetCommandDictionary(string path)
         {

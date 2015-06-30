@@ -61,8 +61,6 @@ namespace Sm4shCommand.Classes
         }
         public byte[] GetArray()
         {
-            VoidPtr addr = WorkingSource.Address;
-
             byte[] file = new byte[Size];
 
             int i = 0;

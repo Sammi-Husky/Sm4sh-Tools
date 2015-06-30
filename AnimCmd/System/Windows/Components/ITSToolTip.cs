@@ -895,6 +895,7 @@ namespace Sm4shCommand
             {
                 var r = new Bitmap(e.ToolTipSize.Width, e.ToolTipSize.Height);
                 var g = Graphics.FromImage(r);
+                r.Dispose();
                 var szT = g.MeasureString(Prefix + this.ToolTipTitle + Suffix, this.TitleFont);
                 var szD = g.MeasureString(this.ToolTipDescription, this.DescriptionFont);
 
@@ -902,7 +903,7 @@ namespace Sm4shCommand
                 if (szT.Width > szD.Width)
                 {
                     // Set tooltip's size according to the Title text property
-                    if (ToolTipDescription == "")
+                    if (String.IsNullOrEmpty(ToolTipDescription))
                     {
                         // Set tooltip size without respecting the description's size
                         e.ToolTipSize = new Size((int)szT.Width + 10, (int)(szT.Height) + 10);

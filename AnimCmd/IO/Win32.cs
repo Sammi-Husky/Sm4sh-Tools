@@ -21,7 +21,7 @@ namespace System
             public SafeHandle(VoidPtr handle) { _handle = handle; }
 
             ~SafeHandle() { Dispose(); }
-            public void Dispose() { if (_handle != 0) { CloseHandle(_handle); _handle = 0; } }
+            public void Dispose() { if (_handle != 0) { CloseHandle(_handle); _handle = 0; } GC.SuppressFinalize(this); }
             public void ErrorCheck() { if (_handle == 0)  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error()); }
 
             public static implicit operator SafeHandle(VoidPtr handle) { return new SafeHandle(handle); }

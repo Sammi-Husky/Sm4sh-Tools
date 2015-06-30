@@ -224,6 +224,7 @@ namespace Sm4shCommand
                     CharacterFiles[3].Export(dlg.SelectedPath + "/expression.bin");
                     MotionTable.Export(dlg.SelectedPath + "/Motion.mtable");
                 }
+                dlg.Dispose();
             }
             else
             {
@@ -232,49 +233,11 @@ namespace Sm4shCommand
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                     _curFile.Export(dlg.FileName);
+                dlg.Dispose();
             }
         }
-        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
-                {
-                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
 
-                    FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
-                }
-            }
-        }
-        private void directoryToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-            FolderSelectDialog dlg = new FolderSelectDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = false;
-
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
-                OpenDirectory(dlg.SelectedPath);
-            }
-        }
         #endregion
 
         private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
@@ -382,6 +345,51 @@ namespace Sm4shCommand
 
             
         }
+
+        private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
+
+                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                {
+                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                    FileName = dlg.FileName;
+                    this.Text = String.Format("Main Form - {0}", FileName);
+                }
+            }
+            dlg.Dispose();
+        }
+
+        private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                OpenDirectory(dlg.SelectedPath);
+            }
+            dlg.Dispose();
+        }
     }
 
     public unsafe class CommandDefinition
@@ -472,7 +480,7 @@ namespace Sm4shCommand
         public override int CalcSize() { return 0x04; }
         public override string GetFormated()
         {
-            return String.Format("0x{0:X8}", ident, _offset);
+            return String.Format("0x{0:X8}", ident);
         }
     }
     public unsafe class ACMDFile
@@ -587,53 +595,55 @@ namespace Sm4shCommand
 
         private CommandList ParseEventList(uint _flags, int _offset)
         {
-            CommandList _cur = new CommandList(_flags, _offset, _endian);
-            Command c = null;
-            VoidPtr addr = (WorkingSource.Address + _offset);
-
-
-            while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
+            using (CommandList _cur = new CommandList(_flags, _offset, _endian))
             {
-                uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
-                CommandDefinition info = null;
+                Command c = null;
+                VoidPtr addr = (WorkingSource.Address + _offset);
 
-                foreach (CommandDefinition e in Runtime.commandDictionary)
-                    if (e.Identifier == ident)
-                        info = e;
 
-                if (info != null)
+                while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
                 {
-                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
+                    uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
+                    CommandDefinition info = null;
+
+                    foreach (CommandDefinition e in Runtime.commandDictionary)
+                        if (e.Identifier == ident)
+                            info = e;
+
+                    if (info != null)
+                    {
+                        DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
+                        c = new Command(_cur, src) { _commandInfo = info };
+                        _cur.Commands.Add(c);
+                        addr += c.CalcSize();
+                        c.getparams();
+                    }
+                    else if (info == null)
+                    {
+                        DataSource src = new DataSource(addr, 0x04);
+                        UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
+                        unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
+                        _cur.Commands.Add(unkC);
+                        addr += 0x04;
+                    }
+
+                }
+
+                if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
+                {
+                    CommandDefinition info = null;
+                    foreach (CommandDefinition e in Runtime.commandDictionary)
+                        if (e.Identifier == Runtime._endingCommand.Identifier)
+                            info = e;
+
+                    DataSource src = new DataSource(addr, 0x04);
                     c = new Command(_cur, src) { _commandInfo = info };
                     _cur.Commands.Add(c);
-                    addr += c.CalcSize();
-                    c.getparams();
-                }
-                else if (info == null)
-                {
-                    DataSource src = new DataSource(addr, 0x04);
-                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
-                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
-                    _cur.Commands.Add(unkC);
-                    addr += 0x04;
+                    addr += 4;
                 }
 
+                return _cur;
             }
-
-            if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
-            {
-                CommandDefinition info = null;
-                foreach (CommandDefinition e in Runtime.commandDictionary)
-                    if (e.Identifier == Runtime._endingCommand.Identifier)
-                        info = e;
-
-                DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, src) { _commandInfo = info };
-                _cur.Commands.Add(c);
-                addr += 4;
-            }
-
-            return _cur;
         }
         public void Export(string path)
         {

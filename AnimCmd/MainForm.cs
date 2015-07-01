@@ -40,7 +40,6 @@ namespace Sm4shCommand
         // Current file that is open and free for editing. \\
         //=================================================\\
         ACMDFile _curFile;
-        TreeNode _curNode;
 
         //==================================\\
         // List of motion table identifiers \\
@@ -196,7 +195,6 @@ namespace Sm4shCommand
 
             CodeView.Text = sb.ToString();
             _linked = s;
-            _curNode = treeView1.SelectedNode;
         }
         #endregion
 
@@ -399,31 +397,27 @@ namespace Sm4shCommand
 
             if (!isRoot)
             {
-                if (_curNode.Level == 0)
+                if (treeView1.SelectedNode.Level == 0)
                 {
-                    uint Ident = uint.Parse(_curNode.Text, System.Globalization.NumberStyles.HexNumber);
+                    uint Ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
                     if (_curFile.Actions[Ident].Dirty)
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(_curNode)].BackColor = Color.PaleVioletRed;
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = Color.PaleVioletRed;
                     else
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(_curNode)].BackColor = SystemColors.Window;
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = SystemColors.Window;
                 }
             }
             else if (isRoot)
-                if (_curNode.Level == 1)
+                if (treeView1.SelectedNode.Level == 1)
                 {
                     TreeNode n = treeView1.SelectedNode;
                     while (n.Level != 0)
                         n = n.Parent;
                     uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
 
-                    if (CharacterFiles[0].Actions[ident].Dirty |
-                        CharacterFiles[1].Actions[ident].Dirty |
-                        CharacterFiles[2].Actions[ident].Dirty |
-                        CharacterFiles[3].Actions[ident].Dirty
-                        )
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(n)].BackColor = Color.PaleVioletRed;
+                    if (_curFile.Actions[ident].Dirty)
+                        treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
                     else
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(n)].BackColor = SystemColors.Window;
+                        treeView1.SelectedNode.BackColor = SystemColors.Window;
                 }
         }
     }
@@ -541,6 +535,16 @@ namespace Sm4shCommand
                 foreach (CommandList e in Actions.Values)
                     size += e.Size;
                 return size;
+            }
+        }
+        public bool Dirty
+        {
+            get
+            {
+                foreach (CommandList cl in Actions.Values)
+                    if (cl.Dirty)
+                        return true;
+                return false;
             }
         }
 

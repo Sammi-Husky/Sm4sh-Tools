@@ -33,8 +33,29 @@ namespace Sm4shCommand
                 }
             }
         }
-
         public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();
+
+        public static void GetCommandSyntax(string path)
+        {
+            using (StreamReader stream = new StreamReader(path))
+            {
+                List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
+                raw.RemoveAll(x => String.IsNullOrEmpty(x) || String.IsNullOrWhiteSpace(x) || x.Contains("//"));
+
+                for (int i = 0; i < raw.Count; i += 3)
+                {
+                    CommandSyntax sy = new CommandSyntax();
+                    sy.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
+                    string[] tmp = raw[i + 1].Split(',').Where(x => x != "NONE").ToArray();
+                    foreach (string s in tmp)
+                        sy.ParamSyntax.Add(s);
+
+                    syntaxDictionary.Add(sy);
+                }
+            }
+        }
+        public static List<CommandSyntax> syntaxDictionary = new List<CommandSyntax>();
+
         public static CommandDefinition _endingCommand;
 
         //public static eDictionary GetSyntaxInfo(string path)

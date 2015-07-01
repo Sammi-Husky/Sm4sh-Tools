@@ -20,9 +20,11 @@ namespace Sm4shCommand
         {
             InitializeComponent();
 
-            if (File.Exists(Application.StartupPath + "/Events.cfg"))
+            if (File.Exists(Application.StartupPath + "/Events.cfg") &&
+                File.Exists(Application.StartupPath + "/EventSyntax.cfg"))
             {
                 Runtime.GetCommandDictionary(Application.StartupPath + "/Events.cfg");
+                Runtime.GetCommandSyntax(Application.StartupPath + "/EventSyntax.cfg");
 
                 TooltipDictionary dict = new TooltipDictionary();
                 foreach (CommandDefinition cd in Runtime.commandDictionary)
@@ -49,7 +51,7 @@ namespace Sm4shCommand
         //===========================================================================\\
         // Main, gfx, sound, and expression event lists. Null if in single file mode.\\
         //===========================================================================\\
-         List<ACMDFile> CharacterFiles = new List<ACMDFile>(4);
+        List<ACMDFile> CharacterFiles = new List<ACMDFile>(4);
 
         // Misc runtime variables.
         bool isRoot = false;
@@ -64,17 +66,17 @@ namespace Sm4shCommand
         {
             VoidPtr addr = source.Address;
             List<uint> ActionFlags = new List<uint>();
-            
-                int i = 0;
-                while (i * 4 != source.Length)
-                {
-                    if (endian == Endianness.Little)
-                        ActionFlags.Add(*(uint*)(addr + (i * 4)));
-                    else if (endian == Endianness.Big)
-                        ActionFlags.Add(*(buint*)(addr + (i * 4)));
-                    i++;
-                }
-                MTable m = new MTable(ActionFlags, endian);
+
+            int i = 0;
+            while (i * 4 != source.Length)
+            {
+                if (endian == Endianness.Little)
+                    ActionFlags.Add(*(uint*)(addr + (i * 4)));
+                else if (endian == Endianness.Big)
+                    ActionFlags.Add(*(buint*)(addr + (i * 4)));
+                i++;
+            }
+            MTable m = new MTable(ActionFlags, endian);
 
             return m;
         }
@@ -114,6 +116,7 @@ namespace Sm4shCommand
                         c._commandInfo = e;
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
+                            // FIX TO ACCOMIDATE SYNTAX INFO!!!!!
                             if (e.ParamSpecifiers[counter] == 0)
                                 c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
                             else if (e.ParamSpecifiers[counter] == 1)
@@ -280,7 +283,7 @@ namespace Sm4shCommand
                 _linked = null; _curFile = null;
                 CharacterFiles.Clear(); MotionTable.Clear();
                 treeView1.Nodes.Clear();
-                isRoot = false;
+                isRoot = true;
 
                 treeView1.ShowLines = treeView1.ShowRootLines = true;
                 OpenDirectory(dlg.SelectedPath);
@@ -422,6 +425,7 @@ namespace Sm4shCommand
                 }
         }
         #endregion
+
     }
 
     public unsafe class CommandDefinition
@@ -432,6 +436,11 @@ namespace Sm4shCommand
 
 
         public List<int> ParamSpecifiers = new List<int>();
+    }
+    public unsafe class CommandSyntax
+    {
+        public uint Identifier;
+        public List<string> ParamSyntax = new List<string>();
     }
 
     public unsafe class Command
@@ -447,6 +456,7 @@ namespace Sm4shCommand
         public Command() { }
 
         public CommandDefinition _commandInfo;
+        public CommandSyntax _syntax;
         public CommandList _owner;
 
 
@@ -457,12 +467,12 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
-                    if (_commandInfo.ParamSpecifiers[i] == 0)
-                        parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
-                    else if (_commandInfo.ParamSpecifiers[i] == 1)
-                        parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
-                    else if (_commandInfo.ParamSpecifiers[i] == 2)
-                        parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
+                if (_commandInfo.ParamSpecifiers[i] == 0)
+                    parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
+                else if (_commandInfo.ParamSpecifiers[i] == 1)
+                    parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
+                else if (_commandInfo.ParamSpecifiers[i] == 2)
+                    parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
             }
         }
         public virtual string GetFormated()
@@ -470,13 +480,17 @@ namespace Sm4shCommand
             string Param = "";
             for (int i = 0; i < parameters.Count; i++)
             {
+                if(_syntax != null)
+                    if (_syntax.ParamSyntax.Count > 0)
+                        Param += String.Format("{0}=", _syntax.ParamSyntax[i]);
+
                 if (parameters[i] is int | parameters[i] is bint)
-                    Param += String.Format("0x{0:X}{1}",parameters[i], i + 1 != parameters.Count ? ", " : "");
+                    Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float | parameters[i] is bfloat)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is decimal)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
-                
+
             }
             string s = String.Format("{0}({1})", _commandInfo.Name, Param);
             return s;
@@ -650,15 +664,20 @@ namespace Sm4shCommand
                 {
                     uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
                     CommandDefinition info = null;
+                    CommandSyntax syntaxInfo = null;
 
                     foreach (CommandDefinition e in Runtime.commandDictionary)
                         if (e.Identifier == ident)
                             info = e;
 
+                    foreach (CommandSyntax sy in Runtime.syntaxDictionary)
+                        if (sy.Identifier == ident)
+                            syntaxInfo = sy;
+
                     if (info != null)
                     {
                         DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                        c = new Command(_cur, src) { _commandInfo = info };
+                        c = new Command(_cur, src) { _commandInfo = info, _syntax = syntaxInfo };
                         _cur.Commands.Add(c);
                         addr += c.CalcSize();
                         c.getparams();
@@ -677,9 +696,14 @@ namespace Sm4shCommand
                 if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
                 {
                     CommandDefinition info = null;
+                    CommandSyntax syntaxInfo = null;
+
                     foreach (CommandDefinition e in Runtime.commandDictionary)
                         if (e.Identifier == Runtime._endingCommand.Identifier)
                             info = e;
+                    foreach (CommandSyntax sy in Runtime.syntaxDictionary)
+                        if (sy.Identifier == Runtime._endingCommand.Identifier)
+                            syntaxInfo = sy;
 
                     DataSource src = new DataSource(addr, 0x04);
                     c = new Command(_cur, src) { _commandInfo = info };

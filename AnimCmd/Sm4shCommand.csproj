@@ -155,6 +155,12 @@
     <EmbeddedResource Include="System\Windows\Forms\HexView.resx">
       <DependentUpon>HexView.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="Events.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="EventSyntax.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -170,13 +176,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="s4.ico" />
-    <None Include="Events.cfg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Structs\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

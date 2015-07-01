@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -43,9 +44,14 @@
             this.nodeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnHexView = new System.Windows.Forms.ToolStripMenuItem();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.CodeView = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             this.nodeContextMenu.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -137,13 +143,14 @@
             // 
             // treeView1
             // 
-            this.treeView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.treeView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeView1.ContextMenuStrip = this.nodeContextMenu;
             this.treeView1.HideSelection = false;
-            this.treeView1.Location = new System.Drawing.Point(637, 27);
+            this.treeView1.Location = new System.Drawing.Point(-1, 27);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(207, 576);
+            this.treeView1.Size = new System.Drawing.Size(103, 576);
             this.treeView1.TabIndex = 6;
             this.treeView1.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView1_BeforeSelect);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
@@ -166,12 +173,30 @@
             // 
             this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.richTextBox1.Enabled = false;
             this.richTextBox1.Location = new System.Drawing.Point(4, 468);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(627, 135);
+            this.richTextBox1.ReadOnly = true;
+            this.richTextBox1.Size = new System.Drawing.Size(728, 135);
             this.richTextBox1.TabIndex = 8;
             this.richTextBox1.Text = "";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.CodeView);
+            this.splitContainer1.Panel1.Controls.Add(this.richTextBox1);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.treeView1);
+            this.splitContainer1.Size = new System.Drawing.Size(844, 628);
+            this.splitContainer1.SplitterDistance = 735;
+            this.splitContainer1.TabIndex = 9;
             // 
             // CodeView
             // 
@@ -183,7 +208,7 @@
             this.CodeView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.55F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.CodeView.Location = new System.Drawing.Point(4, 27);
             this.CodeView.Name = "CodeView";
-            this.CodeView.Size = new System.Drawing.Size(627, 435);
+            this.CodeView.Size = new System.Drawing.Size(731, 435);
             this.CodeView.TabIndex = 4;
             this.CodeView.Text = "";
             this.CodeView.WordWrap = false;
@@ -194,18 +219,21 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(844, 628);
-            this.Controls.Add(this.richTextBox1);
-            this.Controls.Add(this.treeView1);
-            this.Controls.Add(this.CodeView);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.splitContainer1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Main Form";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.nodeContextMenu.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -228,6 +256,7 @@
         private System.Windows.Forms.ToolStripMenuItem btnHexView;
         private System.Windows.Forms.ToolStripMenuItem openFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openDirectoryToolStripMenuItem;
+        private System.Windows.Forms.SplitContainer splitContainer1;
 
     }
 }

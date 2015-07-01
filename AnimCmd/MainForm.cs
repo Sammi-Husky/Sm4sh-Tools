@@ -49,7 +49,7 @@ namespace Sm4shCommand
         //===========================================================================\\
         // Main, gfx, sound, and expression event lists. Null if in single file mode.\\
         //===========================================================================\\
-        List<ACMDFile> CharacterFiles = new List<ACMDFile>();
+         List<ACMDFile> CharacterFiles = new List<ACMDFile>(4);
 
         // Misc runtime variables.
         bool isRoot = false;
@@ -64,17 +64,17 @@ namespace Sm4shCommand
         {
             VoidPtr addr = source.Address;
             List<uint> ActionFlags = new List<uint>();
-            int i = 0;
-            while (i * 4 != source.Length)
-            {
-                if (endian == Endianness.Little)
-                    ActionFlags.Add(*(uint*)(addr + (i * 4)));
-                else if (endian == Endianness.Big)
-                    ActionFlags.Add(*(buint*)(addr + (i * 4)));
-                i++;
-            }
-            MTable m = new MTable(ActionFlags, endian);
-
+            
+                int i = 0;
+                while (i * 4 != source.Length)
+                {
+                    if (endian == Endianness.Little)
+                        ActionFlags.Add(*(uint*)(addr + (i * 4)));
+                    else if (endian == Endianness.Big)
+                        ActionFlags.Add(*(buint*)(addr + (i * 4)));
+                    i++;
+                }
+                MTable m = new MTable(ActionFlags, endian);
 
             return m;
         }
@@ -148,7 +148,10 @@ namespace Sm4shCommand
                     MessageBox.Show("There were no actions found");
                     return false;
                 }
+
                 CharacterFiles.Add(file);
+                file.Dispose();
+                source.Close();
 
                 return true;
             }
@@ -290,6 +293,39 @@ namespace Sm4shCommand
             EventLibrary dlg = new EventLibrary();
             dlg.Show();
         }
+        private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
+        {
+            if (_linked != null)
+                ParseCodeBox();
+
+            if (treeView1.SelectedNode == null)
+                return;
+
+            if (!isRoot)
+            {
+                if (treeView1.SelectedNode.Level == 0)
+                {
+                    uint Ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
+                    if (_curFile.Actions[Ident].Dirty)
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = Color.PaleVioletRed;
+                    else
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = SystemColors.Window;
+                }
+            }
+            else if (isRoot)
+                if (treeView1.SelectedNode.Level == 1)
+                {
+                    TreeNode n = treeView1.SelectedNode;
+                    while (n.Level != 0)
+                        n = n.Parent;
+                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
+
+                    if (_curFile.Actions[ident].Dirty)
+                        treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
+                    else
+                        treeView1.SelectedNode.BackColor = SystemColors.Window;
+                }
+        }
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (!isRoot)
@@ -386,40 +422,6 @@ namespace Sm4shCommand
                 }
         }
         #endregion
-
-        private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
-        {
-            if (_linked != null)
-                ParseCodeBox();
-
-            if (treeView1.SelectedNode == null)
-                return;
-
-            if (!isRoot)
-            {
-                if (treeView1.SelectedNode.Level == 0)
-                {
-                    uint Ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
-                    if (_curFile.Actions[Ident].Dirty)
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = Color.PaleVioletRed;
-                    else
-                        treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = SystemColors.Window;
-                }
-            }
-            else if (isRoot)
-                if (treeView1.SelectedNode.Level == 1)
-                {
-                    TreeNode n = treeView1.SelectedNode;
-                    while (n.Level != 0)
-                        n = n.Parent;
-                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
-
-                    if (_curFile.Actions[ident].Dirty)
-                        treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
-                    else
-                        treeView1.SelectedNode.BackColor = SystemColors.Window;
-                }
-        }
     }
 
     public unsafe class CommandDefinition
@@ -513,8 +515,10 @@ namespace Sm4shCommand
             return String.Format("0x{0:X8}", ident);
         }
     }
-    public unsafe class ACMDFile
+    public unsafe class ACMDFile : IDisposable
     {
+
+        ~ACMDFile() { Dispose(); }
         public VoidPtr Header { get { return _replSource != DataSource.Empty ? _replSource.Address : WorkingSource.Address; } }
         public DataSource WorkingSource, _replSource;
 
@@ -712,6 +716,16 @@ namespace Sm4shCommand
             for (int i = 0; i < tmp.Length; i++)
                 tmp[i] = *(byte*)(src.Address + i);
             return tmp;
+        }
+
+        public void Dispose()
+        {
+            if (WorkingSource.Map != null)
+                WorkingSource.Close();
+            if (_replSource.Map != null)
+                _replSource.Close();
+
+            GC.SuppressFinalize(this);
         }
     }
     public unsafe class MTable : IEnumerable

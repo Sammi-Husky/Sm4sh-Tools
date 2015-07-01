@@ -689,7 +689,7 @@ namespace Sm4shCommand
             this.OwnerDraw = true;
             this.Popup += new PopupEventHandler(this.OnPopup);
             this.Draw += new DrawToolTipEventHandler(this.OnDraw);
-            this.InitialDelay = 1;
+            this.InitialDelay = 200;
             this.ReshowDelay = 500;
             // Force the ToolTip text to be displayed whether or not the control active.
             this.ShowAlways = true;

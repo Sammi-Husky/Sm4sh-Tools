@@ -92,6 +92,18 @@ namespace Sm4shCommand
         #endregion
 
         #region Methods
+        private string FomatParams(string commandName)
+        {
+            string Param = "";
+            foreach(CommandDefinition c in commandDictionary)
+                if (c.Name == commandName)
+                {
+                    for(int i=0; i<c.ParamSyntax.Count;i++)
+                        Param += String.Format("{0}={1}", c.ParamSyntax[i], i + 1 != c.ParamSyntax.Count ? ", " : "");
+                    break;
+                }
+            return Param;
+        }
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if ((e.KeyCode == Keys.Enter | e.KeyCode == Keys.Down | e.KeyCode == Keys.Space) && AutocompleteBox.Visible == true)
@@ -113,10 +125,11 @@ namespace Sm4shCommand
             if (e.KeyCode == Keys.Enter | e.KeyCode == Keys.Space)
             {
                 Point cp;
+                string commandName = ((ListBox)sender).SelectedItem.ToString();
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
-                this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), ((ListBox)sender).SelectedItem.ToString() + "()");
                 GetCaretPos(out cp);
-                this.Select(GetFirstCharIndexFromLine(CurrentLineIndex) + CurrentLineText.Length -1, 0);
+                this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), commandName + String.Format("({0})", FomatParams(commandName)));
+                this.SelectionStart = GetCharIndexFromPosition(cp) + CurrentLineText.Length;
                 AutocompleteBox.Hide();
                 this.Focus();
             }

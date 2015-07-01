@@ -20,11 +20,9 @@ namespace Sm4shCommand
         {
             InitializeComponent();
 
-            if (File.Exists(Application.StartupPath + "/Events.cfg") &&
-                File.Exists(Application.StartupPath + "/EventSyntax.cfg"))
+            if (File.Exists(Application.StartupPath + "/Events.cfg"))
             {
-                Runtime.GetCommandDictionary(Application.StartupPath + "/Events.cfg");
-                Runtime.GetCommandSyntax(Application.StartupPath + "/EventSyntax.cfg");
+                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
 
                 TooltipDictionary dict = new TooltipDictionary();
                 foreach (CommandDefinition cd in Runtime.commandDictionary)
@@ -116,7 +114,10 @@ namespace Sm4shCommand
                         c._commandInfo = e;
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
-                            // FIX TO ACCOMIDATE SYNTAX INFO!!!!!
+                            // parameter - it's syntax keyword(s), and then parse.
+                            if (e.ParamSyntax.Count > 0)
+                                Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=')+1);
+
                             if (e.ParamSpecifiers[counter] == 0)
                                 c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
                             else if (e.ParamSpecifiers[counter] == 1)
@@ -436,12 +437,10 @@ namespace Sm4shCommand
 
 
         public List<int> ParamSpecifiers = new List<int>();
-    }
-    public unsafe class CommandSyntax
-    {
-        public uint Identifier;
         public List<string> ParamSyntax = new List<string>();
+
     }
+
 
     public unsafe class Command
     {
@@ -456,7 +455,6 @@ namespace Sm4shCommand
         public Command() { }
 
         public CommandDefinition _commandInfo;
-        public CommandSyntax _syntax;
         public CommandList _owner;
 
 
@@ -480,9 +478,9 @@ namespace Sm4shCommand
             string Param = "";
             for (int i = 0; i < parameters.Count; i++)
             {
-                if(_syntax != null)
-                    if (_syntax.ParamSyntax.Count > 0)
-                        Param += String.Format("{0}=", _syntax.ParamSyntax[i]);
+
+                if (_commandInfo.ParamSyntax.Count > 0)
+                    Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
 
                 if (parameters[i] is int | parameters[i] is bint)
                     Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
@@ -664,20 +662,14 @@ namespace Sm4shCommand
                 {
                     uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
                     CommandDefinition info = null;
-                    CommandSyntax syntaxInfo = null;
 
                     foreach (CommandDefinition e in Runtime.commandDictionary)
-                        if (e.Identifier == ident)
-                            info = e;
-
-                    foreach (CommandSyntax sy in Runtime.syntaxDictionary)
-                        if (sy.Identifier == ident)
-                            syntaxInfo = sy;
+                        if (e.Identifier == ident) { info = e; break; }
 
                     if (info != null)
                     {
                         DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                        c = new Command(_cur, src) { _commandInfo = info, _syntax = syntaxInfo };
+                        c = new Command(_cur, src) { _commandInfo = info};
                         _cur.Commands.Add(c);
                         addr += c.CalcSize();
                         c.getparams();
@@ -696,14 +688,11 @@ namespace Sm4shCommand
                 if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
                 {
                     CommandDefinition info = null;
-                    CommandSyntax syntaxInfo = null;
 
                     foreach (CommandDefinition e in Runtime.commandDictionary)
-                        if (e.Identifier == Runtime._endingCommand.Identifier)
-                            info = e;
-                    foreach (CommandSyntax sy in Runtime.syntaxDictionary)
-                        if (sy.Identifier == Runtime._endingCommand.Identifier)
-                            syntaxInfo = sy;
+                        if (e.Identifier == Runtime._endingCommand.Identifier) 
+                            { info = e; break; }
+
 
                     DataSource src = new DataSource(addr, 0x04);
                     c = new Command(_cur, src) { _commandInfo = info };

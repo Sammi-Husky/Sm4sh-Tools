@@ -140,10 +140,12 @@
             this.treeView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeView1.ContextMenuStrip = this.nodeContextMenu;
+            this.treeView1.HideSelection = false;
             this.treeView1.Location = new System.Drawing.Point(637, 27);
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(207, 576);
             this.treeView1.TabIndex = 6;
+            this.treeView1.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView1_BeforeSelect);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
             // 
             // nodeContextMenu

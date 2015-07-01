@@ -13,6 +13,7 @@ namespace Sm4shCommand.Classes
         public DataSource WorkingSource { get { return _replSource != DataSource.Empty ? _replSource : _workingSource; } }
         public DataSource _workingSource, _replSource;
         public Endianness _endian;
+        private byte[] _data;
 
         public CommandList(uint flags, int offset, Endianness endian)
         {
@@ -35,11 +36,30 @@ namespace Sm4shCommand.Classes
         }
 
         public bool _empty;
+        public bool Dirty
+        {
+            get
+            {
+                byte[] data = GetArray();
+                if (data.Length != _data.Length)
+                    return true;
+
+                for (int i = 0; i < _data.Length; i++)
+                    if (data[i] != _data[i])
+                        return true;
+
+                return false;
+            }
+        }
 
 
         public uint _flags;
         public int _offset;
 
+        public void Initialize()
+        {
+            _data = GetArray();
+        }
         public void OnRebuild(VoidPtr address, int size)
         {
             VoidPtr addr = address;

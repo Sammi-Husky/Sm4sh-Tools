@@ -40,6 +40,7 @@ namespace Sm4shCommand
         // Current file that is open and free for editing. \\
         //=================================================\\
         ACMDFile _curFile;
+        TreeNode _curNode;
 
         //==================================\\
         // List of motion table identifiers \\
@@ -85,6 +86,13 @@ namespace Sm4shCommand
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
             _curFile.Actions[_linked._flags].Commands.Clear();
+
+            if (String.IsNullOrEmpty(CodeView.Text))
+            {
+                _curFile.Actions[_linked._flags]._empty = true;
+                return;
+            }
+
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("0x"))
@@ -119,6 +127,7 @@ namespace Sm4shCommand
             }
 
         }
+
         public bool OpenFile(string Filepath)
         {
             try
@@ -146,7 +155,6 @@ namespace Sm4shCommand
             }
             catch (Exception x) { MessageBox.Show(x.Message); return false; }
         }
-
         public void OpenDirectory(string dirPath)
         {
             OpenFile(dirPath + "/game.bin");
@@ -182,15 +190,13 @@ namespace Sm4shCommand
         // Displays the list of commands as plain text in the code editor.
         public void DisplayScript(CommandList s)
         {
-            if (_linked != null)
-                ParseCodeBox();
-
             StringBuilder sb = new StringBuilder();
             foreach (Command cmd in s.Commands)
                 sb.Append(cmd.GetFormated() + "\n");
 
             CodeView.Text = sb.ToString();
             _linked = s;
+            _curNode = treeView1.SelectedNode;
         }
         #endregion
 
@@ -237,15 +243,55 @@ namespace Sm4shCommand
             }
         }
 
+        private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-        #endregion
+                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                {
+                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                    FileName = dlg.FileName;
+                    this.Text = String.Format("Main Form - {0}", FileName);
+                }
+            }
+            dlg.Dispose();
+        }
+        private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                CodeView.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _curFile = null;
+                CharacterFiles.Clear(); MotionTable.Clear();
+                treeView1.Nodes.Clear();
+                isRoot = false;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                OpenDirectory(dlg.SelectedPath);
+            }
+            dlg.Dispose();
+        }
 
         private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             EventLibrary dlg = new EventLibrary();
             dlg.Show();
         }
-
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (!isRoot)
@@ -340,55 +386,45 @@ namespace Sm4shCommand
                         f.Show();
                     }
                 }
-
-
-
-            
         }
+        #endregion
 
-        private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            if (_linked != null)
+                ParseCodeBox();
+
+            if (treeView1.SelectedNode == null)
+                return;
+
+            if (!isRoot)
             {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
-
-                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                if (_curNode.Level == 0)
                 {
-                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
-
-                    FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
+                    uint Ident = uint.Parse(_curNode.Text, System.Globalization.NumberStyles.HexNumber);
+                    if (_curFile.Actions[Ident].Dirty)
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(_curNode)].BackColor = Color.PaleVioletRed;
+                    else
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(_curNode)].BackColor = SystemColors.Window;
                 }
             }
-            dlg.Dispose();
-        }
+            else if (isRoot)
+                if (_curNode.Level == 1)
+                {
+                    TreeNode n = treeView1.SelectedNode;
+                    while (n.Level != 0)
+                        n = n.Parent;
+                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
 
-        private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dlg = new FolderSelectDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = false;
-
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
-                OpenDirectory(dlg.SelectedPath);
-            }
-            dlg.Dispose();
+                    if (CharacterFiles[0].Actions[ident].Dirty |
+                        CharacterFiles[1].Actions[ident].Dirty |
+                        CharacterFiles[2].Actions[ident].Dirty |
+                        CharacterFiles[3].Actions[ident].Dirty
+                        )
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(n)].BackColor = Color.PaleVioletRed;
+                    else
+                        treeView1.Nodes[treeView1.Nodes.IndexOf(n)].BackColor = SystemColors.Window;
+                }
         }
     }
 
@@ -550,10 +586,11 @@ namespace Sm4shCommand
         }
         public void OnRebuild(VoidPtr address, int length)
         {
-            //  Remove empty event lists.
+            //  Make sure empty event lists at least contain the ending specifier,
+            //  otherwise the list will bleed over and read the next one.
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
-                    Actions.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand });
+                    Actions.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand, _owner = Actions.Values[i] });
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
@@ -641,7 +678,7 @@ namespace Sm4shCommand
                     _cur.Commands.Add(c);
                     addr += 4;
                 }
-
+                _cur.Initialize();
                 return _cur;
             }
         }

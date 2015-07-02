@@ -163,11 +163,15 @@ namespace Sm4shCommand
         }
         public void OpenDirectory(string dirPath)
         {
-            OpenFile(dirPath + "/game.bin");
-            OpenFile(dirPath + "/effect.bin");
-            OpenFile(dirPath + "/sound.bin");
-            OpenFile(dirPath + "/expression.bin");
-            MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
+            try
+            {
+                OpenFile(dirPath + "/game.bin");
+                OpenFile(dirPath + "/effect.bin");
+                OpenFile(dirPath + "/sound.bin");
+                OpenFile(dirPath + "/expression.bin");
+                MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
+            }
+            catch { return; }
 
             int counter = 0;
             foreach (uint u in MotionTable)
@@ -437,7 +441,7 @@ namespace Sm4shCommand
 
             foreach (uint u in MotionTable)
             {
-                sb.Append(String.Format("\n\n[{0:X}]", u));
+                sb.Append(String.Format("\n\n{0:X}: [{1:X8}]", MotionTable.IndexOf(u), u));
                 CommandList c1 = null, c2 = null,
                             c3 = null, c4 = null;
 
@@ -479,37 +483,22 @@ namespace Sm4shCommand
                     foreach (Command cmd in c4.Commands)
                         sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
                 else
-                    sb.Append("\n\tEmpty");
+                    sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
             }
             sb.Append("\n\t End. -Dumped via Sm4shCommand-");
             SaveFileDialog dlg = new SaveFileDialog();
+            dlg.Filter = "Plain Text (.txt) | *.txt";
             DialogResult result = dlg.ShowDialog();
             if (result == DialogResult.OK)
                 using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
-                {
                     writer.Write(sb.ToString());
-                }
         }
-
-
-
-
-
-
-        //ACMDFile file = CharacterFiles[0];
-        //foreach (CommandList s in file.Actions.Values)
-        //{
-        //    sb.Append(String.Format("[{0:X}]", s._flags));
-        //    foreach (Command cmd in s.Commands)
-        //        sb.Append(cmd.GetFormated() + "\n");
-        //}
-
-
     }
 
     public unsafe class CommandDefinition
     {
+
         public uint Identifier;
         public string Name;
         public string EventDescription;
@@ -868,6 +857,10 @@ namespace Sm4shCommand
         public void Remove(int index)
         {
             _baseList.RemoveAt(index);
+        }
+        public int IndexOf(uint var)
+        {
+            return _baseList.IndexOf(var);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

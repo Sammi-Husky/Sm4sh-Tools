@@ -37,6 +37,8 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dumpAsTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eventLibraryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -46,8 +48,6 @@
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.CodeView = new Sm4shCommand.ITSCodeBox();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dumpAsTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.nodeContextMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -120,6 +120,19 @@
             this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.saveAsToolStripMenuItem.Text = "Save as..";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            // 
+            // dumpAsTextToolStripMenuItem
+            // 
+            this.dumpAsTextToolStripMenuItem.Name = "dumpAsTextToolStripMenuItem";
+            this.dumpAsTextToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.dumpAsTextToolStripMenuItem.Text = "Dump as Text";
+            this.dumpAsTextToolStripMenuItem.Click += new System.EventHandler(this.dumpAsTextToolStripMenuItem_Click);
+            // 
+            // editToolStripMenuItem
+            // 
+            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+            this.editToolStripMenuItem.Text = "Edit";
             // 
             // viewToolStripMenuItem
             // 
@@ -217,19 +230,6 @@
             this.CodeView.Text = "";
             this.CodeView.WordWrap = false;
             // 
-            // editToolStripMenuItem
-            // 
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.editToolStripMenuItem.Text = "Edit";
-            // 
-            // dumpAsTextToolStripMenuItem
-            // 
-            this.dumpAsTextToolStripMenuItem.Name = "dumpAsTextToolStripMenuItem";
-            this.dumpAsTextToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.dumpAsTextToolStripMenuItem.Text = "Dump as Text";
-            this.dumpAsTextToolStripMenuItem.Click += new System.EventHandler(this.dumpAsTextToolStripMenuItem_Click);
-            // 
             // ACMDMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -239,7 +239,6 @@
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.splitContainer1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "ACMDMain";

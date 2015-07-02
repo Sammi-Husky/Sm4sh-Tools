@@ -8,10 +8,9 @@ using System.IO;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class CommandList : IDisposable
+    public unsafe class CommandList
     {
-        public DataSource WorkingSource { get { return _replSource != DataSource.Empty ? _replSource : _workingSource; } }
-        public DataSource _workingSource, _replSource;
+
         public Endianness _endian;
         private byte[] _data;
 
@@ -22,7 +21,6 @@ namespace Sm4shCommand.Classes
             _endian = endian;
         }
         public CommandList() { }
-        ~CommandList() { Dispose(); }
 
         public int Size
         {
@@ -94,12 +92,7 @@ namespace Sm4shCommand.Classes
             return file;
 
         }
+
         public List<Command> Commands = new List<Command>();
-        public void Dispose()
-        {
-            _workingSource.Close();
-            _replSource.Close();
-            GC.SuppressFinalize(this);
-        }
     }
 }

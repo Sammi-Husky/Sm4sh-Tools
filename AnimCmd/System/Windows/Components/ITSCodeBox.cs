@@ -129,7 +129,7 @@ namespace Sm4shCommand
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
                 GetCaretPos(out cp);
                 this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), commandName + String.Format("({0})", FomatParams(commandName)));
-                this.SelectionStart = GetCharIndexFromPosition(cp) + CurrentLineText.Length;
+                this.SelectionStart = GetCharIndexFromPosition(cp) + Lines[GetLineFromCharIndex(GetCharIndexFromPosition(cp))].Length;
                 AutocompleteBox.Hide();
                 this.Focus();
             }

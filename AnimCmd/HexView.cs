@@ -14,13 +14,17 @@ namespace Sm4shCommand
 {
     public partial class HexView : Form
     {
-        public byte[] _Data;
+        public byte[] Data { get { return _data; } set { _data = value; } }
+        private byte[] _data;
 
         public HexView(byte[] Data)
         {
-            this._Data = Data;
+            this._data = Data;
+
             InitializeComponent();
-            hexBox.ByteProvider = new DynamicByteProvider(_Data);
+            hexBox.ByteProvider = new DynamicByteProvider(_data);
+            hexBox.ReadOnly = true;
+            hexBox.InsertActive = false;
         }
 
         private void gotoAdressToolStripMenuItem_Click(object sender, EventArgs e)
@@ -38,6 +42,11 @@ namespace Sm4shCommand
         private void hexBox_SelectionStartChanged(object sender, EventArgs e)
         {
             statusOffset.Text = "0x" + hexBox.SelectionStart.ToString("x");
+        }
+
+        private void HexView_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _data = ((DynamicByteProvider)hexBox.ByteProvider).Bytes.ToArray();
         }
     }
 }

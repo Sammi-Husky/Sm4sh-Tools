@@ -14,9 +14,9 @@ using Be.Windows.Forms;
 
 namespace Sm4shCommand
 {
-    public unsafe partial class MainForm : Form
+    public unsafe partial class ACMDMain : Form
     {
-        public MainForm()
+        public ACMDMain()
         {
             InitializeComponent();
 
@@ -116,7 +116,7 @@ namespace Sm4shCommand
                         {
                             // parameter - it's syntax keyword(s), and then parse.
                             if (e.ParamSyntax.Count > 0)
-                                Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=')+1);
+                                Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=') + 1);
 
                             if (e.ParamSpecifiers[counter] == 0)
                                 c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
@@ -379,11 +379,12 @@ namespace Sm4shCommand
             {
                 if (treeView1.SelectedNode.Level == 0)
                 {
-                    //byte[] data = _curFile.GetArray();
-                    byte[] data = CharacterFiles[0].Actions[uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber)].GetArray();
+                    uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
+                    byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                     HexView f = new HexView(data);
-                    f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                    f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                     f.Show();
+
                 }
             }
             else if (isRoot)
@@ -398,7 +399,7 @@ namespace Sm4shCommand
                     {
                         byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "GFX")
@@ -406,26 +407,104 @@ namespace Sm4shCommand
 
                         byte[] data = CharacterFiles[1].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Sound")
                     {
                         byte[] data = CharacterFiles[2].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Expression")
                     {
                         byte[] data = CharacterFiles[3].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = "HexView - " + treeView1.SelectedNode.Text;
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                 }
         }
         #endregion
+
+        private void dumpAsTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isRoot)
+                return;
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (uint u in MotionTable)
+            {
+                sb.Append(String.Format("\n\n[{0:X}]", u));
+                CommandList c1 = null, c2 = null,
+                            c3 = null, c4 = null;
+
+                if (CharacterFiles[0].Actions.ContainsKey(u))
+                    c1 = CharacterFiles[0].Actions[u];
+                if (CharacterFiles[1].Actions.ContainsKey(u))
+                    c2 = CharacterFiles[1].Actions[u];
+                if (CharacterFiles[2].Actions.ContainsKey(u))
+                    c3 = CharacterFiles[2].Actions[u];
+                if (CharacterFiles[3].Actions.ContainsKey(u))
+                    c4 = CharacterFiles[3].Actions[u];
+
+                sb.Append("\n\tGame:{");
+                if (c1 != null)
+                    foreach (Command cmd in c1.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tGFX:{");
+                if (c2 != null)
+                    foreach (Command cmd in c2.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tSFX:{");
+                if (c3 != null)
+                    foreach (Command cmd in c3.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tExpression:{");
+                if (c4 != null)
+                    foreach (Command cmd in c4.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                else
+                    sb.Append("\n\tEmpty");
+                sb.Append("\n\t}");
+            }
+            sb.Append("\n\t End. -Dumped via Sm4shCommand-");
+            SaveFileDialog dlg = new SaveFileDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+                using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+        }
+
+
+
+
+
+
+        //ACMDFile file = CharacterFiles[0];
+        //foreach (CommandList s in file.Actions.Values)
+        //{
+        //    sb.Append(String.Format("[{0:X}]", s._flags));
+        //    foreach (Command cmd in s.Commands)
+        //        sb.Append(cmd.GetFormated() + "\n");
+        //}
+
 
     }
 
@@ -652,57 +731,57 @@ namespace Sm4shCommand
 
         private CommandList ParseEventList(uint _flags, int _offset)
         {
-            using (CommandList _cur = new CommandList(_flags, _offset, _endian))
+            CommandList _cur = new CommandList(_flags, _offset, _endian);
+
+            Command c = null;
+            VoidPtr addr = (WorkingSource.Address + _offset);
+
+            while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
-                Command c = null;
-                VoidPtr addr = (WorkingSource.Address + _offset);
+                uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
+                CommandDefinition info = null;
 
+                foreach (CommandDefinition e in Runtime.commandDictionary)
+                    if (e.Identifier == ident) { info = e; break; }
 
-                while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
+                if (info != null)
                 {
-                    uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
-                    CommandDefinition info = null;
-
-                    foreach (CommandDefinition e in Runtime.commandDictionary)
-                        if (e.Identifier == ident) { info = e; break; }
-
-                    if (info != null)
-                    {
-                        DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                        c = new Command(_cur, src) { _commandInfo = info};
-                        _cur.Commands.Add(c);
-                        addr += c.CalcSize();
-                        c.getparams();
-                    }
-                    else if (info == null)
-                    {
-                        DataSource src = new DataSource(addr, 0x04);
-                        UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
-                        unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
-                        _cur.Commands.Add(unkC);
-                        addr += 0x04;
-                    }
-
-                }
-
-                if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
-                {
-                    CommandDefinition info = null;
-
-                    foreach (CommandDefinition e in Runtime.commandDictionary)
-                        if (e.Identifier == Runtime._endingCommand.Identifier) 
-                            { info = e; break; }
-
-
-                    DataSource src = new DataSource(addr, 0x04);
+                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
                     c = new Command(_cur, src) { _commandInfo = info };
                     _cur.Commands.Add(c);
-                    addr += 4;
+                    addr += c.CalcSize();
+                    c.getparams();
                 }
-                _cur.Initialize();
-                return _cur;
+                else if (info == null)
+                {
+                    DataSource src = new DataSource(addr, 0x04);
+                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
+                    _cur.Commands.Add(unkC);
+                    addr += 0x04;
+                }
             }
+
+
+
+            if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
+            {
+                CommandDefinition info = null;
+
+                foreach (CommandDefinition e in Runtime.commandDictionary)
+                    if (e.Identifier == Runtime._endingCommand.Identifier)
+                    { info = e; break; }
+
+
+                DataSource src = new DataSource(addr, 0x04);
+                c = new Command(_cur, src) { _commandInfo = info };
+                _cur.Commands.Add(c);
+                addr += 4;
+            }
+            _cur.Initialize();
+            return _cur;
         }
+
         public void Export(string path)
         {
             Rebuild();

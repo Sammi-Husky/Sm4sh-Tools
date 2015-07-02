@@ -193,17 +193,17 @@ namespace Sm4shCommand
     }
     public class FormProvider
     {
-        public static MainForm MainWindow
+        public static ACMDMain MainWindow
         {
             get
             {
                 if (_mainForm == null)
                 {
-                    _mainForm= new MainForm();
+                    _mainForm= new ACMDMain();
                 }
                 return _mainForm;
             }
         }
-        private static MainForm _mainForm;
+        private static ACMDMain _mainForm;
     }
 }

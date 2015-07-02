@@ -189,6 +189,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "HexView";
             this.Text = "HexView - ";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HexView_FormClosing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);

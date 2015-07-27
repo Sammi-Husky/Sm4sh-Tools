@@ -44,6 +44,7 @@ namespace Sm4shCommand
         {
             using (StreamWriter writer = new StreamWriter(path))
             {
+                WriteConfigHelp(writer);
                 foreach (CommandDefinition def in commandDictionary)
                 {
                     //Write Ident
@@ -84,6 +85,29 @@ namespace Sm4shCommand
                 }
                 writer.Close();
             }
+        }
+        public static void WriteConfigHelp(StreamWriter writer)
+        {
+            writer.WriteLine("//===========================================\\\\");
+            writer.WriteLine("//**********How to use this File*************\\\\");
+            writer.WriteLine("//===========================================\\\\");
+            writer.WriteLine("// 	The structure of this file is as follows:\\\\");
+            writer.WriteLine("// 		-Command Identifier:				 \\\\");
+            writer.WriteLine("// 		-Display Name / Dictionary Name:	 \\\\");
+            writer.WriteLine("// 		-Parameters, separated by comma:	 \\\\");
+            writer.WriteLine("//				0 = Integer					 \\\\");
+            writer.WriteLine("//				1 = Float					 \\\\");
+            writer.WriteLine("//				2 = Decimal					 \\\\");
+            writer.WriteLine("//			 NONE = no params				 \\\\");
+            writer.WriteLine("//											 \\\\");
+            writer.WriteLine("//		-Parameters Keywords List			 \\\\");
+            writer.WriteLine("//			-NONE = no keywords				 \\\\");
+            writer.WriteLine("//		-Event Description / tooltip		 \\\\");
+            writer.WriteLine("//			-NONE = no description			 \\\\");
+            writer.WriteLine("//===========================================\\\\");
+            writer.WriteLine("//===========================================\\\\\n");
+
+
         }
         public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();
         public static CommandDefinition _endingCommand;

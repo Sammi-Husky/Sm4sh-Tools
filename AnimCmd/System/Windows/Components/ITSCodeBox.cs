@@ -19,11 +19,17 @@ namespace Sm4shCommand
         private ListBox AutocompleteBox;
         private ITSToolTip ITSToolTip;
         private TooltipDictionary EventDescriptions;
+        private const int WM_USER = 0x0400;
+        private const int EM_SETEVENTMASK = (WM_USER + 69);
+        private const int WM_SETREDRAW = 0x0b;
+        private IntPtr OldEventMask;
         #endregion
 
         #region External Methods
         [DllImport("user32")]
         private extern static int GetCaretPos(out Point p);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
         #endregion
 
         #region Constructors
@@ -185,11 +191,11 @@ namespace Sm4shCommand
             // Process numbers
             Format(line, LineIndex, "\\b(?:[0-9]*\\.)?[0-9]+\\b", Color.Red); // Decimal
             Format(line, LineIndex, @"\b0x[a-fA-F\d]+\b", Color.DarkCyan); // Hexadecimal
-            
+
             // Don't need to process these, they just slow everything down.
 
-            //// Process parenthesis
-            //Format(line, LineIndex, "[\x28-\x2c]", Color.Blue);
+            // Process parenthesis
+            Format(line, LineIndex, "[\x28-\x2c]", Color.Blue);
             //// Process comments
             //Format(line, LineIndex, "//.*$", Color.DarkRed);
 
@@ -206,6 +212,7 @@ namespace Sm4shCommand
         /// <param name="color">The color to paint matches.</param>
         private void Format(string line, int LineIndex, string strRegex, Color color)
         {
+
             Regex regKeywords = new Regex(strRegex, RegexOptions.IgnoreCase);
             Match regMatch;
 
@@ -225,11 +232,24 @@ namespace Sm4shCommand
         /// </summary>
         public void ProcessAllLines()
         {
+            BeginUpdate();
             string[] lines = Lines;
             for (int i = 0; i < lines.Length; i++)
                 FormatLine(lines, i);
+            EndUpdate();
         }
 
+        public void BeginUpdate()
+        {
+            SendMessage(this.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+            OldEventMask = (IntPtr)SendMessage(this.Handle, EM_SETEVENTMASK, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        public void EndUpdate()
+        {
+            SendMessage(this.Handle, WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+            SendMessage(this.Handle, EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
+        }
         #endregion
     }
 }

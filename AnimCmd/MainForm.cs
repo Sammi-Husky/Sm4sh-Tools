@@ -19,21 +19,6 @@ namespace Sm4shCommand
         public ACMDMain()
         {
             InitializeComponent();
-
-            if (File.Exists(Application.StartupPath + "/Events.cfg"))
-            {
-                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
-
-                TooltipDictionary dict = new TooltipDictionary();
-                foreach (CommandDefinition cd in Runtime.commandDictionary)
-                    if (!String.IsNullOrEmpty(cd.EventDescription))
-                        dict.Add(cd.Name, cd.EventDescription);
-
-                CodeView.CommandDictionary = Runtime.commandDictionary;
-                CodeView.Tooltip.Dictionary = dict;
-            }
-            else
-                MessageBox.Show("Could not load one or more resources! (Events.cfg, Syntax.cfg)");
         }
 
         //=================================================\\
@@ -176,7 +161,7 @@ namespace Sm4shCommand
             int counter = 0;
             foreach (uint u in MotionTable)
             {
-                TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
+                TreeNode n = new TreeNode($"{counter:X} [{u:X8}]");
 
                 if (CharacterFiles[0].Actions.ContainsKey(u))
                     n.Nodes.Add("Main");
@@ -192,7 +177,7 @@ namespace Sm4shCommand
             }
             isRoot = true;
             rootPath = dirPath;
-            this.Text = String.Format("Main Form - {0}", dirPath);
+            this.Text = $"Main Form - {dirPath}";
         }
 
 
@@ -202,7 +187,7 @@ namespace Sm4shCommand
         {
             StringBuilder sb = new StringBuilder();
             foreach (Command cmd in s.Commands)
-                sb.Append(cmd.GetFormated() + "\n");
+                sb.Append(cmd.ToString() + "\n");
 
             CodeView.Text = sb.ToString();
             _linked = s;
@@ -269,10 +254,10 @@ namespace Sm4shCommand
                 if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
                 {
                     foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+                        treeView1.Nodes.Add($"{list._flags:X8}");
 
                     FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
+                    this.Text = $"Main Form - {FileName}";
                 }
             }
             dlg.Dispose();
@@ -386,7 +371,7 @@ namespace Sm4shCommand
                     uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
                     byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                     HexView f = new HexView(data);
-                    f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+                    f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
                     f.Show();
 
                 }
@@ -403,7 +388,7 @@ namespace Sm4shCommand
                     {
                         byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "GFX")
@@ -411,21 +396,21 @@ namespace Sm4shCommand
 
                         byte[] data = CharacterFiles[1].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Sound")
                     {
                         byte[] data = CharacterFiles[2].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Expression")
                     {
                         byte[] data = CharacterFiles[3].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
                         f.Show();
                     }
                 }
@@ -457,7 +442,7 @@ namespace Sm4shCommand
                 sb.Append("\n\tGame:{");
                 if (c1 != null)
                     foreach (Command cmd in c1.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
@@ -465,7 +450,7 @@ namespace Sm4shCommand
                 sb.Append("\n\tGFX:{");
                 if (c2 != null)
                     foreach (Command cmd in c2.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
@@ -473,7 +458,7 @@ namespace Sm4shCommand
                 sb.Append("\n\tSFX:{");
                 if (c3 != null)
                     foreach (Command cmd in c3.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
@@ -481,7 +466,7 @@ namespace Sm4shCommand
                 sb.Append("\n\tExpression:{");
                 if (c4 != null)
                     foreach (Command cmd in c4.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.GetFormated()));
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
@@ -493,6 +478,29 @@ namespace Sm4shCommand
             if (result == DialogResult.OK)
                 using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
                     writer.Write(sb.ToString());
+        }
+
+        private void ACMDMain_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(Application.StartupPath + "/Events.cfg"))
+            {
+                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
+
+                TooltipDictionary dict = new TooltipDictionary();
+                foreach (CommandDefinition cd in Runtime.commandDictionary)
+                    if (!String.IsNullOrEmpty(cd.EventDescription))
+                        dict.Add(cd.Name, cd.EventDescription);
+
+                CodeView.CommandDictionary = Runtime.commandDictionary;
+                CodeView.Tooltip.Dictionary = dict;
+            }
+            else
+                MessageBox.Show("Could not load Events.cfg");
+        }
+
+        private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
         }
     }
 
@@ -541,14 +549,14 @@ namespace Sm4shCommand
                     parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
             }
         }
-        public virtual string GetFormated()
+        public override string ToString()
         {
             string Param = "";
             for (int i = 0; i < parameters.Count; i++)
             {
 
                 if (_commandInfo.ParamSyntax.Count > 0)
-                    Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
+                    Param += $"{_commandInfo.ParamSyntax[i]}=";
 
                 if (parameters[i] is int | parameters[i] is bint)
                     Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
@@ -558,8 +566,7 @@ namespace Sm4shCommand
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
 
             }
-            string s = String.Format("{0}({1})", _commandInfo.Name, Param);
-            return s;
+            return $"{_commandInfo.Name}({Param})";
 
         }
         public virtual byte[] ToArray()
@@ -590,10 +597,7 @@ namespace Sm4shCommand
         public uint ident;
 
         public override int CalcSize() { return 0x04; }
-        public override string GetFormated()
-        {
-            return String.Format("0x{0:X8}", ident);
-        }
+        public override string ToString() => $"0x{ident:X8}";
     }
     public unsafe class ACMDFile : IDisposable
     {
@@ -745,13 +749,11 @@ namespace Sm4shCommand
                 {
                     DataSource src = new DataSource(addr, 0x04);
                     UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
-                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = $"0x{ident:X}" };
                     _cur.Commands.Add(unkC);
                     addr += 0x04;
                 }
             }
-
-
 
             if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
             {

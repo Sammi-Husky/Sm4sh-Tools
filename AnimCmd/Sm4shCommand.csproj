@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Sm4shCommand</RootNamespace>
     <AssemblyName>AnimCmd</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -57,11 +57,17 @@
     <Compile Include="Classes\EventList.cs" />
     <Compile Include="Classes\Runtime.cs" />
     <Compile Include="Classes\Util.cs" />
-    <Compile Include="Event Library.cs">
+    <Compile Include="Event Library\Event Library.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Event Library.Designer.cs">
+    <Compile Include="Event Library\Event Library.Designer.cs">
       <DependentUpon>Event Library.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Event Library\Rename.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Event Library\Rename.Designer.cs">
+      <DependentUpon>Rename.cs</DependentUpon>
     </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -83,9 +89,7 @@
     <Compile Include="System\Windows\Components\ITSCodeBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="System\Windows\Components\ITSToolTip.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="System\Windows\Components\ITSToolTip.cs" />
     <Compile Include="System\Windows\Forms\HexBox\BuiltInContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -129,8 +133,11 @@
     <Compile Include="Type Extensions\UInt16Extension.cs" />
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
-    <EmbeddedResource Include="Event Library.resx">
+    <EmbeddedResource Include="Event Library\Event Library.resx">
       <DependentUpon>Event Library.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Event Library\Rename.resx">
+      <DependentUpon>Rename.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -156,7 +163,7 @@
       <DependentUpon>HexView.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Events.cfg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

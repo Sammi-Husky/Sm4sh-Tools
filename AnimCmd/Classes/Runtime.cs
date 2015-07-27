@@ -17,7 +17,7 @@ namespace Sm4shCommand
 
                 for (int i = 0; i < raw.Count; i += 5)
                 {
- 
+
                     CommandDefinition h = new CommandDefinition();
                     h.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
                     h.Name = raw[i + 1];
@@ -32,8 +32,57 @@ namespace Sm4shCommand
                     if (h.Identifier == 0x5766F889 || h.Identifier == 0x89F86657)
                         _endingCommand = h;
 
+                    if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
+                        while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
+                            h.ParamSyntax.Add("Unknown");
+
                     commandDictionary.Add(h);
                 }
+            }
+        }
+        public static void SaveCommandInfo(string path)
+        {
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                foreach (CommandDefinition def in commandDictionary)
+                {
+                    //Write Ident
+                    writer.WriteLine(def.Identifier.ToString("X"));
+
+                    //Write Name
+                    writer.WriteLine(def.Name);
+
+                    //Write Parameter Specifier List
+                    if (def.ParamSpecifiers.Count != 0)
+                        for(int i=0;i<def.ParamSpecifiers.Count;i++)
+                        {
+                            writer.Write(def.ParamSpecifiers[i].ToString());
+                            if (i != def.ParamSpecifiers.Count - 1)
+                                writer.Write(",");
+                        }
+                    else
+                        writer.Write("NONE");
+                    writer.Write("\n");
+
+                    //Write Parameter Syntax Keywords
+                    if (def.ParamSyntax.Count != 0)
+                        for(int i=0; i<def.ParamSyntax.Count;i++)
+                        {
+                            writer.Write(def.ParamSyntax[i]);
+                            if (i != def.ParamSyntax.Count - 1)
+                                writer.Write(",");
+                        }
+                    else
+                        writer.Write("NONE");
+                    writer.Write("\n");
+
+                    //Write Command Description
+                    if (!string.IsNullOrEmpty(def.EventDescription))
+                        writer.WriteLine(def.EventDescription + "\n");
+                    else
+                        writer.WriteLine("NONE\n");
+                }
+                writer.Close();
             }
         }
         public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();

@@ -72,11 +72,15 @@ namespace Sm4shCommand
             }
         }
 
-        private void richTextBox2_TextChanged(object sender, EventArgs e) =>
+        private void richTextBox2_TextChanged(object sender, EventArgs e)
+        {
             curDef.EventDescription = richTextBox1.Text = richTextBox2.Text;
+        }
 
-        private void comboBox1_TextChanged(object sender, EventArgs e) =>
+        private void comboBox1_TextChanged(object sender, EventArgs e)
+        {
             curDef.ParamSpecifiers[listBox2.SelectedIndex] = comboBox1.SelectedIndex;
+        }
 
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)

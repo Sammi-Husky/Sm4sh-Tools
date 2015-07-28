@@ -16,7 +16,10 @@ namespace Sm4shCommand
             InitializeComponent();
             textBox1.Text = text;
         }
-        public string ParameterName => textBox1.Text;
+        public string ParameterName
+        {
+            get { return textBox1.Text; }
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {

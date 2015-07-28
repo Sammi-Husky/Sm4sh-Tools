@@ -161,7 +161,7 @@ namespace Sm4shCommand
             int counter = 0;
             foreach (uint u in MotionTable)
             {
-                TreeNode n = new TreeNode($"{counter:X} [{u:X8}]");
+                TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
                 if (CharacterFiles[0].Actions.ContainsKey(u))
                     n.Nodes.Add("Main");
@@ -177,7 +177,7 @@ namespace Sm4shCommand
             }
             isRoot = true;
             rootPath = dirPath;
-            this.Text = $"Main Form - {dirPath}";
+            this.Text = String.Format("Main Form - {0}", dirPath);
         }
 
 
@@ -254,10 +254,10 @@ namespace Sm4shCommand
                 if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
                 {
                     foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add($"{list._flags:X8}");
+                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
 
                     FileName = dlg.FileName;
-                    this.Text = $"Main Form - {FileName}";
+                    this.Text = String.Format("Main Form - {0}", FileName);
                 }
             }
             dlg.Dispose();
@@ -371,7 +371,7 @@ namespace Sm4shCommand
                     uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
                     byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                     HexView f = new HexView(data);
-                    f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
+                    f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                     f.Show();
 
                 }
@@ -388,7 +388,7 @@ namespace Sm4shCommand
                     {
                         byte[] data = CharacterFiles[0].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "GFX")
@@ -396,21 +396,21 @@ namespace Sm4shCommand
 
                         byte[] data = CharacterFiles[1].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Sound")
                     {
                         byte[] data = CharacterFiles[2].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                     else if (treeView1.SelectedNode.Text == "Expression")
                     {
                         byte[] data = CharacterFiles[3].Actions[ident].GetArray();
                         HexView f = new HexView(data);
-                        f.Text = $"HexView - {treeView1.SelectedNode.Text} - ReadOnly";
+                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                         f.Show();
                     }
                 }
@@ -556,7 +556,7 @@ namespace Sm4shCommand
             {
 
                 if (_commandInfo.ParamSyntax.Count > 0)
-                    Param += $"{_commandInfo.ParamSyntax[i]}=";
+                    Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
 
                 if (parameters[i] is int | parameters[i] is bint)
                     Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
@@ -566,7 +566,7 @@ namespace Sm4shCommand
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
 
             }
-            return $"{_commandInfo.Name}({Param})";
+            return String.Format("{0}({1})", _commandInfo.Name, Param);
 
         }
         public virtual byte[] ToArray()
@@ -597,7 +597,7 @@ namespace Sm4shCommand
         public uint ident;
 
         public override int CalcSize() { return 0x04; }
-        public override string ToString() => $"0x{ident:X8}";
+        public override string ToString() { return String.Format("0x{0:X8}", ident); }
     }
     public unsafe class ACMDFile : IDisposable
     {
@@ -749,7 +749,7 @@ namespace Sm4shCommand
                 {
                     DataSource src = new DataSource(addr, 0x04);
                     UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
-                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = $"0x{ident:X}" };
+                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
                     _cur.Commands.Add(unkC);
                     addr += 0x04;
                 }

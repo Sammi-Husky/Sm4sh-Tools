@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using Sm4shCommand.Classes;
 using System.Collections;
 using Be.Windows.Forms;
 
@@ -47,21 +46,12 @@ namespace Sm4shCommand
         // Parses an MTable file. Basically copies all data into a list of uints.
         public MTable ParseMTable(DataSource source, Endianness endian)
         {
-            VoidPtr addr = source.Address;
             List<uint> ActionFlags = new List<uint>();
 
-            int i = 0;
-            while (i * 4 != source.Length)
-            {
-                if (endian == Endianness.Little)
-                    ActionFlags.Add(*(uint*)(addr + (i * 4)));
-                else if (endian == Endianness.Big)
-                    ActionFlags.Add(*(buint*)(addr + (i * 4)));
-                i++;
-            }
-            MTable m = new MTable(ActionFlags, endian);
+            for (int i = 0; i < source.Length; i += 4)
+                ActionFlags.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
 
-            return m;
+            return new MTable(ActionFlags, endian);
         }
 
         // Crawls the code box and applies changes to the linked command list.
@@ -81,11 +71,8 @@ namespace Sm4shCommand
             {
                 if (lines[i].StartsWith("0x"))
                 {
-                    UnknownCommand unkC = new UnknownCommand();
-                    unkC._commandInfo = new CommandDefinition() { Identifier = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber), Name = lines[i].Substring(2) };
-                    unkC._owner = _curFile.Actions[_linked._flags];
-                    unkC.ident = UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber);
-                    unkC._offset = UInt32.Parse(lines[i].Substring(lines[i].IndexOf('@') + 3), System.Globalization.NumberStyles.HexNumber);
+
+                    UnknownCommand unkC = new UnknownCommand(/*UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber), workingEndian*/);
                     _curFile.Actions[_linked._flags].Commands.Add(unkC);
                     continue;
                 }
@@ -94,9 +81,7 @@ namespace Sm4shCommand
                     {
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
                         List<string> Params = temp.Replace("0x", "").Split(',').ToList();
-                        Command c = new Command();
-                        c._owner = _curFile.Actions[_linked._flags];
-                        c._commandInfo = e;
+                        Command c = new Command(workingEndian, e);
                         for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
                         {
                             // parameter - it's syntax keyword(s), and then parse.
@@ -118,33 +103,31 @@ namespace Sm4shCommand
 
         public bool OpenFile(string Filepath)
         {
-            try
+            //try
+            //{
+            DataSource source = new DataSource(FileMap.FromFile(Filepath));
+
+            if (*(byte*)(source.Address + 0x04) == 0x02)
+                workingEndian = Endianness.Little;
+            else if ((*(byte*)(source.Address + 0x04) == 0x00))
+                workingEndian = Endianness.Big;
+            else
             {
-                DataSource source = new DataSource(FileMap.FromFile(Filepath));
-
-                if (*(byte*)(source.Address + 0x04) == 0x02)
-                    workingEndian = Endianness.Little;
-                else if ((*(byte*)(source.Address + 0x04) == 0x00))
-                    workingEndian = Endianness.Big;
-                else
-                {
-                    MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
-                    return false;
-                }
-                ACMDFile file = new ACMDFile(source, workingEndian);
-                if (file.Actions.Count == 0 && isRoot == false)
-                {
-                    MessageBox.Show("There were no actions found");
-                    return false;
-                }
-
-                CharacterFiles.Add(file);
-                file.Dispose();
-                source.Close();
-
-                return true;
+                MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
+                return false;
             }
-            catch (Exception x) { MessageBox.Show(x.Message); return false; }
+            ACMDFile file = new ACMDFile(source, workingEndian);
+            if (file.Actions.Count == 0 && isRoot == false)
+            {
+                MessageBox.Show("There were no actions found");
+                return false;
+            }
+
+            CharacterFiles.Add(file);
+
+            return true;
+            //}
+            //catch (Exception x) { MessageBox.Show(x.Message); return false; }
         }
         public void OpenDirectory(string dirPath)
         {
@@ -520,35 +503,21 @@ namespace Sm4shCommand
 
     public unsafe class Command
     {
-        public DataSource WorkingSource { get { return _workingSource; } set { _workingSource = value; } }
-        private DataSource _workingSource;
-
-        public Command(CommandList Owner, DataSource source)
+        public Command(Endianness _endian, CommandDefinition info)
         {
-            _owner = Owner;
-            _workingSource = source;
+            endian = _endian;
+            _commandInfo = info;
         }
         public Command() { }
 
         public CommandDefinition _commandInfo;
-        public CommandList _owner;
+        public Endianness endian;
 
 
         public List<object> parameters = new List<object>();
 
         public virtual int CalcSize() { return 0x04 + (_commandInfo.ParamSpecifiers.Count * 4); }
-        public void getparams()
-        {
-            for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
-            {
-                if (_commandInfo.ParamSpecifiers[i] == 0)
-                    parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
-                else if (_commandInfo.ParamSpecifiers[i] == 1)
-                    parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
-                else if (_commandInfo.ParamSpecifiers[i] == 2)
-                    parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _owner._endian));
-            }
-        }
+
         public override string ToString()
         {
             string Param = "";
@@ -572,11 +541,11 @@ namespace Sm4shCommand
         public virtual byte[] ToArray()
         {
             byte[] tmp = new byte[CalcSize()];
-            Util.SetWord(ref tmp, _commandInfo.Identifier, 0, _owner._endian);
+            Util.SetWord(ref tmp, _commandInfo.Identifier, 0, endian);
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
                 if (_commandInfo.ParamSpecifiers[i] == 0)
-                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4, _owner._endian);
+                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4, endian);
                 else if (_commandInfo.ParamSpecifiers[i] == 1)
                 {
                     double HEX = Convert.ToDouble(parameters[i]);
@@ -585,7 +554,7 @@ namespace Sm4shCommand
                     int dec = BitConverter.ToInt32(bytes, 0);
                     string HexVal = dec.ToString("X");
 
-                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4, _owner._endian);
+                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4, endian);
                 }
             }
             return tmp;
@@ -593,16 +562,32 @@ namespace Sm4shCommand
     }
     public unsafe class UnknownCommand : Command
     {
-        public uint _offset;
-        public uint ident;
+        //public UnknownCommand(uint ident, Endianness endian)
+        //{
+        //    _ident = ident;
+        //    _endian = endian;
+        //}
 
-        public override int CalcSize() { return 0x04; }
-        public override string ToString() { return String.Format("0x{0:X8}", ident); }
+        public uint _ident;
+        public List<int> data = new List<int>();
+        public Endianness _endian;
+
+        public override int CalcSize() { return data.Count * 4; }
+        public override string ToString()
+        {
+            string s1 = "";
+            for (int i = 0; i < data.Count; i++)
+                s1 += String.Format("0x{0:X8}{1}", data[i], i + 1 != data.Count ? "\n" : "");
+            return s1;
+        }
+        public override byte[] ToArray()
+        {
+            return data.SelectMany(i => BitConverter.GetBytes(i)).ToArray();
+        }
     }
-    public unsafe class ACMDFile : IDisposable
-    {
 
-        ~ACMDFile() { Dispose(); }
+    public unsafe class ACMDFile
+    {
         public VoidPtr Header { get { return _replSource != DataSource.Empty ? _replSource.Address : WorkingSource.Address; } }
         public DataSource WorkingSource, _replSource;
 
@@ -682,7 +667,7 @@ namespace Sm4shCommand
             //  otherwise the list will bleed over and read the next one.
             for (int i = 0; i < Actions.Count; i++)
                 if (Actions.Values[i]._empty)
-                    Actions.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand, _owner = Actions.Values[i] });
+                    Actions.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand });
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
@@ -728,6 +713,7 @@ namespace Sm4shCommand
 
             Command c = null;
             VoidPtr addr = (WorkingSource.Address + _offset);
+            UnknownCommand unkC = new UnknownCommand();
 
             while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
@@ -739,18 +725,30 @@ namespace Sm4shCommand
 
                 if (info != null)
                 {
-                    DataSource src = new DataSource(addr, 0x04 + (info.ParamSpecifiers.Count * 4));
-                    c = new Command(_cur, src) { _commandInfo = info };
+                    c = new Command(_endian, info);
+                    for (int i = 0; i < info.ParamSpecifiers.Count; i++)
+                    {
+                        if (info.ParamSpecifiers[i] == 0)
+                            c.parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
+                        else if (info.ParamSpecifiers[i] == 1)
+                            c.parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
+                        else if (info.ParamSpecifiers[i] == 2)
+                            c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
+                    }
+                    if (unkC != null)
+                    {
+                        _cur.Commands.Add(unkC);
+                        unkC = null;
+                    }
                     _cur.Commands.Add(c);
                     addr += c.CalcSize();
-                    c.getparams();
+
                 }
                 else if (info == null)
                 {
-                    DataSource src = new DataSource(addr, 0x04);
-                    UnknownCommand unkC = new UnknownCommand() { _owner = _cur, _offset = (uint)addr - (uint)WorkingSource.Address, ident = ident, WorkingSource = src };
-                    unkC._commandInfo = new CommandDefinition() { Identifier = ident, Name = String.Format("0x{0:X}", ident) };
-                    _cur.Commands.Add(unkC);
+                    if (unkC == null)
+                        unkC = new UnknownCommand();
+                    unkC.data.Add(Util.GetWordUnsafe(addr, _endian));
                     addr += 0x04;
                 }
             }
@@ -763,9 +761,7 @@ namespace Sm4shCommand
                     if (e.Identifier == Runtime._endingCommand.Identifier)
                     { info = e; break; }
 
-
-                DataSource src = new DataSource(addr, 0x04);
-                c = new Command(_cur, src) { _commandInfo = info };
+                c = new Command(_endian, info);
                 _cur.Commands.Add(c);
                 addr += 4;
             }
@@ -799,16 +795,6 @@ namespace Sm4shCommand
             for (int i = 0; i < tmp.Length; i++)
                 tmp[i] = *(byte*)(src.Address + i);
             return tmp;
-        }
-
-        public void Dispose()
-        {
-            if (WorkingSource.Map != null)
-                WorkingSource.Close();
-            if (_replSource.Map != null)
-                _replSource.Close();
-
-            GC.SuppressFinalize(this);
         }
     }
     public unsafe class MTable : IEnumerable
@@ -917,6 +903,93 @@ namespace Sm4shCommand
             }
         }
 
+    }
+
+    public unsafe class CommandList
+    {
+        public Endianness _endian;
+        private byte[] _data;
+
+        public CommandList(uint flags, int offset, Endianness endian)
+        {
+            _flags = flags;
+            _offset = offset;
+            _endian = endian;
+        }
+        public CommandList() { }
+
+        public int Size
+        {
+            get
+            {
+                int size = 0;
+                foreach (Command e in Commands)
+                    size += e.CalcSize();
+                return size;
+            }
+        }
+
+        public bool _empty;
+        public bool Dirty
+        {
+            get
+            {
+                byte[] data = GetArray();
+                if (data.Length != _data.Length)
+                    return true;
+
+                for (int i = 0; i < _data.Length; i++)
+                    if (data[i] != _data[i])
+                        return true;
+
+                return false;
+            }
+        }
+
+
+        public uint _flags;
+        public int _offset;
+
+        public void Initialize()
+        {
+            _data = GetArray();
+        }
+        public void OnRebuild(VoidPtr address, int size)
+        {
+            VoidPtr addr = address;
+            for (int x = 0; x < Commands.Count; x++)
+            {
+                byte[] a = Commands[x].ToArray();
+                byte* tmp = stackalloc byte[a.Length];
+                for (int i = 0; i < a.Length; i++)
+                    tmp[i] = a[i];
+
+                Win32.MoveMemory(addr, tmp, (uint)a.Length);
+                addr += Commands[x].CalcSize();
+            }
+        }
+        public void Export(string path)
+        {
+            byte[] file = GetArray();
+            File.WriteAllBytes(path, file);
+        }
+        public byte[] GetArray()
+        {
+            byte[] file = new byte[Size];
+
+            int i = 0;
+            foreach (Command c in Commands)
+            {
+                byte[] command = c.ToArray();
+                for (int x = 0; x < command.Length; x++, i++)
+                    file[i] = command[x];
+            }
+
+            return file;
+
+        }
+
+        public List<Command> Commands = new List<Command>();
     }
 
     public enum Endianness

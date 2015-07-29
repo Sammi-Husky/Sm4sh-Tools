@@ -8,6 +8,13 @@ namespace Sm4shCommand
 {
     public unsafe static class Util
     {
+        //==================================================\\
+        // Uses code from PSA (Project Smash Attacks) SSBB  \\
+        // Moveset editor. Credit to PhantomWings and any   \\
+        // others who contributed to the source code        \\
+        //==================================================\\
+
+
         /// <summary>
         /// Retrieves a word from an array of bytes.
         /// </summary>
@@ -190,20 +197,20 @@ namespace Sm4shCommand
             mantissa *= (float)Math.Pow(2, exponent);
             return mantissa *= sign;
         }
-    }
-    public class FormProvider
-    {
-        public static ACMDMain MainWindow
+        /// <summary>
+        /// Copies data from memory at a specific address into an array
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceOffset"></param>
+        /// <param name="target"></param>
+        /// <param name="targetOffset"></param>
+        /// <param name="Length"></param>
+        public static byte[] GetArrayFromAddress(VoidPtr Address, int length)
         {
-            get
-            {
-                if (_mainForm == null)
-                {
-                    _mainForm= new ACMDMain();
-                }
-                return _mainForm;
-            }
+            byte[] arr = new byte[length];
+            for (int i = 0; i < length; i++)
+                arr[i] = *(byte*)(Address + i);
+            return arr;
         }
-        private static ACMDMain _mainForm;
     }
 }

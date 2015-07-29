@@ -54,9 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\EventList.cs" />
-    <Compile Include="Classes\Runtime.cs" />
-    <Compile Include="Classes\Util.cs" />
+    <Compile Include="Runtime.cs" />
+    <Compile Include="Util.cs" />
     <Compile Include="Event Library\Event Library.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -16,7 +16,7 @@ namespace Sm4shCommand
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(FormProvider.MainWindow);
+            Application.Run(new ACMDMain());
         }
     }
 }

@@ -56,22 +56,22 @@
   <ItemGroup>
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="Event Library\Event Library.cs">
+    <Compile Include="Gui\Event Library\Event Library.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Event Library\Event Library.Designer.cs">
+    <Compile Include="Gui\Event Library\Event Library.Designer.cs">
       <DependentUpon>Event Library.cs</DependentUpon>
     </Compile>
-    <Compile Include="Event Library\Rename.cs">
+    <Compile Include="Gui\Event Library\Rename.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Event Library\Rename.Designer.cs">
+    <Compile Include="Gui\Event Library\Rename.Designer.cs">
       <DependentUpon>Rename.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainForm.cs">
+    <Compile Include="Gui\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainForm.Designer.cs">
+    <Compile Include="Gui\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="IO\DataSource.cs" />
@@ -113,10 +113,10 @@
     <Compile Include="System\Windows\Forms\HexBox\IByteProvider.cs" />
     <Compile Include="System\Windows\Forms\HexBox\MemoryDataBlock.cs" />
     <Compile Include="System\Windows\Forms\HexBox\NativeMethods.cs" />
-    <Compile Include="HexView.cs">
+    <Compile Include="Gui\HexView.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HexView.designer.cs">
+    <Compile Include="Gui\HexView.designer.cs">
       <DependentUpon>HexView.cs</DependentUpon>
     </Compile>
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
@@ -132,13 +132,13 @@
     <Compile Include="Type Extensions\UInt16Extension.cs" />
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
-    <EmbeddedResource Include="Event Library\Event Library.resx">
+    <EmbeddedResource Include="Gui\Event Library\Event Library.resx">
       <DependentUpon>Event Library.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Event Library\Rename.resx">
+    <EmbeddedResource Include="Gui\Event Library\Rename.resx">
       <DependentUpon>Rename.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
+    <EmbeddedResource Include="Gui\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -158,7 +158,7 @@
       <DependentUpon>GotoDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="System\Windows\Forms\HexBox\HexBox.resx" />
-    <EmbeddedResource Include="HexView.resx">
+    <EmbeddedResource Include="Gui\HexView.resx">
       <DependentUpon>HexView.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Events.cfg">

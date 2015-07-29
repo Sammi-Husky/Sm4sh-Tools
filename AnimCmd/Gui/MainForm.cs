@@ -23,17 +23,9 @@ namespace Sm4shCommand
         //=================================================\\
         // Current file that is open and free for editing. \\
         //=================================================\\
-        ACMDFile _curFile;
+        ACMDFile _workingFile;
 
-        //==================================\\
-        // List of motion table identifiers \\
-        //==================================\\
-        MTable MotionTable = new MTable();
-
-        //===========================================================================\\
-        // Main, gfx, sound, and expression event lists. Null if in single file mode.\\
-        //===========================================================================\\
-        List<ACMDFile> CharacterFiles = new List<ACMDFile>(4);
+        Fighter _curFighter;
 
         // Misc runtime variables.
         bool isRoot = false;
@@ -59,11 +51,11 @@ namespace Sm4shCommand
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            _curFile.Actions[_linked._flags].Commands.Clear();
+            _workingFile.Actions[_linked._flags].Commands.Clear();
 
             if (String.IsNullOrEmpty(CodeView.Text))
             {
-                _curFile.Actions[_linked._flags]._empty = true;
+                _workingFile.Actions[_linked._flags]._empty = true;
                 return;
             }
             UnknownCommand unkC = null;
@@ -81,7 +73,7 @@ namespace Sm4shCommand
                     {
                         if (unkC != null)
                         {
-                            _curFile.Actions[_linked._flags].Commands.Add(unkC);
+                            _workingFile.Actions[_linked._flags].Commands.Add(unkC);
                             unkC = null;
                         }
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
@@ -100,13 +92,13 @@ namespace Sm4shCommand
                             else if (e.ParamSpecifiers[counter] == 2)
                                 c.parameters.Add(decimal.Parse(Params[counter]));
                         }
-                        _curFile.Actions[_linked._flags].Commands.Add(c);
+                        _workingFile.Actions[_linked._flags].Commands.Add(c);
                     }
             }
 
         }
 
-        public bool OpenFile(string Filepath)
+        public ACMDFile OpenFile(string Filepath)
         {
             //try
             //{
@@ -119,45 +111,40 @@ namespace Sm4shCommand
             else
             {
                 MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
-                return false;
+                return null;
             }
             ACMDFile file = new ACMDFile(source, workingEndian);
-            if (file.Actions.Count == 0 && isRoot == false)
-            {
-                MessageBox.Show("There were no actions found");
-                return false;
-            }
 
-            CharacterFiles.Add(file);
-
-            return true;
+            return file;
             //}
             //catch (Exception x) { MessageBox.Show(x.Message); return false; }
         }
-        public void OpenDirectory(string dirPath)
+        public Fighter OpenFighter(string dirPath)
         {
+            Fighter f = new Fighter();
             try
             {
-                OpenFile(dirPath + "/game.bin");
-                OpenFile(dirPath + "/effect.bin");
-                OpenFile(dirPath + "/sound.bin");
-                OpenFile(dirPath + "/expression.bin");
-                MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
+
+                f.Main = OpenFile(dirPath + "/game.bin");
+                f.GFX = OpenFile(dirPath + "/effect.bin");
+                f.SFX = OpenFile(dirPath + "/sound.bin");
+                f.Expression = OpenFile(dirPath + "/expression.bin");
+                f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
             }
-            catch { return; }
+            catch { return null; }
 
             int counter = 0;
-            foreach (uint u in MotionTable)
+            foreach (uint u in f.MotionTable)
             {
                 TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
-                if (CharacterFiles[0].Actions.ContainsKey(u))
+                //if (CharacterFiles[0].Actions.ContainsKey(u))
                     n.Nodes.Add("Main");
-                if (CharacterFiles[1].Actions.ContainsKey(u))
+                //if (CharacterFiles[1].Actions.ContainsKey(u))
                     n.Nodes.Add("GFX");
-                if (CharacterFiles[2].Actions.ContainsKey(u))
+                //if (CharacterFiles[2].Actions.ContainsKey(u))
                     n.Nodes.Add("Sound");
-                if (CharacterFiles[3].Actions.ContainsKey(u))
+                //if (CharacterFiles[3].Actions.ContainsKey(u))
                     n.Nodes.Add("Expression");
 
                 treeView1.Nodes.Add(n);
@@ -166,8 +153,8 @@ namespace Sm4shCommand
             isRoot = true;
             rootPath = dirPath;
             this.Text = String.Format("Main Form - {0}", dirPath);
+            return f;
         }
-
 
         #region Display related methods
         // Displays the list of commands as plain text in the code editor.
@@ -188,14 +175,14 @@ namespace Sm4shCommand
             ParseCodeBox();
             if (isRoot)
             {
-                CharacterFiles[0].Export(rootPath + "/game.bin");
-                CharacterFiles[1].Export(rootPath + "/effect.bin");
-                CharacterFiles[2].Export(rootPath + "/sound.bin");
-                CharacterFiles[3].Export(rootPath + "/expression.bin");
-                MotionTable.Export(rootPath + "/Motion.mtable");
+                _curFighter.Main.Export(rootPath + "/game.bin");
+                _curFighter.GFX.Export(rootPath + "/effect.bin");
+                _curFighter.SFX.Export(rootPath + "/sound.bin");
+                _curFighter.Expression.Export(rootPath + "/expression.bin");
+                _curFighter.MotionTable.Export(rootPath + "/Motion.mtable");
             }
             else
-                _curFile.Export(FileName);
+                _workingFile.Export(FileName);
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -206,11 +193,11 @@ namespace Sm4shCommand
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    CharacterFiles[0].Export(dlg.SelectedPath + "/game.bin");
-                    CharacterFiles[1].Export(dlg.SelectedPath + "/effect.bin");
-                    CharacterFiles[2].Export(dlg.SelectedPath + "/sound.bin");
-                    CharacterFiles[3].Export(dlg.SelectedPath + "/expression.bin");
-                    MotionTable.Export(dlg.SelectedPath + "/Motion.mtable");
+                    _curFighter.Main.Export(dlg.SelectedPath + "/game.bin");
+                    _curFighter.GFX.Export(dlg.SelectedPath + "/effect.bin");
+                    _curFighter.SFX.Export(dlg.SelectedPath + "/sound.bin");
+                    _curFighter.Expression.Export(dlg.SelectedPath + "/expression.bin");
+                    _curFighter.MotionTable.Export(dlg.SelectedPath + "/Motion.mtable");
                 }
                 dlg.Dispose();
             }
@@ -220,7 +207,7 @@ namespace Sm4shCommand
                 dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
-                    _curFile.Export(dlg.FileName);
+                    _workingFile.Export(dlg.FileName);
                 dlg.Dispose();
             }
         }
@@ -236,13 +223,12 @@ namespace Sm4shCommand
                     CodeView.Text = FileName =
                     rootPath = String.Empty;
                     _linked = null;
-                    CharacterFiles.Clear(); MotionTable.Clear();
                     treeView1.Nodes.Clear();
                     isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                    if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                    if (OpenFile(dlg.FileName) != null)
                     {
-                        foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                        foreach (CommandList list in _workingFile.Actions.Values)
                             treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
 
                         FileName = dlg.FileName;
@@ -259,13 +245,12 @@ namespace Sm4shCommand
             {
                 CodeView.Text = FileName =
                 rootPath = String.Empty;
-                _linked = null; _curFile = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
+                _linked = null; _workingFile = null;
                 treeView1.Nodes.Clear();
                 isRoot = true;
 
                 treeView1.ShowLines = treeView1.ShowRootLines = true;
-                OpenDirectory(dlg.SelectedPath);
+                _curFighter = OpenFighter(dlg.SelectedPath);
             }
             dlg.Dispose();
         }
@@ -288,7 +273,7 @@ namespace Sm4shCommand
                 if (treeView1.SelectedNode.Level == 0)
                 {
                     uint Ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
-                    if (_curFile.Actions[Ident].Dirty)
+                    if (_workingFile.Actions[Ident].Dirty)
                         treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = Color.PaleVioletRed;
                     else
                         treeView1.Nodes[treeView1.Nodes.IndexOf(treeView1.SelectedNode)].BackColor = SystemColors.Window;
@@ -300,14 +285,15 @@ namespace Sm4shCommand
                     TreeNode n = treeView1.SelectedNode;
                     while (n.Level != 0)
                         n = n.Parent;
-                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
+                    uint ident = _curFighter.MotionTable[treeView1.Nodes.IndexOf(n)];
 
-                    if (_curFile.Actions[ident].Dirty)
+                    if (_workingFile.Actions[ident].Dirty)
                         treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
                     else
                         treeView1.SelectedNode.BackColor = SystemColors.Window;
                 }
         }
+
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (!isRoot)
@@ -315,8 +301,7 @@ namespace Sm4shCommand
                 if (e.Node.Level == 0)
                 {
                     uint Ident = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
-                    DisplayScript(CharacterFiles[0].Actions[Ident]);
-                    _curFile = CharacterFiles[0];
+                    DisplayScript(_workingFile.Actions[Ident]);
                 }
             }
             else if (isRoot)
@@ -325,84 +310,107 @@ namespace Sm4shCommand
                     TreeNode n = e.Node;
                     while (n.Level != 0)
                         n = n.Parent;
-                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
+                    uint ident = _curFighter.MotionTable[treeView1.Nodes.IndexOf(n)];
 
                     if (e.Node.Text == "Main")
                     {
-                        DisplayScript(CharacterFiles[0].Actions[ident]);
-                        _curFile = CharacterFiles[0];
+                        if (!_curFighter.Main.Actions.Keys.Contains(ident))
+                        {
+                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            tmp.Initialize();
+                            _curFighter.Main.Actions.Add(ident, tmp);
+                        }
+                        DisplayScript(_curFighter.Main.Actions[ident]);
+                        _workingFile = _curFighter.Main;
                     }
                     else if (e.Node.Text == "GFX")
                     {
-
-                        DisplayScript(CharacterFiles[1].Actions[ident]);
-                        _curFile = CharacterFiles[1];
+                        if (!_curFighter.GFX.Actions.Keys.Contains(ident))
+                        {
+                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            tmp.Initialize();
+                            _curFighter.GFX.Actions.Add(ident, tmp );
+                        }
+                        DisplayScript(_curFighter.GFX.Actions[ident]);
+                        _workingFile = _curFighter.GFX;
                     }
                     else if (e.Node.Text == "Sound")
                     {
-                        DisplayScript(CharacterFiles[2].Actions[ident]);
-                        _curFile = CharacterFiles[2];
+                        if (!_curFighter.SFX.Actions.Keys.Contains(ident))
+                        {
+                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            tmp.Initialize();
+                            _curFighter.SFX.Actions.Add(ident, tmp);
+                        }
+                        DisplayScript(_curFighter.SFX.Actions[ident]);
+                        _workingFile = _curFighter.SFX;
                     }
                     else if (e.Node.Text == "Expression")
                     {
-                        DisplayScript(CharacterFiles[3].Actions[ident]);
-                        _curFile = CharacterFiles[3];
+                        if (!_curFighter.Expression.Actions.Keys.Contains(ident))
+                        {
+                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            tmp.Initialize();
+                            _curFighter.Expression.Actions.Add(ident, tmp);
+                        }
+                        DisplayScript(_curFighter.Expression.Actions[ident]);
+                        _workingFile = _curFighter.Expression;
                     }
                 }
         }
         private void btnHexView_Click(object sender, EventArgs e)
         {
 
-            if (!isRoot)
-            {
-                if (treeView1.SelectedNode.Level == 0)
-                {
+            //if (!isRoot)
+            //{
+            //    if (treeView1.SelectedNode.Level == 0)
+            //    {
                     uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
-                    byte[] data = CharacterFiles[0].Actions[ident].GetArray();
+                    byte[] data = _workingFile.Actions[ident].GetArray();
                     HexView f = new HexView(data);
                     f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
                     f.Show();
 
-                }
-            }
-            else if (isRoot)
-                if (treeView1.SelectedNode.Level == 1)
-                {
-                    TreeNode n = treeView1.SelectedNode;
-                    while (n.Level != 0)
-                        n = n.Parent;
-                    uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
+            //    }
+            //}
+            //else if (isRoot)
+            //    if (treeView1.SelectedNode.Level == 1)
+            //    {
+            //        TreeNode n = treeView1.SelectedNode;
+            //        while (n.Level != 0)
+            //            n = n.Parent;
+            //        uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
 
-                    if (treeView1.SelectedNode.Text == "Main")
-                    {
-                        byte[] data = CharacterFiles[0].Actions[ident].GetArray();
-                        HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-                        f.Show();
-                    }
-                    else if (treeView1.SelectedNode.Text == "GFX")
-                    {
+            //        if (treeView1.SelectedNode.Text == "Main")
+            //        {
+            //            byte[] data = CharacterFiles[0].Actions[ident].GetArray();
+            //            HexView f = new HexView(data);
+            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            //            f.Show();
+            //        }
+            //        else if (treeView1.SelectedNode.Text == "GFX")
+            //        {
 
-                        byte[] data = CharacterFiles[1].Actions[ident].GetArray();
-                        HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-                        f.Show();
-                    }
-                    else if (treeView1.SelectedNode.Text == "Sound")
-                    {
-                        byte[] data = CharacterFiles[2].Actions[ident].GetArray();
-                        HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-                        f.Show();
-                    }
-                    else if (treeView1.SelectedNode.Text == "Expression")
-                    {
-                        byte[] data = CharacterFiles[3].Actions[ident].GetArray();
-                        HexView f = new HexView(data);
-                        f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-                        f.Show();
-                    }
-                }
+            //            byte[] data = CharacterFiles[1].Actions[ident].GetArray();
+            //            HexView f = new HexView(data);
+            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            //            f.Show();
+            //        }
+            //        else if (treeView1.SelectedNode.Text == "Sound")
+            //        {
+            //            byte[] data = CharacterFiles[2].Actions[ident].GetArray();
+            //            HexView f = new HexView(data);
+            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            //            f.Show();
+            //        }
+            //        else if (treeView1.SelectedNode.Text == "Expression")
+            //        {
+            //            byte[] data = CharacterFiles[3].Actions[ident].GetArray();
+            //            HexView f = new HexView(data);
+            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            //            f.Show();
+            //        }
+            //    }
         }
         #endregion
 
@@ -411,62 +419,7 @@ namespace Sm4shCommand
             if (!isRoot)
                 return;
 
-            StringBuilder sb = new StringBuilder();
-
-            foreach (uint u in MotionTable)
-            {
-                sb.Append(String.Format("\n\n{0:X}: [{1:X8}]", MotionTable.IndexOf(u), u));
-                CommandList c1 = null, c2 = null,
-                            c3 = null, c4 = null;
-
-                if (CharacterFiles[0].Actions.ContainsKey(u))
-                    c1 = CharacterFiles[0].Actions[u];
-                if (CharacterFiles[1].Actions.ContainsKey(u))
-                    c2 = CharacterFiles[1].Actions[u];
-                if (CharacterFiles[2].Actions.ContainsKey(u))
-                    c3 = CharacterFiles[2].Actions[u];
-                if (CharacterFiles[3].Actions.ContainsKey(u))
-                    c4 = CharacterFiles[3].Actions[u];
-
-                sb.Append("\n\tGame:{");
-                if (c1 != null)
-                    foreach (Command cmd in c1.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
-                else
-                    sb.Append("\n\t\tEmpty");
-                sb.Append("\n\t}");
-
-                sb.Append("\n\tGFX:{");
-                if (c2 != null)
-                    foreach (Command cmd in c2.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
-                else
-                    sb.Append("\n\t\tEmpty");
-                sb.Append("\n\t}");
-
-                sb.Append("\n\tSFX:{");
-                if (c3 != null)
-                    foreach (Command cmd in c3.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
-                else
-                    sb.Append("\n\t\tEmpty");
-                sb.Append("\n\t}");
-
-                sb.Append("\n\tExpression:{");
-                if (c4 != null)
-                    foreach (Command cmd in c4.Commands)
-                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
-                else
-                    sb.Append("\n\t\tEmpty");
-                sb.Append("\n\t}");
-            }
-            sb.Append("\n\t End. -Dumped via Sm4shCommand-");
-            SaveFileDialog dlg = new SaveFileDialog();
-            dlg.Filter = "Plain Text (.txt) | *.txt";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-                using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
-                    writer.Write(sb.ToString());
+            
         }
 
         private void ACMDMain_Load(object sender, EventArgs e)
@@ -921,7 +874,6 @@ namespace Sm4shCommand
         public CommandList(uint flags, int offset, Endianness endian)
         {
             _flags = flags;
-            _offset = offset;
             _endian = endian;
         }
         public CommandList() { }
@@ -956,7 +908,6 @@ namespace Sm4shCommand
 
 
         public uint _flags;
-        public int _offset;
 
         public void Initialize()
         {
@@ -992,12 +943,88 @@ namespace Sm4shCommand
                 for (int x = 0; x < command.Length; x++, i++)
                     file[i] = command[x];
             }
-
             return file;
-
         }
 
         public List<Command> Commands = new List<Command>();
+    }
+
+    public class Fighter
+    {
+        public ACMDFile Main { get { return _main; } set { _main = value; } }
+        private ACMDFile _main;
+
+        public ACMDFile GFX { get { return _gfx; } set { _gfx = value; } }
+        private ACMDFile _gfx;
+
+        public ACMDFile SFX { get { return _sfx; } set { _sfx = value; } }
+        private ACMDFile _sfx;
+
+        public ACMDFile Expression { get { return _expression; } set { _expression = value; } }
+        private ACMDFile _expression;
+
+        public MTable MotionTable { get { return _mtable; } set { _mtable = value; } }
+        private MTable _mtable;
+
+        public void DumpAsText(string path)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (uint u in MotionTable)
+            {
+                sb.Append(String.Format("\n\n{0:X}: [{1:X8}]", MotionTable.IndexOf(u), u));
+                CommandList c1 = null, c2 = null,
+                            c3 = null, c4 = null;
+
+                if (Main.Actions.ContainsKey(u))
+                    c1 = Main.Actions[u];
+                if (GFX.Actions.ContainsKey(u))
+                    c2 = GFX.Actions[u];
+                if (SFX.Actions.ContainsKey(u))
+                    c3 = SFX.Actions[u];
+                if (Expression.Actions.ContainsKey(u))
+                    c4 = Expression.Actions[u];
+
+                sb.Append("\n\tGame:{");
+                if (c1 != null)
+                    foreach (Command cmd in c1.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tGFX:{");
+                if (c2 != null)
+                    foreach (Command cmd in c2.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tSFX:{");
+                if (c3 != null)
+                    foreach (Command cmd in c3.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+
+                sb.Append("\n\tExpression:{");
+                if (c4 != null)
+                    foreach (Command cmd in c4.Commands)
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+            }
+            sb.Append("\n\t End. -Dumped via Sm4shCommand-");
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.Filter = "Plain Text (.txt) | *.txt";
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+                using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
+                    writer.Write(sb.ToString());
+        }
     }
 
     public enum Endianness

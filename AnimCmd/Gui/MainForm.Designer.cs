@@ -81,14 +81,14 @@
             this.toolStripSeparator2,
             this.dumpAsTextToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // openFileToolStripMenuItem
             // 
             this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
             this.openFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.openFileToolStripMenuItem.Text = "Open File..";
             this.openFileToolStripMenuItem.Click += new System.EventHandler(this.openFileToolStripMenuItem_Click);
             // 
@@ -97,20 +97,20 @@
             this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
             this.openDirectoryToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.O)));
-            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.openDirectoryToolStripMenuItem.Text = "Open Directory..";
             this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(222, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(232, 6);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
@@ -119,26 +119,26 @@
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
             this.saveAsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.S)));
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.saveAsToolStripMenuItem.Text = "Save as..";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(222, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(232, 6);
             // 
             // dumpAsTextToolStripMenuItem
             // 
             this.dumpAsTextToolStripMenuItem.Name = "dumpAsTextToolStripMenuItem";
-            this.dumpAsTextToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.dumpAsTextToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.dumpAsTextToolStripMenuItem.Text = "Dump as Text";
             this.dumpAsTextToolStripMenuItem.Click += new System.EventHandler(this.dumpAsTextToolStripMenuItem_Click);
             // 
             // editToolStripMenuItem
             // 
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
             // 
             // viewToolStripMenuItem
@@ -146,13 +146,13 @@
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.eventLibraryToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
             // 
             // eventLibraryToolStripMenuItem
             // 
             this.eventLibraryToolStripMenuItem.Name = "eventLibraryToolStripMenuItem";
-            this.eventLibraryToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.eventLibraryToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.eventLibraryToolStripMenuItem.Text = "Event Library";
             this.eventLibraryToolStripMenuItem.Click += new System.EventHandler(this.eventLibraryToolStripMenuItem_Click);
             // 
@@ -167,14 +167,12 @@
             // 
             // treeView1
             // 
-            this.treeView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.treeView1.ContextMenuStrip = this.nodeContextMenu;
+            this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.HideSelection = false;
-            this.treeView1.Location = new System.Drawing.Point(-1, 27);
+            this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(103, 576);
+            this.treeView1.Size = new System.Drawing.Size(113, 582);
             this.treeView1.TabIndex = 6;
             this.treeView1.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView1_BeforeSelect);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
@@ -184,30 +182,29 @@
             this.nodeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnHexView});
             this.nodeContextMenu.Name = "nodeContextMenu";
-            this.nodeContextMenu.Size = new System.Drawing.Size(133, 26);
+            this.nodeContextMenu.Size = new System.Drawing.Size(135, 26);
             // 
             // btnHexView
             // 
             this.btnHexView.Name = "btnHexView";
-            this.btnHexView.Size = new System.Drawing.Size(132, 22);
+            this.btnHexView.Size = new System.Drawing.Size(134, 22);
             this.btnHexView.Text = "Hex Editor..";
             this.btnHexView.Click += new System.EventHandler(this.btnHexView_Click);
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.richTextBox1.Location = new System.Drawing.Point(4, 468);
+            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTextBox1.Location = new System.Drawing.Point(0, 436);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(728, 135);
+            this.richTextBox1.Size = new System.Drawing.Size(727, 146);
             this.richTextBox1.TabIndex = 8;
             this.richTextBox1.Text = "";
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -218,8 +215,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.treeView1);
-            this.splitContainer1.Size = new System.Drawing.Size(844, 628);
-            this.splitContainer1.SplitterDistance = 735;
+            this.splitContainer1.Size = new System.Drawing.Size(844, 582);
+            this.splitContainer1.SplitterDistance = 727;
             this.splitContainer1.TabIndex = 9;
             // 
             // CodeView
@@ -230,9 +227,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.CodeView.BackColor = System.Drawing.SystemColors.Window;
             this.CodeView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.55F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.CodeView.Location = new System.Drawing.Point(4, 27);
+            this.CodeView.Location = new System.Drawing.Point(4, 3);
             this.CodeView.Name = "CodeView";
-            this.CodeView.Size = new System.Drawing.Size(731, 435);
+            this.CodeView.Size = new System.Drawing.Size(723, 427);
             this.CodeView.TabIndex = 4;
             this.CodeView.Text = "";
             this.CodeView.WordWrap = false;
@@ -243,9 +240,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(844, 628);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "ACMDMain";

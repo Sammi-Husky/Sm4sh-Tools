@@ -569,7 +569,6 @@ namespace Sm4shCommand
     public unsafe class UnknownCommand : Command
     {
         public List<int> data = new List<int>();
-        public Endianness _endian;
 
         public override int CalcSize() { return data.Count * 4; }
         public override string ToString()
@@ -675,26 +674,26 @@ namespace Sm4shCommand
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
             //
-            Util.SetWordUnsafe(address + 0x04, 2, _endian); // Version (2)          //
-            Util.SetWordUnsafe(address + 0x08, Actions.Count, _endian);             //
-            //
-            int count = 0;                                                          //
-            foreach (CommandList e in Actions.Values)                               //
-                count += e.Commands.Count;                                            //
-            //
-            Util.SetWordUnsafe(address + 0x0C, count, _endian);                     //
-            addr += 0x10;                                                           //
-            //
-            //=======Write Event List offsets and flags=================//          //                                        //            //
-            for (int i = 0, prev = 0; i < Actions.Count; i++)           //          //
-            {                                                           //          //
-                int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //          //
-                Util.SetWordUnsafe(addr, (int)Actions.Keys[i], _endian);//          //
-                Util.SetWordUnsafe(addr + 4, dataOffset, _endian);      //          //
-                prev += Actions.Values[i].Size;                         //          //
-                addr += 8;                                              //          //
-            }                                                           //          //
-            //=========================================================//           //
+            Util.SetWordUnsafe(address + 0x04, 2, _endian); // Version (2)              //
+            Util.SetWordUnsafe(address + 0x08, Actions.Count, _endian);                 //
+                                                                                        //
+            int count = 0;                                                              //
+            foreach (CommandList e in Actions.Values)                                   //
+                count += e.Commands.Count;                                              //
+                                                                                        //
+            Util.SetWordUnsafe(address + 0x0C, count, _endian);                         //
+            addr += 0x10;                                                               //
+                                                                                        //
+                                                                                        //=======Write Event List offsets and flags=================//              //                                        //            //
+            for (int i = 0, prev = 0; i < Actions.Count; i++)           //              //
+            {                                                           //              //
+                int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //              //
+                Util.SetWordUnsafe(addr, (int)Actions.Keys[i], _endian);//              //
+                Util.SetWordUnsafe(addr + 4, dataOffset, _endian);      //              //
+                prev += Actions.Values[i].Size;                         //              //
+                addr += 8;                                              //              //
+            }                                                           //              //
+            //=========================================================//               //
             //                                                                         //
             //========================================================================//
 
@@ -718,7 +717,7 @@ namespace Sm4shCommand
             // Loop through Event List.
             while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
-                // Check if current word is a command ident & setup commandDefinition
+                // Try to get command definition
                 uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
                 CommandDefinition info = null;
                 foreach (CommandDefinition e in Runtime.commandDictionary)
@@ -760,6 +759,7 @@ namespace Sm4shCommand
                     addr += 0x04;
                 }
             }
+
             // If we hit a script_end command, add it to the the Event List and terminate looping.
             if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
             {

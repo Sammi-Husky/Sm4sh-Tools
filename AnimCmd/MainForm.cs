@@ -66,19 +66,24 @@ namespace Sm4shCommand
                 _curFile.Actions[_linked._flags]._empty = true;
                 return;
             }
-
+            UnknownCommand unkC = null;
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("0x"))
                 {
-
-                    UnknownCommand unkC = new UnknownCommand(/*UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber), workingEndian*/);
-                    _curFile.Actions[_linked._flags].Commands.Add(unkC);
+                    if (unkC == null)
+                        unkC = new UnknownCommand();
+                    unkC.data.Add(Int32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber));
                     continue;
                 }
                 foreach (CommandDefinition e in Runtime.commandDictionary)
                     if (lines[i].StartsWith(e.Name))
                     {
+                        if (unkC != null)
+                        {
+                            _curFile.Actions[_linked._flags].Commands.Add(unkC);
+                            unkC = null;
+                        }
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
                         List<string> Params = temp.Replace("0x", "").Split(',').ToList();
                         Command c = new Command(workingEndian, e);
@@ -222,28 +227,29 @@ namespace Sm4shCommand
 
         private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null;
-                CharacterFiles.Clear(); MotionTable.Clear();
-                treeView1.Nodes.Clear();
-                isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
-
-                if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                dlg.Filter = "ACMD Binary (*.bin)|*.bin| All Files (*.*)|*.*";
+                DialogResult result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
                 {
-                    foreach (CommandList list in CharacterFiles[0].Actions.Values)
-                        treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+                    CodeView.Text = FileName =
+                    rootPath = String.Empty;
+                    _linked = null;
+                    CharacterFiles.Clear(); MotionTable.Clear();
+                    treeView1.Nodes.Clear();
+                    isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                    FileName = dlg.FileName;
-                    this.Text = String.Format("Main Form - {0}", FileName);
+                    if (OpenFile(dlg.FileName) && CharacterFiles[0] != null)
+                    {
+                        foreach (CommandList list in CharacterFiles[0].Actions.Values)
+                            treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+
+                        FileName = dlg.FileName;
+                        this.Text = String.Format("Main Form - {0}", FileName);
+                    }
                 }
             }
-            dlg.Dispose();
         }
         private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -562,13 +568,6 @@ namespace Sm4shCommand
     }
     public unsafe class UnknownCommand : Command
     {
-        //public UnknownCommand(uint ident, Endianness endian)
-        //{
-        //    _ident = ident;
-        //    _endian = endian;
-        //}
-
-        public uint _ident;
         public List<int> data = new List<int>();
         public Endianness _endian;
 
@@ -712,38 +711,47 @@ namespace Sm4shCommand
             CommandList _cur = new CommandList(_flags, _offset, _endian);
 
             Command c = null;
-            VoidPtr addr = (WorkingSource.Address + _offset);
-            UnknownCommand unkC = new UnknownCommand();
+            UnknownCommand unkC = null;
 
+            VoidPtr addr = (WorkingSource.Address + _offset);
+
+            // Loop through Event List.
             while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
             {
+                // Check if current word is a command ident & setup commandDefinition
                 uint ident = (uint)Util.GetWordUnsafe(addr, _endian);
                 CommandDefinition info = null;
-
                 foreach (CommandDefinition e in Runtime.commandDictionary)
                     if (e.Identifier == ident) { info = e; break; }
 
+                // If a command definition exists, use that info to deserialize.
                 if (info != null)
                 {
-                    c = new Command(_endian, info);
-                    for (int i = 0; i < info.ParamSpecifiers.Count; i++)
-                    {
-                        if (info.ParamSpecifiers[i] == 0)
-                            c.parameters.Add(Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
-                        else if (info.ParamSpecifiers[i] == 1)
-                            c.parameters.Add(Util.GetFloatUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
-                        else if (info.ParamSpecifiers[i] == 2)
-                            c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (WorkingSource.Address + (i * 4)), _endian));
-                    }
+                    // If previous commands were unknown, add them here.
                     if (unkC != null)
                     {
                         _cur.Commands.Add(unkC);
                         unkC = null;
                     }
+
+                    // Get command parameters and add the command to the event list.
+                    c = new Command(_endian, info);
+                    for (int i = 0; i < info.ParamSpecifiers.Count; i++)
+                    {
+                        if (info.ParamSpecifiers[i] == 0)
+                            c.parameters.Add(Util.GetWordUnsafe(0x04 + (addr + (i * 4)), _endian));
+                        else if (info.ParamSpecifiers[i] == 1)
+                            c.parameters.Add(Util.GetFloatUnsafe(0x04 + (addr + (i * 4)), _endian));
+                        else if (info.ParamSpecifiers[i] == 2)
+                            c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), _endian));
+                    }
+
                     _cur.Commands.Add(c);
                     addr += c.CalcSize();
-
                 }
+                // If there is no command definition, this is unknown data.
+                // Add the current word to the unk command and continue adding
+                // until we hit a known command
                 else if (info == null)
                 {
                     if (unkC == null)
@@ -752,7 +760,7 @@ namespace Sm4shCommand
                     addr += 0x04;
                 }
             }
-
+            // If we hit a script_end command, add it to the the Event List and terminate looping.
             if (Util.GetWordUnsafe(addr, _endian) == Runtime._endingCommand.Identifier)
             {
                 CommandDefinition info = null;

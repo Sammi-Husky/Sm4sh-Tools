@@ -14,12 +14,12 @@ Miscellaneous tools for dealing with Smash 4 files.
     - Displays unknown commands as well as defined commands, with full rebuild capability.
   
   - Planned updates
-    - Customizable event syntax and descriptions.
-    - Tooltips when hovering over commands.
+    ~~- Customizable event syntax and descriptions.~~ Done
+    ~~- Tooltips when hovering over commands.~~ Done
     - Exporting / importing individual event lists as raw data.
-    - Exporting event lists as plaintext.
+    ~~- Exporting event lists as plaintext.~~ Done
     - Realtime error checking of the code box.
-    - Marking of changed actions in the tree view.
+    ~~- Marking of changed actions in the tree view.~~ Done
     - Adding new event lists to files.
     - Creating entirely new ACMD files.
     - Creating entirely new MTable files.
@@ -27,9 +27,9 @@ Miscellaneous tools for dealing with Smash 4 files.
     - Undo and redo support.
 
   - Known Bugs
-    - Leaving the code box blank and saving will remove that event list from the file entirely.
-    - Trying to open the code for an removed event list (see bug 1) will crash the application.
-    - Saving an event list without an Script_End() command will cause the eventlist to merge with the next, corrupting the file.
+    ~~- Leaving the code box blank and saving will remove that event list from the file entirely.~~
+    ~~- Trying to open the code for an removed event list (see bug 1) will crash the application.~~
+    ~~- Saving an event list without an Script_End() command will cause the eventlist to merge with the next, corrupting the file.~~
     - Does not warn on exiting before saving.
     - Saving with incorrect parameters in a command will crash the tool.
 

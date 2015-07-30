@@ -38,13 +38,13 @@ namespace Sm4shCommand
         // Parses an MTable file. Basically copies all data into a list of uints.
         public MTable ParseMTable(DataSource source, Endianness endian)
         {
-            List<uint> ActionFlags = new List<uint>();
+            List<uint> CRCTable = new List<uint>();
 
             for (int i = 0; i < source.Length; i += 4)
                 //if((uint)Util.GetWordUnsafe((source.Address + i), endian) != 0)
-                    ActionFlags.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
+                CRCTable.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
 
-            return new MTable(ActionFlags, endian);
+            return new MTable(CRCTable, endian);
         }
 
         // Crawls the code box and applies changes to the linked command list.
@@ -52,11 +52,11 @@ namespace Sm4shCommand
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
             string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            _workingFile.Actions[_linked._flags].Commands.Clear();
+            _workingFile.Actions[_linked._crc].Commands.Clear();
 
             if (String.IsNullOrEmpty(CodeView.Text))
             {
-                _workingFile.Actions[_linked._flags]._empty = true;
+                _workingFile.Actions[_linked._crc]._empty = true;
                 return;
             }
             UnknownCommand unkC = null;
@@ -74,7 +74,7 @@ namespace Sm4shCommand
                     {
                         if (unkC != null)
                         {
-                            _workingFile.Actions[_linked._flags].Commands.Add(unkC);
+                            _workingFile.Actions[_linked._crc].Commands.Add(unkC);
                             unkC = null;
                         }
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
@@ -93,7 +93,7 @@ namespace Sm4shCommand
                             else if (e.ParamSpecifiers[counter] == 2)
                                 c.parameters.Add(decimal.Parse(Params[counter]));
                         }
-                        _workingFile.Actions[_linked._flags].Commands.Add(c);
+                        _workingFile.Actions[_linked._crc].Commands.Add(c);
                     }
             }
 
@@ -230,7 +230,7 @@ namespace Sm4shCommand
                     if (OpenFile(dlg.FileName) != null)
                     {
                         foreach (CommandList list in _workingFile.Actions.Values)
-                            treeView1.Nodes.Add(String.Format("{0:X8}", list._flags));
+                            treeView1.Nodes.Add(String.Format("{0:X8}", list._crc));
 
                         FileName = dlg.FileName;
                         this.Text = String.Format("Main Form - {0}", FileName);
@@ -317,7 +317,7 @@ namespace Sm4shCommand
                     {
                         if (!_curFighter.Main.Actions.Keys.Contains(ident))
                         {
-                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            CommandList tmp = new CommandList(ident, workingEndian);
                             tmp.Initialize();
                             _curFighter.Main.Actions.Add(ident, tmp);
                         }
@@ -328,7 +328,7 @@ namespace Sm4shCommand
                     {
                         if (!_curFighter.GFX.Actions.Keys.Contains(ident))
                         {
-                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            CommandList tmp = new CommandList(ident, workingEndian);
                             tmp.Initialize();
                             _curFighter.GFX.Actions.Add(ident, tmp);
                         }
@@ -339,7 +339,7 @@ namespace Sm4shCommand
                     {
                         if (!_curFighter.SFX.Actions.Keys.Contains(ident))
                         {
-                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            CommandList tmp = new CommandList(ident, workingEndian);
                             tmp.Initialize();
                             _curFighter.SFX.Actions.Add(ident, tmp);
                         }
@@ -350,7 +350,7 @@ namespace Sm4shCommand
                     {
                         if (!_curFighter.Expression.Actions.Keys.Contains(ident))
                         {
-                            CommandList tmp = new CommandList(ident, 0, workingEndian);
+                            CommandList tmp = new CommandList(ident, workingEndian);
                             tmp.Initialize();
                             _curFighter.Expression.Actions.Add(ident, tmp);
                         }
@@ -588,15 +588,10 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < _actionCount; i++)
             {
-                uint _flags = 0;
-                int _offset = 0;
+                uint _crc = (uint)Util.GetWordUnsafe(WorkingSource.Address + 0x10 + (i * 8), _endian);
+                int _offset = Util.GetWordUnsafe((WorkingSource.Address + 0x10 + (i * 8)) + 0x04, _endian);
 
-
-                _flags = (uint)Util.GetWordUnsafe(WorkingSource.Address + 0x10 + (i * 8), _endian);
-                _offset = Util.GetWordUnsafe((WorkingSource.Address + 0x10 + (i * 8)) + 0x04, _endian);
-
-
-                Actions.Add(_flags, ParseEventList(_flags, _offset));
+                Actions.Add(_crc, ParseEventList(_crc, _offset));
             }
         }
         public void Rebuild()
@@ -638,7 +633,7 @@ namespace Sm4shCommand
             Util.SetWordUnsafe(address + 0x0C, count, _endian);                         //
             addr += 0x10;                                                               //
                                                                                         //
-                                                                                        //=======Write Event List offsets and flags=================//              //                                        //            //
+            //=======Write Event List offsets and CRC's=================//              //
             for (int i = 0, prev = 0; i < Actions.Count; i++)           //              //
             {                                                           //              //
                 int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //              //
@@ -659,14 +654,14 @@ namespace Sm4shCommand
             }
         }
 
-        private CommandList ParseEventList(uint _flags, int _offset)
+        private CommandList ParseEventList(uint CRC, int Offset)
         {
-            CommandList _cur = new CommandList(_flags, _offset, _endian);
+            CommandList _cur = new CommandList(CRC, _endian);
 
             Command c = null;
             UnknownCommand unkC = null;
 
-            VoidPtr addr = (WorkingSource.Address + _offset);
+            VoidPtr addr = (WorkingSource.Address + Offset);
 
             // Loop through Event List.
             while (Util.GetWordUnsafe(addr, _endian) != Runtime._endingCommand.Identifier)
@@ -768,10 +763,10 @@ namespace Sm4shCommand
             get { return _baseList[i]; }
             set { _baseList[i] = value; }
         }
-        public MTable(List<uint> ActionFlags, Endianness endian)
+        public MTable(List<uint> CRCTable, Endianness endian)
         {
             _endian = endian;
-            _baseList = ActionFlags;
+            _baseList = CRCTable;
         }
         public MTable() { }
 
@@ -872,10 +867,10 @@ namespace Sm4shCommand
         public Endianness _endian;
         private byte[] _data;
 
-        public CommandList(uint flags, int offset, Endianness endian)
+        public CommandList(uint CRC, Endianness Endian)
         {
-            _flags = flags;
-            _endian = endian;
+            _crc = CRC;
+            _endian = Endian;
         }
         public CommandList() { }
 
@@ -908,7 +903,7 @@ namespace Sm4shCommand
         }
 
 
-        public uint _flags;
+        public uint _crc;
 
         public void Initialize()
         {

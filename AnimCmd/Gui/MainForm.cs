@@ -41,7 +41,8 @@ namespace Sm4shCommand
             List<uint> ActionFlags = new List<uint>();
 
             for (int i = 0; i < source.Length; i += 4)
-                ActionFlags.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
+                //if((uint)Util.GetWordUnsafe((source.Address + i), endian) != 0)
+                    ActionFlags.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
 
             return new MTable(ActionFlags, endian);
         }
@@ -138,13 +139,13 @@ namespace Sm4shCommand
             {
                 TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
-                //if (CharacterFiles[0].Actions.ContainsKey(u))
+                if (f.Main.Actions.ContainsKey(u))
                     n.Nodes.Add("Main");
-                //if (CharacterFiles[1].Actions.ContainsKey(u))
+                if (f.GFX.Actions.ContainsKey(u))
                     n.Nodes.Add("GFX");
-                //if (CharacterFiles[2].Actions.ContainsKey(u))
+                if (f.SFX.Actions.ContainsKey(u))
                     n.Nodes.Add("Sound");
-                //if (CharacterFiles[3].Actions.ContainsKey(u))
+                if (f.Expression.Actions.ContainsKey(u))
                     n.Nodes.Add("Expression");
 
                 treeView1.Nodes.Add(n);
@@ -329,7 +330,7 @@ namespace Sm4shCommand
                         {
                             CommandList tmp = new CommandList(ident, 0, workingEndian);
                             tmp.Initialize();
-                            _curFighter.GFX.Actions.Add(ident, tmp );
+                            _curFighter.GFX.Actions.Add(ident, tmp);
                         }
                         DisplayScript(_curFighter.GFX.Actions[ident]);
                         _workingFile = _curFighter.GFX;
@@ -365,11 +366,11 @@ namespace Sm4shCommand
             //{
             //    if (treeView1.SelectedNode.Level == 0)
             //    {
-                    uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
-                    byte[] data = _workingFile.Actions[ident].GetArray();
-                    HexView f = new HexView(data);
-                    f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-                    f.Show();
+            uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
+            byte[] data = _workingFile.Actions[ident].GetArray();
+            HexView f = new HexView(data);
+            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            f.Show();
 
             //    }
             //}
@@ -419,7 +420,7 @@ namespace Sm4shCommand
             if (!isRoot)
                 return;
 
-            
+
         }
 
         private void ACMDMain_Load(object sender, EventArgs e)

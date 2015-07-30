@@ -19,16 +19,9 @@ Miscellaneous tools for dealing with Smash 4 files.
     - Exporing full character dumps as .txt.
     
   - Planned updates
-    - Exporting / importing individual event lists as raw data.
-    - Realtime error checking of the code box.
-    - Adding new event lists to files.
-    - Creating entirely new ACMD files.
-    - Creating entirely new MTable files.
-    - Better user interface, including application icon.
-    - Undo and redo support.
+    - [Features and requests.](https://github.com/Sammi-Husky/Sm4sh-Tools/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement)
 
   - Known Bugs
-    - Does not warn on exiting before saving.
-    - Saving with incorrect parameters in a command will crash the tool.
+    - [Bug Tracker](http://www.github.com/sammi-husky/sm4sh-tools/issues)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/e6q6vbdgjs4eoop5?svg=true)](https://ci.appveyor.com/project/Sammi-Husky/sm4sh-tools)

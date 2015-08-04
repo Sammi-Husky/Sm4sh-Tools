@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="crc32.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Gui\Event Library\Event Library.cs">

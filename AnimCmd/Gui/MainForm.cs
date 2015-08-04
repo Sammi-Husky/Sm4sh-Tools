@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO;
-using System.Collections;
-using Be.Windows.Forms;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Sm4shCommand
 {
@@ -24,8 +23,9 @@ namespace Sm4shCommand
         // Current file that is open and free for editing. \\
         //=================================================\\
         ACMDFile _workingFile;
-
         Fighter _curFighter;
+
+        Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
 
         // Misc runtime variables.
         bool isRoot = false;
@@ -66,7 +66,7 @@ namespace Sm4shCommand
                 {
                     if (unkC == null)
                         unkC = new UnknownCommand();
-                    unkC.data.Add(Int32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber));
+                    unkC.data.Add(UInt32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber));
                     continue;
                 }
                 foreach (CommandDefinition e in Runtime.commandDictionary)
@@ -87,7 +87,7 @@ namespace Sm4shCommand
                                 Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=') + 1);
 
                             if (e.ParamSpecifiers[counter] == 0)
-                                c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
+                                c.parameters.Add(UInt32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
                             else if (e.ParamSpecifiers[counter] == 1)
                                 c.parameters.Add(float.Parse(Params[counter]));
                             else if (e.ParamSpecifiers[counter] == 2)
@@ -132,7 +132,7 @@ namespace Sm4shCommand
                 f.Expression = OpenFile(dirPath + "/expression.bin");
                 f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
             }
-            catch { return null; }
+            catch (Exception x) { MessageBox.Show(x.Message); return null; }
 
             int counter = 0;
             foreach (uint u in f.MotionTable)
@@ -163,7 +163,15 @@ namespace Sm4shCommand
         {
             StringBuilder sb = new StringBuilder();
             foreach (Command cmd in s.Commands)
-                sb.Append(cmd.ToString() + "\n");
+            {
+                string command = cmd.ToString() + "\n";
+                for (int i = 0; i < cmd.parameters.Count; i++)
+                {
+                    if ((cmd.parameters[i] is uint) && AnimHashPairs.ContainsKey((uint)cmd.parameters[i]))
+                        command = command.Replace(String.Format("0x{0:X8}", cmd.parameters[i]), String.Format("\"{0}\"", AnimHashPairs[(uint)cmd.parameters[i]]));
+                }
+                sb.Append(command);
+            }
 
             CodeView.Text = sb.ToString();
             _linked = s;
@@ -227,7 +235,7 @@ namespace Sm4shCommand
                     treeView1.Nodes.Clear();
                     isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                    if (OpenFile(dlg.FileName) != null)
+                    if ((_workingFile = OpenFile(dlg.FileName)) != null)
                     {
                         foreach (CommandList list in _workingFile.Actions.Values)
                             treeView1.Nodes.Add(String.Format("{0:X8}", list._crc));
@@ -445,6 +453,36 @@ namespace Sm4shCommand
         {
             Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
         }
+
+        private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                string[] names = Directory.EnumerateFiles(dlg.SelectedPath).ToArray();
+                uint[] hashes = new uint[names.Length];
+                Crc32 c = new Crc32();
+
+                for (int i = 0; i < names.Length; i++)
+                {
+                    Regex expression = new Regex(@"(.*)([A-Z])([0-9][0-9])(.*)\.omo");
+                    Match match = expression.Match(names[i]);
+                    string Anim = match.Groups[4].ToString();
+                    AnimHashPairs.Add(BitConverter.ToUInt32(c.ComputeHash(Encoding.ASCII.GetBytes(Anim.ToLower())), 0).Reverse(), Anim);
+                }
+
+                treeView1.BeginUpdate();
+                for (int i = 0; i < treeView1.Nodes.Count; i++)
+                {
+                    string s = treeView1.Nodes[i].Text.Substring(treeView1.Nodes[i].Text.IndexOf('[') + 1, 8);
+                    uint hash = uint.Parse(s, System.Globalization.NumberStyles.HexNumber);
+                    if (AnimHashPairs.ContainsKey(hash))
+                        treeView1.Nodes[i].Text = AnimHashPairs[hash];
+                }
+                treeView1.EndUpdate();
+            }
+        }
     }
 
     public unsafe class CommandDefinition
@@ -487,9 +525,9 @@ namespace Sm4shCommand
                 if (_commandInfo.ParamSyntax.Count > 0)
                     Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
 
-                if (parameters[i] is int | parameters[i] is bint)
+                if (parameters[i] is uint)
                     Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
-                if (parameters[i] is float | parameters[i] is bfloat)
+                if (parameters[i] is float)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is decimal)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
@@ -505,7 +543,7 @@ namespace Sm4shCommand
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
                 if (_commandInfo.ParamSpecifiers[i] == 0)
-                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4, endian);
+                    Util.SetWord(ref tmp, Convert.ToUInt32(parameters[i]), (i + 1) * 4, endian);
                 else if (_commandInfo.ParamSpecifiers[i] == 1)
                 {
                     double HEX = Convert.ToDouble(parameters[i]);
@@ -522,7 +560,7 @@ namespace Sm4shCommand
     }
     public unsafe class UnknownCommand : Command
     {
-        public List<int> data = new List<int>();
+        public List<uint> data = new List<uint>();
 
         public override int CalcSize() { return data.Count * 4; }
         public override string ToString()
@@ -578,8 +616,8 @@ namespace Sm4shCommand
             WorkingSource = source;
             _endian = endian;
 
-            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, endian);
-            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, endian);
+            _actionCount = (int)Util.GetWordUnsafe(source.Address + 0x08, endian);
+            _commandCount = (int)Util.GetWordUnsafe(source.Address + 0x0C, endian);
 
             Parse();
         }
@@ -589,7 +627,7 @@ namespace Sm4shCommand
             for (int i = 0; i < _actionCount; i++)
             {
                 uint _crc = (uint)Util.GetWordUnsafe(WorkingSource.Address + 0x10 + (i * 8), _endian);
-                int _offset = Util.GetWordUnsafe((WorkingSource.Address + 0x10 + (i * 8)) + 0x04, _endian);
+                int _offset = (int)Util.GetWordUnsafe((WorkingSource.Address + 0x10 + (i * 8)) + 0x04, _endian);
 
                 Actions.Add(_crc, ParseEventList(_crc, _offset));
             }
@@ -633,7 +671,7 @@ namespace Sm4shCommand
             Util.SetWordUnsafe(address + 0x0C, count, _endian);                         //
             addr += 0x10;                                                               //
                                                                                         //
-            //=======Write Event List offsets and CRC's=================//              //
+                                                                                        //=======Write Event List offsets and CRC's=================//              //
             for (int i = 0, prev = 0; i < Actions.Count; i++)           //              //
             {                                                           //              //
                 int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //              //

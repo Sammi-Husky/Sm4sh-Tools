@@ -22,7 +22,7 @@ namespace Sm4shCommand
         /// <param name="offset"></param>
         /// <param name="endian"></param>
         /// <returns></returns>
-        public static long GetWord(byte[] data, long offset, Endianness endian)
+        public static uint GetWord(byte[] data, long offset, Endianness endian)
         {
             if (offset % 4 != 0) throw new Exception("Odd word offset.");
             if (offset >= data.Length) throw new Exception("Offset outside of expected value range.");
@@ -48,15 +48,15 @@ namespace Sm4shCommand
         /// <param name="Address"></param>
         /// <param name="endian"></param>
         /// <returns></returns>
-        public static int GetWordUnsafe(VoidPtr Address, Endianness endian)
+        public static uint GetWordUnsafe(VoidPtr Address, Endianness endian)
         {
             if (Address % 4 != 0)
                 return 0;
 
             if (endian == Endianness.Big)
-                return *(bint*)Address;
+                return *(buint*)Address;
             else
-                return *(int*)Address;
+                return *(uint*)Address;
         }
 
         /// <summary>

@@ -366,7 +366,11 @@ namespace Sm4shCommand
             //{
             //    if (treeView1.SelectedNode.Level == 0)
             //    {
-            uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
+            uint ident = 0;
+            if (treeView1.SelectedNode.Level == 0)
+                ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
+            else if (treeView1.SelectedNode.Level == 1)
+                ident = uint.Parse(treeView1.SelectedNode.Parent.Text.Substring(treeView1.SelectedNode.Parent.Text.IndexOf('[') + 1, 8), System.Globalization.NumberStyles.HexNumber);
             byte[] data = _workingFile.Actions[ident].GetArray();
             HexView f = new HexView(data);
             f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
@@ -420,6 +424,7 @@ namespace Sm4shCommand
             if (!isRoot)
                 return;
 
+            _curFighter.DumpAsText();
 
         }
 
@@ -633,7 +638,7 @@ namespace Sm4shCommand
             Util.SetWordUnsafe(address + 0x0C, count, _endian);                         //
             addr += 0x10;                                                               //
                                                                                         //
-            //=======Write Event List offsets and CRC's=================//              //
+                                                                                        //=======Write Event List offsets and CRC's=================//              //
             for (int i = 0, prev = 0; i < Actions.Count; i++)           //              //
             {                                                           //              //
                 int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //              //
@@ -962,7 +967,7 @@ namespace Sm4shCommand
         public MTable MotionTable { get { return _mtable; } set { _mtable = value; } }
         private MTable _mtable;
 
-        public void DumpAsText(string path)
+        public void DumpAsText()
         {
             StringBuilder sb = new StringBuilder();
 

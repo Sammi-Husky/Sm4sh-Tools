@@ -51,10 +51,11 @@ namespace Sm4shCommand
         public void ParseCodeBox()
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
-            string[] lines = CodeView.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
+            ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+            string[] lines = box.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
             _workingFile.Actions[_linked._crc].Commands.Clear();
 
-            if (String.IsNullOrEmpty(CodeView.Text))
+            if (String.IsNullOrEmpty(box.Text))
             {
                 _workingFile.Actions[_linked._crc]._empty = true;
                 return;
@@ -165,12 +166,37 @@ namespace Sm4shCommand
             foreach (Command cmd in s.Commands)
                 sb.Append(cmd.ToString() + "\n");
 
-            CodeView.Text = sb.ToString();
+            ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+            box.Text = sb.ToString();
             _linked = s;
         }
         #endregion
 
         #region Event Handler Methods
+        private void ACMDMain_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(Application.StartupPath + "/Events.cfg"))
+            {
+                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
+
+                TooltipDictionary dict = new TooltipDictionary();
+                foreach (CommandDefinition cd in Runtime.commandDictionary)
+                    if (!String.IsNullOrEmpty(cd.EventDescription))
+                        dict.Add(cd.Name, cd.EventDescription);
+                if (tabControl1.SelectedTab == null)
+                    return;
+                ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+                box.CommandDictionary = Runtime.commandDictionary;
+                box.Tooltip.Dictionary = dict;
+            }
+            else
+                MessageBox.Show("Could not load Events.cfg");
+        }
+        private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
+        }
+
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ParseCodeBox();
@@ -187,7 +213,12 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ParseCodeBox();
+            if (_curFighter.Main.Dirty |
+                _curFighter.GFX.Dirty |
+                _curFighter.SFX.Dirty |
+                _curFighter.Expression.Dirty)
+                ParseCodeBox();
+
             if (isRoot)
             {
                 FolderSelectDialog dlg = new FolderSelectDialog();
@@ -213,7 +244,25 @@ namespace Sm4shCommand
             }
         }
 
-        private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void workspaceToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            FolderSelectDialog dlg = new FolderSelectDialog();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+                box.Text = FileName =
+                rootPath = String.Empty;
+                _linked = null; _workingFile = null;
+                treeView1.Nodes.Clear();
+                isRoot = true;
+
+                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                _curFighter = OpenFighter(dlg.SelectedPath);
+            }
+            dlg.Dispose();
+        }
+        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
@@ -221,7 +270,8 @@ namespace Sm4shCommand
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    CodeView.Text = FileName =
+                    ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+                    box.Text = FileName =
                     rootPath = String.Empty;
                     _linked = null;
                     treeView1.Nodes.Clear();
@@ -238,29 +288,7 @@ namespace Sm4shCommand
                 }
             }
         }
-        private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dlg = new FolderSelectDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                CodeView.Text = FileName =
-                rootPath = String.Empty;
-                _linked = null; _workingFile = null;
-                treeView1.Nodes.Clear();
-                isRoot = true;
 
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
-                _curFighter = OpenFighter(dlg.SelectedPath);
-            }
-            dlg.Dispose();
-        }
-
-        private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            EventLibrary dlg = new EventLibrary();
-            dlg.Show();
-        }
         private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
             if (_linked != null)
@@ -294,7 +322,6 @@ namespace Sm4shCommand
                         treeView1.SelectedNode.BackColor = SystemColors.Window;
                 }
         }
-
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (!isRoot)
@@ -359,6 +386,7 @@ namespace Sm4shCommand
                     }
                 }
         }
+
         private void btnHexView_Click(object sender, EventArgs e)
         {
 
@@ -413,38 +441,17 @@ namespace Sm4shCommand
             //        }
             //    }
         }
-        #endregion
-
+        private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EventLibrary dlg = new EventLibrary();
+            dlg.Show();
+        }
         private void dumpAsTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!isRoot)
                 return;
-
-
         }
-
-        private void ACMDMain_Load(object sender, EventArgs e)
-        {
-            if (File.Exists(Application.StartupPath + "/Events.cfg"))
-            {
-                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
-
-                TooltipDictionary dict = new TooltipDictionary();
-                foreach (CommandDefinition cd in Runtime.commandDictionary)
-                    if (!String.IsNullOrEmpty(cd.EventDescription))
-                        dict.Add(cd.Name, cd.EventDescription);
-
-                CodeView.CommandDictionary = Runtime.commandDictionary;
-                CodeView.Tooltip.Dictionary = dict;
-            }
-            else
-                MessageBox.Show("Could not load Events.cfg");
-        }
-
-        private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
-        }
+        #endregion
     }
 
     public unsafe class CommandDefinition
@@ -633,7 +640,7 @@ namespace Sm4shCommand
             Util.SetWordUnsafe(address + 0x0C, count, _endian);                         //
             addr += 0x10;                                                               //
                                                                                         //
-            //=======Write Event List offsets and CRC's=================//              //
+                                                                                        //=======Write Event List offsets and CRC's=================//              //
             for (int i = 0, prev = 0; i < Actions.Count; i++)           //              //
             {                                                           //              //
                 int dataOffset = 0x10 + (Actions.Count * 8) + prev;     //              //

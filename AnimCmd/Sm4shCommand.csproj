@@ -54,7 +54,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="crc32.cs" />
+    <Compile Include="Classes\ACMDFile.cs" />
+    <Compile Include="Classes\Command.cs" />
+    <Compile Include="Classes\CommandInfo.cs" />
+    <Compile Include="Classes\CommandList.cs" />
+    <Compile Include="Classes\Fighter.cs" />
+    <Compile Include="Classes\Mtable.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Gui\Event Library\Event Library.cs">

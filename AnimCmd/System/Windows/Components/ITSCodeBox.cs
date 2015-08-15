@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Sm4shCommand.Classes;
 
 namespace Sm4shCommand
 {
@@ -15,7 +16,7 @@ namespace Sm4shCommand
     class ITSCodeBox : RichTextBox
     {
         #region Members
-        private List<CommandDefinition> commandDictionary;
+        private List<CommandInfo> commandDictionary;
         private ListBox AutocompleteBox;
         private ITSToolTip ITSToolTip;
         private TooltipDictionary EventDescriptions;
@@ -42,7 +43,7 @@ namespace Sm4shCommand
             AutocompleteBox.KeyUp += OnKeyUp;
             AutocompleteBox.Visible = false;
             ITSToolTip = new ITSToolTip();
-            this.commandDictionary = new List<CommandDefinition>();
+            this.commandDictionary = new List<CommandInfo>();
 
             ITSToolTip.RichTextBox = this;
             EventDescriptions = new TooltipDictionary();
@@ -55,7 +56,7 @@ namespace Sm4shCommand
         /// The autocomplete dictionary.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public List<CommandDefinition> CommandDictionary
+        public List<CommandInfo> CommandDictionary
         {
             get { return this.commandDictionary; }
             set { this.commandDictionary = value; }
@@ -101,7 +102,7 @@ namespace Sm4shCommand
         private string FomatParams(string commandName)
         {
             string Param = "";
-            foreach(CommandDefinition c in commandDictionary)
+            foreach(CommandInfo c in commandDictionary)
                 if (c.Name == commandName)
                 {
                     for(int i=0; i<c.ParamSyntax.Count;i++)

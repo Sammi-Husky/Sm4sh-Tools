@@ -314,8 +314,9 @@ namespace Sm4shCommand
             {
                 if (e.Node.Level == 0)
                 {
-                    uint Ident = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
-                    DisplayScript(((NodeWrapper)treeView1.SelectedNode)._resource.EventLists[Ident]);
+                    uint CRC = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
+                    DisplayScript(((NodeWrapper)treeView1.SelectedNode)._resource.EventLists[CRC]);
+                    tabControl1.SelectedTab.Text = CRC.ToString("X");
                 }
             }
             else if (isRoot)
@@ -338,6 +339,7 @@ namespace Sm4shCommand
                         }
                         DisplayScript(tmp.EventLists[CRC]);
                         _workingFile = tmp;
+                        tabControl1.SelectedTab.Text = String.Format("Fighter[{0}] - {1}", e.Node.Index, CRC.ToString("X8"));
                     }
                 }
         }

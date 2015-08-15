@@ -53,6 +53,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.itsCodeBox1 = new Sm4shCommand.ITSCodeBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.newToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.openToolStripButton = new System.Windows.Forms.ToolStripButton();
@@ -60,7 +61,6 @@
             this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
-            this.itsCodeBox1 = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             this.nodeContextMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -205,7 +205,7 @@
             this.treeView1.HideSelection = false;
             this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(136, 579);
+            this.treeView1.Size = new System.Drawing.Size(137, 579);
             this.treeView1.TabIndex = 6;
             this.treeView1.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView1_BeforeSelect);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
@@ -230,7 +230,7 @@
             this.richTextBox1.Location = new System.Drawing.Point(0, 433);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(704, 146);
+            this.richTextBox1.Size = new System.Drawing.Size(703, 146);
             this.richTextBox1.TabIndex = 8;
             this.richTextBox1.Text = "";
             // 
@@ -249,7 +249,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.treeView1);
             this.splitContainer1.Size = new System.Drawing.Size(844, 579);
-            this.splitContainer1.SplitterDistance = 704;
+            this.splitContainer1.SplitterDistance = 703;
             this.splitContainer1.TabIndex = 9;
             // 
             // tabControl1
@@ -261,7 +261,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(704, 438);
+            this.tabControl1.Size = new System.Drawing.Size(703, 438);
             this.tabControl1.TabIndex = 9;
             // 
             // tabPage1
@@ -270,10 +270,21 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(696, 412);
+            this.tabPage1.Size = new System.Drawing.Size(695, 412);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // itsCodeBox1
+            // 
+            this.itsCodeBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.itsCodeBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.itsCodeBox1.Location = new System.Drawing.Point(3, 3);
+            this.itsCodeBox1.Name = "itsCodeBox1";
+            this.itsCodeBox1.Size = new System.Drawing.Size(689, 406);
+            this.itsCodeBox1.TabIndex = 0;
+            this.itsCodeBox1.Text = "";
+            this.itsCodeBox1.WordWrap = false;
             // 
             // toolStrip1
             // 
@@ -309,6 +320,7 @@
             this.openToolStripButton.Name = "openToolStripButton";
             this.openToolStripButton.Size = new System.Drawing.Size(23, 22);
             this.openToolStripButton.Text = "&Open";
+            this.openToolStripButton.Click += new System.EventHandler(this.fileToolStripMenuItem1_Click);
             // 
             // saveToolStripButton
             // 
@@ -318,6 +330,7 @@
             this.saveToolStripButton.Name = "saveToolStripButton";
             this.saveToolStripButton.Size = new System.Drawing.Size(23, 22);
             this.saveToolStripButton.Text = "&Save";
+            this.saveToolStripButton.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // toolStripSeparator
             // 
@@ -362,17 +375,6 @@
             "z"});
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
-            // 
-            // itsCodeBox1
-            // 
-            this.itsCodeBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.itsCodeBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.itsCodeBox1.Location = new System.Drawing.Point(3, 3);
-            this.itsCodeBox1.Name = "itsCodeBox1";
-            this.itsCodeBox1.Size = new System.Drawing.Size(690, 406);
-            this.itsCodeBox1.TabIndex = 0;
-            this.itsCodeBox1.Text = "";
-            this.itsCodeBox1.WordWrap = false;
             // 
             // ACMDMain
             // 

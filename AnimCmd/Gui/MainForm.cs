@@ -302,7 +302,7 @@ namespace Sm4shCommand
             if (treeView1.SelectedNode == null)
                 return;
 
-            if(treeView1.SelectedNode is NodeWrapper)
+            if (treeView1.SelectedNode is NodeWrapper)
                 if (((NodeWrapper)treeView1.SelectedNode)._resource.Dirty)
                     treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
                 else

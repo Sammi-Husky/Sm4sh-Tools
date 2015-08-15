@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sm4shCommand.Classes;
 using System.IO;
 
 namespace Sm4shCommand
@@ -18,7 +19,7 @@ namespace Sm4shCommand
                 for (int i = 0; i < raw.Count; i += 5)
                 {
 
-                    CommandDefinition h = new CommandDefinition();
+                    CommandInfo h = new CommandInfo();
                     h.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
                     h.Name = raw[i + 1];
                     string[] paramList = raw[i + 2].Split(',').Where(x => x != "NONE").ToArray();
@@ -45,7 +46,7 @@ namespace Sm4shCommand
             using (StreamWriter writer = new StreamWriter(path))
             {
                 WriteConfigHelp(writer);
-                foreach (CommandDefinition def in commandDictionary)
+                foreach (CommandInfo def in commandDictionary)
                 {
                     //Write Ident
                     writer.WriteLine(def.Identifier.ToString("X"));
@@ -109,7 +110,7 @@ namespace Sm4shCommand
 
 
         }
-        public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();
-        public static CommandDefinition _endingCommand;
+        public static List<CommandInfo> commandDictionary = new List<CommandInfo>();
+        public static CommandInfo _endingCommand;
     }
 }

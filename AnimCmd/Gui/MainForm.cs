@@ -227,7 +227,7 @@ namespace Sm4shCommand
                     treeView1.Nodes.Clear();
                     isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
 
-                    if (OpenFile(dlg.FileName) != null)
+                    if ((_workingFile = OpenFile(dlg.FileName)) != null)
                     {
                         foreach (CommandList list in _workingFile.Actions.Values)
                             treeView1.Nodes.Add(String.Format("{0:X8}", list._crc));

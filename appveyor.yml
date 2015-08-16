@@ -11,8 +11,8 @@ deploy:
     password:
       secure: XDMi7RoQ6O8Mx+fPKLafCQ==
     folder: public_html/Downloads/dev
-    artifact: AnimCmd-$(appveyor_build_version).zip
+    artifact: "AnimCmd-$(appveyor_build_version).zip"
   
 after_build:
-  - 7z a AnimCmd-$(appveyor_build_version).zip AnimCmd\bin\Release\AnimCmd.exe
-  - 7z a AnimCmd-$(appveyor_build_version).zip AnimCmd\bin\Release\Events.cfg
+  - 7z a "AnimCmd-$(appveyor_build_version).zip" AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a "AnimCmd-$(appveyor_build_version).zip" AnimCmd\bin\Release\Events.cfg

@@ -14,10 +14,10 @@ deploy:
     artifact: ZIPDEPLOY
   
 artifacts:
-  - path: AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip
+  - path: AnimCmd.zip
     name: ZIPDEPLOY
 
 after_build:
-  - 7z a AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip AnimCmd\bin\Release\AnimCmd.exe
-  - 7z a AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip AnimCmd\bin\Release\Events.cfg
-  - appveyor PushArtifact AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip -FileName AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip -DeploymentName test
+  - 7z a AnimCmd.zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCmd.zip AnimCmd\bin\Release\Events.cfg
+  - appveyor PushArtifact AnimCmd.zip -FileName AnimCmd.zip -DeploymentName test

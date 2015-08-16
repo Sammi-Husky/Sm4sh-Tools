@@ -8,4 +8,11 @@ build:
   verbosity: minimal
   
 deploy:
-- provider: Local
+  - provider: FTP
+    host: animcmd.net16.net
+    protocol: ftp
+    username: a2743571
+    password:
+      secure: XDMi7RoQ6O8Mx+fPKLafCQ==
+    folder: Downloads/dev
+    artifact: AnimCmd

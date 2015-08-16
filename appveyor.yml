@@ -1,5 +1,7 @@
 configuration: Release
 
+version: "0.52-dev{build}"
+
 build:
   verbosity: minimal
 
@@ -11,9 +13,9 @@ deploy:
     password:
       secure: XDMi7RoQ6O8Mx+fPKLafCQ==
     folder: public_html/Downloads/dev
-    artifact: "AnimCmd-$(APPVEYOR_BUILD_VERSION).zip"
+    artifact: "AnimCmd-v$(APPVEYOR_BUILD_VERSION).zip"
   
 after_build:
-  - 7z a AnimCmd-%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\AnimCmd.exe
-  - 7z a AnimCmd-%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\Events.cfg
-  - appveyor PushArtifact AnimCmd-%APPVEYOR_BUILD_VERSION%.zip
+  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\Events.cfg
+  - appveyor PushArtifact AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip

@@ -2,14 +2,10 @@ configuration: Release
 
 build:
   verbosity: minimal
-  publish_wap: true 
   
 artifacts:
   - path: AnimCmd/bin/Release
     name: AnimCmd
-  
-after_build:
-  - appveyor PushArtifact AnimCmd\bin\AnimCmd.zip -FileName Downloads\dev\AnimCmd.zip -DeploymentName test
   
 deploy:
   - provider: FTP

@@ -14,6 +14,5 @@ deploy:
     artifact: AnimCmd-$(appveyor_build_version).zip
   
 after_build:
-  - 7z a Latest.zip AnimCmd\bin\Release\AnimCmd.exe
-  - 7z a Latest.zip AnimCmd\bin\Release\Events.cfg
-  - ps: Push-AppveyorArtifact Latest.zip -FileName "AnimCmd-$(appveyor_build_version).zip"
+  - 7z a AnimCmd-$(appveyor_build_version).zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCmd-$(appveyor_build_version).zip AnimCmd\bin\Release\Events.cfg

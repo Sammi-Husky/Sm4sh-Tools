@@ -11,7 +11,11 @@ deploy:
     password:
       secure: XDMi7RoQ6O8Mx+fPKLafCQ==
     folder: public_html/Downloads/dev
-    artifact: AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip
+    artifact: ZIPDEPLOY
+  
+artifacts:
+  - path: AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip
+    name: ZIPDEPLOY
 
 after_build:
   - 7z a AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip AnimCmd\bin\Release\AnimCmd.exe

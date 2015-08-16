@@ -11,12 +11,9 @@ deploy:
     password:
       secure: XDMi7RoQ6O8Mx+fPKLafCQ==
     folder: public_html/Downloads/dev
-    artifact: ZIPDEPLOY
+    artifact: AnimCmd-$(appveyor_build_version).zip
   
-artifacts:
-  - path: Latest.zip
-    name: ZIPDEPLOY
-
 after_build:
   - 7z a Latest.zip AnimCmd\bin\Release\AnimCmd.exe
   - 7z a Latest.zip AnimCmd\bin\Release\Events.cfg
+  - ps: Push-AppveyorArtifact Latest.zip -FileName "AnimCmd-$(appveyor_build_version).zip"

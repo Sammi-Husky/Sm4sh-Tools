@@ -15,5 +15,5 @@ deploy:
 
 after_build:
   - 7z a AnimCmd.zip AnimCmd\bin\Release\AnimCmd.exe
-  - 7z a AnimCmd.zip AnimCmd\bin\Events.cfg
+  - 7z a AnimCmd.zip AnimCmd\bin\Release\Events.cfg
     appveyor PushArtifact AnimCmd.zip -FileName Downloads\dev\AnimCmd-%(APPVEYOR_BUILD_NUMBER).zip -DeploymentName test

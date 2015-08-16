@@ -4,7 +4,7 @@ Sm4sh-Tools
 Miscellaneous tools for dealing with Smash 4 files.
 
 - AnimCmd
-![Screenshot](http://i.imgur.com/ujA4tcu.png)
+![Screenshot](http://i.imgur.com/3X6Ze7I.png)
   - Aims to be a full fledged moveset editor for the smash4 ACMD filetypes, commonly refered to as "Moveset Files". The application supports full text editor based code writing with syntax highlighting and code completion. The application is still under active developement and some features may be unstable / incomplete.
   - Usable features.
     - Syntax highlighting of integer types.

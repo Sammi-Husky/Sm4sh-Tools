@@ -20,4 +20,3 @@ artifacts:
 after_build:
   - 7z a AnimCmd.zip AnimCmd\bin\Release\AnimCmd.exe
   - 7z a AnimCmd.zip AnimCmd\bin\Release\Events.cfg
-  - appveyor PushArtifact AnimCmd.zip -FileName AnimCmd.zip -DeploymentName test

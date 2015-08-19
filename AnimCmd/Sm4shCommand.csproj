@@ -60,6 +60,7 @@
     <Compile Include="Classes\CommandList.cs" />
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
+    <Compile Include="WorkspaceManager.cs" />
     <Compile Include="crc32.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />
@@ -180,6 +181,8 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="ProjectExample.fitproj" />
+    <None Include="WorkspaceExample.wrkspc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

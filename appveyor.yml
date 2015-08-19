@@ -2,6 +2,11 @@ configuration: Release
 
 version: "0.52-[{build}]-dev"
 
+branches:
+  only:
+    - master
+    - Stable
+
 build:
   verbosity: minimal
 

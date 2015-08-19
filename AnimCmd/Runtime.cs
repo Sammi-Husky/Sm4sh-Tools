@@ -35,7 +35,7 @@ namespace Sm4shCommand
 
                     if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
                         while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
-                            h.ParamSyntax.Add("Unknown");
+                            h.ParamSyntax.Add("unknown");
 
                     commandDictionary.Add(h);
                 }

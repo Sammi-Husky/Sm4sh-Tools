@@ -11,6 +11,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Collections;
 using Be.Windows.Forms;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace Sm4shCommand
 {
@@ -25,7 +27,7 @@ namespace Sm4shCommand
         // Current file that is open and free for editing. \\
         //=================================================\\
         ACMDFile _workingFile;
-
+        Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
         Fighter _curFighter;
 
         // Misc runtime variables.
@@ -56,11 +58,13 @@ namespace Sm4shCommand
             string[] lines = box.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
             _workingFile.EventLists[_linked.AnimationCRC].Commands.Clear();
 
+            //
             if (String.IsNullOrEmpty(box.Text))
             {
                 _workingFile.EventLists[_linked.AnimationCRC].isEmpty = true;
                 return;
             }
+
             UnknownCommand unkC = null;
             for (int i = 0; i < lines.Length; i++)
             {
@@ -122,7 +126,7 @@ namespace Sm4shCommand
             //}
             //catch (Exception x) { MessageBox.Show(x.Message); return false; }
         }
-        public Fighter OpenFighter(string dirPath)
+        public Fighter OpenWorkspace(string dirPath)
         {
             Fighter f = new Fighter();
             try
@@ -134,7 +138,7 @@ namespace Sm4shCommand
                 f.Expression = OpenFile(dirPath + "/expression.bin");
                 f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
             }
-            catch (FileNotFoundException x) { throw x; }
+            catch (FileNotFoundException x) { MessageBox.Show(x.Message); return null; }
 
             int counter = 0;
             foreach (uint u in f.MotionTable)
@@ -262,7 +266,7 @@ namespace Sm4shCommand
                 isRoot = true;
 
                 treeView1.ShowLines = treeView1.ShowRootLines = true;
-                _curFighter = OpenFighter(dlg.SelectedPath);
+                _curFighter = OpenWorkspace(dlg.SelectedPath);
             }
             dlg.Dispose();
         }
@@ -284,7 +288,7 @@ namespace Sm4shCommand
                     if ((_workingFile = OpenFile(dlg.FileName)) != null)
                     {
                         foreach (CommandList list in _workingFile.EventLists.Values)
-                            treeView1.Nodes.Add(new NodeWrapper(String.Format("{0:X8}", list.AnimationCRC), _workingFile));
+                            treeView1.Nodes.Add(new NodeWrapper(String.Format("[{0:X8}]", list.AnimationCRC), _workingFile));
 
                         FileName = dlg.FileName;
                         this.Text = String.Format("Main Form - {0}", FileName);
@@ -314,7 +318,15 @@ namespace Sm4shCommand
             {
                 if (e.Node.Level == 0)
                 {
-                    uint CRC = uint.Parse(e.Node.Text, System.Globalization.NumberStyles.HexNumber);
+                    uint CRC;
+                    if (e.Node.Text.Contains('['))
+                    {
+                        string id = e.Node.Text.Substring(e.Node.Text.IndexOf('[') + 1).TrimEnd(new char[] { ']' });
+                        CRC = uint.Parse(id, System.Globalization.NumberStyles.HexNumber);
+                    }
+                    else
+                        CRC = Crc32.Compute(Encoding.ASCII.GetBytes(e.Node.Text.ToLower()));
+
                     DisplayScript(((NodeWrapper)treeView1.SelectedNode)._resource.EventLists[CRC]);
                     tabControl1.SelectedTab.Text = CRC.ToString("X");
                 }
@@ -326,8 +338,16 @@ namespace Sm4shCommand
                     while (n.Level != 0)
                         n = n.Parent;
 
-                    string id = n.Text.Substring(n.Text.IndexOf('[') + 1).TrimEnd(new char[] { ']' });
-                    uint CRC = uint.Parse(id, System.Globalization.NumberStyles.HexNumber);
+                    uint CRC;
+
+                    if (n.Text.Contains('['))
+                    {
+                        string id = n.Text.Substring(n.Text.IndexOf('[') + 1).TrimEnd(new char[] { ']' });
+                        CRC = uint.Parse(id, System.Globalization.NumberStyles.HexNumber);
+                    }
+                    else
+                        CRC = Crc32.Compute(Encoding.ASCII.GetBytes(n.Text.ToLower()));
+
                     ACMDFile tmp = ((NodeWrapper)treeView1.SelectedNode)._resource;
                     if ((tmp = _curFighter[e.Node.Index]) != null)
                     {
@@ -339,64 +359,31 @@ namespace Sm4shCommand
                         }
                         DisplayScript(tmp.EventLists[CRC]);
                         _workingFile = tmp;
-                        tabControl1.SelectedTab.Text = String.Format("Fighter[{0}] - {1}", e.Node.Index, CRC.ToString("X8"));
+                        tabControl1.SelectedTab.Text = String.Format("Fighter[{0}] - {1}", e.Node.Index, CRC.ToString("X"));
                     }
                 }
         }
 
+
         private void btnHexView_Click(object sender, EventArgs e)
         {
+            TreeNode n = treeView1.SelectedNode;
+            while (n.Level != 0)
+                n = n.Parent;
 
-            //if (!isRoot)
-            //{
-            //    if (treeView1.SelectedNode.Level == 0)
-            //    {
-            uint ident = uint.Parse(treeView1.SelectedNode.Text, System.Globalization.NumberStyles.HexNumber);
-            byte[] data = _workingFile.EventLists[ident].ToArray();
+            uint CRC;
+            if (n.Text.Contains('['))
+            {
+                string id = n.Text.Substring(n.Text.IndexOf('[') + 1).TrimEnd(new char[] { ']' });
+                CRC = uint.Parse(id, System.Globalization.NumberStyles.HexNumber);
+            }
+            else
+                CRC = Crc32.Compute(Encoding.ASCII.GetBytes(n.Text.ToLower()));
+
+            byte[] data = ((NodeWrapper)treeView1.SelectedNode)._resource.EventLists[CRC].ToArray();
             HexView f = new HexView(data);
             f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
             f.Show();
-
-            //    }
-            //}
-            //else if (isRoot)
-            //    if (treeView1.SelectedNode.Level == 1)
-            //    {
-            //        TreeNode n = treeView1.SelectedNode;
-            //        while (n.Level != 0)
-            //            n = n.Parent;
-            //        uint ident = MotionTable[treeView1.Nodes.IndexOf(n)];
-
-            //        if (treeView1.SelectedNode.Text == "Main")
-            //        {
-            //            byte[] data = CharacterFiles[0].Actions[ident].GetArray();
-            //            HexView f = new HexView(data);
-            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-            //            f.Show();
-            //        }
-            //        else if (treeView1.SelectedNode.Text == "GFX")
-            //        {
-
-            //            byte[] data = CharacterFiles[1].Actions[ident].GetArray();
-            //            HexView f = new HexView(data);
-            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-            //            f.Show();
-            //        }
-            //        else if (treeView1.SelectedNode.Text == "Sound")
-            //        {
-            //            byte[] data = CharacterFiles[2].Actions[ident].GetArray();
-            //            HexView f = new HexView(data);
-            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-            //            f.Show();
-            //        }
-            //        else if (treeView1.SelectedNode.Text == "Expression")
-            //        {
-            //            byte[] data = CharacterFiles[3].Actions[ident].GetArray();
-            //            HexView f = new HexView(data);
-            //            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
-            //            f.Show();
-            //        }
-            //    }
         }
         private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -416,7 +403,41 @@ namespace Sm4shCommand
                     writer.Write(_curFighter.ToString());
         }
         #endregion
+
+        private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            DialogResult result = dlg.ShowDialog();
+            try
+            {
+                if (result == DialogResult.OK)
+                {
+                    byte[] filebytes = File.ReadAllBytes(dlg.FileName);
+                    int count = (int)Util.GetWord(filebytes, 8, workingEndian);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), workingEndian);
+                        string FileName = Util.GetString(filebytes, off, workingEndian);
+                        string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+                        AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
+                    }
+
+                    treeView1.BeginUpdate();
+                    for (int i = 0; i < treeView1.Nodes.Count; i++)
+                    {
+                        string s = treeView1.Nodes[i].Text.Substring(treeView1.Nodes[i].Text.IndexOf('[') + 1, 8);
+                        uint hash = uint.Parse(s, System.Globalization.NumberStyles.HexNumber);
+                        if (AnimHashPairs.ContainsKey(hash))
+                            treeView1.Nodes[i].Text = AnimHashPairs[hash];
+                    }
+                    treeView1.EndUpdate();
+                }
+            }
+            catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
+        }
     }
+
     public class NodeWrapper : TreeNode
     {
         public NodeWrapper(ACMDFile Resource)

@@ -101,32 +101,29 @@ namespace Sm4shCommand.Classes
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
 
-            //=========================================================================//   
+            //==========================================================================//   
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
-            //
-            Util.SetWordUnsafe(address + 0x04, 2, Endian); // Version (2)              //
-            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);                 //
-                                                                                        //
-            int count = 0;                                                              //
-            foreach (CommandList e in EventLists.Values)                                   //
-                count += e.Commands.Count;                                              //
-                                                                                        //
-            Util.SetWordUnsafe(address + 0x0C, count, Endian);                         //
-            addr += 0x10;                                                               //
-                                                                                        //
-                                                                                        //=======Write Event List offsets and CRC's=================//              //
-            for (int i = 0, prev = 0; i < EventLists.Count; i++)           //              //
-            {                                                           //              //
-                int dataOffset = 0x10 + (EventLists.Count * 8) + prev;     //              //
-                Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Endian);//              //
-                Util.SetWordUnsafe(addr + 4, dataOffset, Endian);      //              //
-                prev += EventLists.Values[i].Size;                         //              //
-                addr += 8;                                              //              //
-            }                                                           //              //
-            //=========================================================//               //
-            //                                                                         //
-            //========================================================================//
+
+            Util.SetWordUnsafe(address + 0x04, 2, Endian); // Version (2)
+            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);                 
+                                                                                        
+            int count = 0;                                                              
+            foreach (CommandList e in EventLists.Values)                                   
+                count += e.Commands.Count;                                              
+                                                                                        
+            Util.SetWordUnsafe(address + 0x0C, count, Endian);                         
+            addr += 0x10;                                                               
+                                                                                        
+            //===============Write Event List offsets and CRC's=================//              
+            for (int i = 0, prev = 0; i < EventLists.Count; i++)                         
+            { 
+                int dataOffset = 0x10 + (EventLists.Count * 8) + prev;
+                Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Endian);
+                Util.SetWordUnsafe(addr + 4, dataOffset, Endian);
+                prev += EventLists.Values[i].Size;
+                addr += 8;
+            }
 
             // Write event lists at final address.
             foreach (CommandList e in EventLists.Values)

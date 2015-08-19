@@ -212,5 +212,22 @@ namespace Sm4shCommand
                 arr[i] = *(byte*)(Address + i);
             return arr;
         }
+        /// <summary>
+        /// Returns a string from an array of bytes at the specified offset
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
+        public static string GetString(byte[] data, long offset, Endianness endian)
+        {
+            if (offset >= data.Length) throw new Exception("Offset outside of expected value range.");
+            string s = "";
+
+            while (data[offset] != 0)
+                s += (char)data[offset++];
+
+            return s;
+        }
     }
 }

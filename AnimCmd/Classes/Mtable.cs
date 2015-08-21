@@ -115,6 +115,5 @@ namespace Sm4shCommand.Classes
                 }
             }
         }
-
     }
 }

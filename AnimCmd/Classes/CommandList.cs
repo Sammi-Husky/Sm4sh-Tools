@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
 using System.Text;
 using System.IO;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class CommandList
+    public unsafe class CommandList : IEnumerable
     {
         private byte[] _data;
 
@@ -24,12 +25,11 @@ namespace Sm4shCommand.Classes
             get
             {
                 int size = 0;
-                foreach (Command e in Commands)
+                foreach (Command e in _commands)
                     size += e.CalcSize();
                 return size;
             }
         }
-
 
         public bool isEmpty;
 
@@ -52,8 +52,16 @@ namespace Sm4shCommand.Classes
             }
         }
 
-
+        /// <summary>
+        /// CRC32 of the animation name linked to this list of commands.
+        /// </summary>
         public uint AnimationCRC;
+
+        public Command this[int i]
+        {
+            get { return _commands[i]; }
+            set { _commands[i] = value; }
+        }
 
         public void Initialize()
         {
@@ -62,15 +70,15 @@ namespace Sm4shCommand.Classes
         public void Rebuild(VoidPtr address, int size)
         {
             VoidPtr addr = address;
-            for (int x = 0; x < Commands.Count; x++)
+            for (int x = 0; x < _commands.Count; x++)
             {
-                byte[] a = Commands[x].ToArray();
+                byte[] a = _commands[x].ToArray();
                 byte* tmp = stackalloc byte[a.Length];
                 for (int i = 0; i < a.Length; i++)
                     tmp[i] = a[i];
 
                 Win32.MoveMemory(addr, tmp, (uint)a.Length);
-                addr += Commands[x].CalcSize();
+                addr += _commands[x].CalcSize();
             }
         }
 
@@ -93,7 +101,7 @@ namespace Sm4shCommand.Classes
             byte[] file = new byte[Size];
 
             int i = 0;
-            foreach (Command c in Commands)
+            foreach (Command c in _commands)
             {
                 byte[] command = c.ToArray();
                 for (int x = 0; x < command.Length; x++, i++)
@@ -102,6 +110,91 @@ namespace Sm4shCommand.Classes
             return file;
         }
 
-        public List<Command> Commands = new List<Command>();
+        private List<Command> _commands = new List<Command>();
+
+        #region IEnumerable Implemntation
+        public int Count { get { return _commands.Count; } }
+        public void Clear()
+        {
+            _commands.Clear();
+        }
+        public void Insert(int index, Command var)
+        {
+            _commands.Insert(index, var);
+        }
+        public void InsertAfter(int index, Command var)
+        {
+                _commands.Insert(index + 1, var);
+        }
+        public void Add(Command var)
+        {
+            _commands.Add(var);
+        }
+        public void Remove(Command var)
+        {
+            _commands.Remove(var);
+        }
+        public void Remove(int index)
+        {
+            _commands.RemoveAt(index);
+        }
+        public int IndexOf(Command var)
+        {
+            return _commands.IndexOf(var);
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator)GetEnumerator();
+        }
+        public CommandListEnumerator GetEnumerator()
+        {
+            return new CommandListEnumerator(_commands.ToArray());
+        }
+        public class CommandListEnumerator : IEnumerator
+        {
+            public Command[] _data;
+            int position = -1;
+            public CommandListEnumerator(Command[] data)
+            {
+                _data = data;
+            }
+
+            public bool MoveNext()
+            {
+                position++;
+                return (position < _data.Length);
+            }
+
+            public void Reset()
+            {
+                position = -1;
+            }
+
+            object IEnumerator.Current
+            {
+                get
+                {
+                    return Current;
+                }
+            }
+
+            public Command Current
+            {
+                get
+                {
+                    try
+                    {
+                        return _data[position];
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+            }
+        }
+        #endregion
     }
+
+
 }

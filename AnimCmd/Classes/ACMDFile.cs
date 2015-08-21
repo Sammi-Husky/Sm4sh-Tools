@@ -96,7 +96,7 @@ namespace Sm4shCommand.Classes
             //  otherwise the list will bleed over and read the next one.
             for (int i = 0; i < EventLists.Count; i++)
                 if (EventLists.Values[i].isEmpty)
-                    EventLists.Values[i].Commands.Add(new Command() { _commandInfo = Runtime._endingCommand });
+                    EventLists.Values[i].Add(new Command() { _commandInfo = Runtime._endingCommand });
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
@@ -110,7 +110,7 @@ namespace Sm4shCommand.Classes
                                                                                         
             int count = 0;                                                              
             foreach (CommandList e in EventLists.Values)                                   
-                count += e.Commands.Count;                                              
+                count += e.Count;                                              
                                                                                         
             Util.SetWordUnsafe(address + 0x0C, count, Endian);                         
             addr += 0x10;                                                               
@@ -157,7 +157,7 @@ namespace Sm4shCommand.Classes
                     // If previous commands were unknown, add them here.
                     if (unkC != null)
                     {
-                        _cur.Commands.Add(unkC);
+                        _cur.Add(unkC);
                         unkC = null;
                     }
 
@@ -173,7 +173,7 @@ namespace Sm4shCommand.Classes
                             c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), Endian));
                     }
 
-                    _cur.Commands.Add(c);
+                    _cur.Add(c);
                     addr += c.CalcSize();
                 }
                 // If there is no command definition, this is unknown data.
@@ -198,7 +198,7 @@ namespace Sm4shCommand.Classes
                     { info = e; break; }
 
                 c = new Command(Endian, info);
-                _cur.Commands.Add(c);
+                _cur.Add(c);
                 addr += 4;
             }
             _cur.Initialize();

@@ -436,6 +436,21 @@ namespace Sm4shCommand
             }
             catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
         }
+
+        private void tabPage1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Middle)
+                tabControl1.TabPages.Remove((TabPage)sender);
+        }
+
+        private void projectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            WorkspaceManager _workspace = new WorkspaceManager();
+            DialogResult result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+                _workspace.ReadWRKSPC(dlg.FileName);
+        }
     }
 
     public class NodeWrapper : TreeNode

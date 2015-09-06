@@ -221,14 +221,14 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (_curFighter.Main.Dirty |
-                _curFighter.GFX.Dirty |
-                _curFighter.SFX.Dirty |
-                _curFighter.Expression.Dirty)
-                ParseCodeBox();
-
             if (isRoot)
             {
+                if (_curFighter.Main.Dirty |
+                    _curFighter.GFX.Dirty |
+                    _curFighter.SFX.Dirty |
+                    _curFighter.Expression.Dirty)
+                    ParseCodeBox();
+
                 FolderSelectDialog dlg = new FolderSelectDialog();
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
@@ -243,6 +243,9 @@ namespace Sm4shCommand
             }
             else
             {
+                if (_workingFile.Dirty)
+                    ParseCodeBox();
+
                 SaveFileDialog dlg = new SaveFileDialog();
                 dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
                 DialogResult result = dlg.ShowDialog();

@@ -42,7 +42,7 @@ namespace Sm4shCommand.Classes
             return String.Format("{0}({1})", _commandInfo.Name, Param);
 
         }
-        public virtual byte[] ToArray()
+        public virtual byte[] GetArray()
         {
             byte[] tmp = new byte[CalcSize()];
             Util.SetWord(ref tmp, _commandInfo.Identifier, 0, endian);
@@ -76,9 +76,18 @@ namespace Sm4shCommand.Classes
                 s1 += String.Format("0x{0:X8}{1}", data[i], i + 1 != data.Count ? "\n" : "");
             return s1;
         }
-        public override byte[] ToArray()
+        public override byte[] GetArray()
         {
-            return data.SelectMany(i => BitConverter.GetBytes(i)).ToArray();
+            // ew this sux; you better fix this later, me.
+            byte[] _data = new byte[data.Count * 4];
+            for(int i=0; i<_data.Length; i+=4)
+            {
+                _data[i] = (byte)(data[i/4] >> 24);
+                _data[i+1] = (byte)(data[i/4] >> 16);
+                _data[i+2] = (byte)(data[i/4] >> 8);
+                _data[i+3] = (byte)(data[i/4]);
+            }
+            return _data;
         }
     }
 }

@@ -72,7 +72,7 @@ namespace Sm4shCommand.Classes
             VoidPtr addr = address;
             for (int x = 0; x < _commands.Count; x++)
             {
-                byte[] a = _commands[x].ToArray();
+                byte[] a = _commands[x].GetArray();
                 byte* tmp = stackalloc byte[a.Length];
                 for (int i = 0; i < a.Length; i++)
                     tmp[i] = a[i];
@@ -103,7 +103,7 @@ namespace Sm4shCommand.Classes
             int i = 0;
             foreach (Command c in _commands)
             {
-                byte[] command = c.ToArray();
+                byte[] command = c.GetArray();
                 for (int x = 0; x < command.Length; x++, i++)
                     file[i] = command[x];
             }

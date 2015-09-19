@@ -112,6 +112,24 @@ namespace Sm4shCommand.Classes
                 }
 
             }
+            set
+            {
+                switch (i)
+                {
+                    case 0:
+                        Main = value;
+                        break;
+                    case 1:
+                        GFX = value;
+                        break;
+                    case 2:
+                        SFX = value;
+                        break;
+                    case 3:
+                        Expression = value;
+                        break;
+                }
+            }
         }
     }
 }

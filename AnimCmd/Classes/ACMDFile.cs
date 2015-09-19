@@ -18,6 +18,7 @@ namespace Sm4shCommand.Classes
         private int _actionCount;
 
         public Endianness Endian;
+        public ACMDType Type;
 
         /// <summary>
         /// List of all EventLists in this file.
@@ -135,7 +136,7 @@ namespace Sm4shCommand.Classes
 
         private CommandList ParseEventList(uint CRC, int Offset)
         {
-            CommandList _cur = new CommandList(CRC);
+            CommandList _cur = new CommandList(CRC,this);
 
             Command c = null;
             UnknownCommand unkC = null;
@@ -240,5 +241,13 @@ namespace Sm4shCommand.Classes
             return tmp;
         }
 
+    }
+
+    public enum ACMDType : int
+    {
+        Main = 0,
+        GFX = 1,
+        SFX = 2,
+        Expression = 3
     }
 }

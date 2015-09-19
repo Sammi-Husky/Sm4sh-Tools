@@ -10,12 +10,14 @@ namespace Sm4shCommand.Classes
     public unsafe class CommandList : IEnumerable
     {
         private byte[] _data;
+        public ACMDFile _parent;
 
-        public CommandList(uint CRC)
+        public CommandList(uint CRC, ACMDFile Parent)
         {
             AnimationCRC = CRC;
+            _parent = Parent;
         }
-        public CommandList() { }
+
 
         /// <summary>
         /// Returns size in bytes.
@@ -124,7 +126,7 @@ namespace Sm4shCommand.Classes
         }
         public void InsertAfter(int index, Command var)
         {
-                _commands.Insert(index + 1, var);
+            _commands.Insert(index + 1, var);
         }
         public void Add(Command var)
         {

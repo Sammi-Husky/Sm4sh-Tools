@@ -77,6 +77,60 @@ namespace Sm4shCommand
             return Param;
         }
 
+        // Crawls the code box and applies changes to the linked command list.
+        public CommandList ParseCodeBox()
+        {
+            // Don't bother selectively processing events, just clear and repopulate the whole thing.
+            string[] lines = Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
+            _list.Clear();
+
+
+            if (String.IsNullOrEmpty(Text))
+            {
+                _list.isEmpty = true;
+                return _list;
+            }
+
+            UnknownCommand unkC = null;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].StartsWith("0x"))
+                {
+                    if (unkC == null)
+                        unkC = new UnknownCommand();
+                    unkC.data.Add(Int32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber));
+                    continue;
+                }
+                foreach (CommandInfo e in Runtime.commandDictionary)
+                    if (lines[i].StartsWith(e.Name))
+                    {
+                        if (unkC != null)
+                        {
+                            _list.Add(unkC);
+                            unkC = null;
+                        }
+                        string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
+                        List<string> Params = temp.Replace("0x", "").Split(',').ToList();
+                        Command c = new Command(e);
+                        for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
+                        {
+                            // parameter - it's syntax keyword(s), and then parse.
+                            if (e.ParamSyntax.Count > 0)
+                                Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=') + 1);
+
+                            if (e.ParamSpecifiers[counter] == 0)
+                                c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
+                            else if (e.ParamSpecifiers[counter] == 1)
+                                c.parameters.Add(float.Parse(Params[counter]));
+                            else if (e.ParamSpecifiers[counter] == 2)
+                                c.parameters.Add(decimal.Parse(Params[counter]));
+                        }
+                        _list.Add(c);
+                    }
+            }
+            return _list;
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if ((e.KeyCode == Keys.Enter | e.KeyCode == Keys.Down | e.KeyCode == Keys.Space) && AutocompleteBox.Visible == true)
@@ -195,6 +249,8 @@ namespace Sm4shCommand
             NativeMethods.SendMessage(this.Handle, NativeMethods.WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
             NativeMethods.SendMessage(this.Handle, NativeMethods.EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
         }
+
+
     }
 
     internal sealed class NativeMethods

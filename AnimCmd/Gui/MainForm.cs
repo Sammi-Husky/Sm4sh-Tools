@@ -22,9 +22,11 @@ namespace Sm4shCommand
         //=================================================\\
         // Current file that is open and free for editing. \\
         //=================================================\\
-        ACMDFile _workingFile;
+
+        ACMDFile _curFile;
         Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
         Fighter _curFighter;
+
 
         // Misc runtime variables.
         bool isRoot = false;
@@ -45,65 +47,8 @@ namespace Sm4shCommand
             return new MTable(CRCTable, endian);
         }
 
-        // Crawls the code box and applies changes to the linked command list.
-        public void ParseCodeBox()
-        {
-            // Don't bother selectively processing events, just clear and repopulate the whole thing.
-            ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
-            string[] lines = box.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            _workingFile.EventLists[box.CommandList.AnimationCRC].Clear();
-
-
-            if (String.IsNullOrEmpty(box.Text))
-            {
-                _workingFile.EventLists[box.CommandList.AnimationCRC].isEmpty = true;
-                return;
-            }
-
-            UnknownCommand unkC = null;
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (lines[i].StartsWith("0x"))
-                {
-                    if (unkC == null)
-                        unkC = new UnknownCommand();
-                    unkC.data.Add(Int32.Parse(lines[i].Substring(2, 8), System.Globalization.NumberStyles.HexNumber));
-                    continue;
-                }
-                foreach (CommandInfo e in Runtime.commandDictionary)
-                    if (lines[i].StartsWith(e.Name))
-                    {
-                        if (unkC != null)
-                        {
-                            _workingFile.EventLists[box.CommandList.AnimationCRC].Add(unkC);
-                            unkC = null;
-                        }
-                        string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
-                        List<string> Params = temp.Replace("0x", "").Split(',').ToList();
-                        Command c = new Command(e);
-                        for (int counter = 0; counter < e.ParamSpecifiers.Count; counter++)
-                        {
-                            // parameter - it's syntax keyword(s), and then parse.
-                            if (e.ParamSyntax.Count > 0)
-                                Params[counter] = Params[counter].Substring(Params[counter].IndexOf('=') + 1);
-
-                            if (e.ParamSpecifiers[counter] == 0)
-                                c.parameters.Add(Int32.Parse(Params[counter], System.Globalization.NumberStyles.HexNumber));
-                            else if (e.ParamSpecifiers[counter] == 1)
-                                c.parameters.Add(float.Parse(Params[counter]));
-                            else if (e.ParamSpecifiers[counter] == 2)
-                                c.parameters.Add(decimal.Parse(Params[counter]));
-                        }
-                        _workingFile.EventLists[box.CommandList.AnimationCRC].Add(c);
-                    }
-            }
-
-        }
-
         public ACMDFile OpenFile(string Filepath)
         {
-            //try
-            //{
             DataSource source = new DataSource(FileMap.FromFile(Filepath));
 
             if (*(byte*)(source.Address + 0x04) == 0x02)
@@ -115,11 +60,8 @@ namespace Sm4shCommand
                 MessageBox.Show("Could not determine endianness of file. Unsupported file version or file header is corrupt.");
                 return null;
             }
-            ACMDFile file = new ACMDFile(source, workingEndian);
 
-            return file;
-            //}
-            //catch (Exception x) { MessageBox.Show(x.Message); return false; }
+            return new ACMDFile(source, workingEndian);
         }
         public Fighter OpenWorkspace(string dirPath)
         {
@@ -131,6 +73,12 @@ namespace Sm4shCommand
                 f.GFX = OpenFile(dirPath + "/effect.bin");
                 f.SFX = OpenFile(dirPath + "/sound.bin");
                 f.Expression = OpenFile(dirPath + "/expression.bin");
+
+                f.Main.Type = ACMDType.Main;
+                f.GFX.Type = ACMDType.GFX;
+                f.SFX.Type = ACMDType.SFX;
+                f.Expression.Type = ACMDType.Expression;
+
                 f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), workingEndian);
             }
             catch (FileNotFoundException x) { MessageBox.Show(x.Message); return null; }
@@ -144,21 +92,35 @@ namespace Sm4shCommand
                 TreeNode n = new TreeNode(String.Format("{0:X} [{1:X8}]", counter, u));
 
                 if (f.Main.EventLists.ContainsKey(u))
-                    n.Nodes.Add(new NodeWrapper("Main", f[0].EventLists[u]));
+                    n.Nodes.Add(new CommandListNode("Main", f[0].EventLists[u]));
                 if (f.GFX.EventLists.ContainsKey(u))
-                    n.Nodes.Add(new NodeWrapper("GFX", f[1].EventLists[u]));
+                    n.Nodes.Add(new CommandListNode("GFX", f[1].EventLists[u]));
                 if (f.SFX.EventLists.ContainsKey(u))
-                    n.Nodes.Add(new NodeWrapper("Sound", f[2].EventLists[u]));
+                    n.Nodes.Add(new CommandListNode("Sound", f[2].EventLists[u]));
                 if (f.Expression.EventLists.ContainsKey(u))
-                    n.Nodes.Add(new NodeWrapper("Expression", f[3].EventLists[u]));
+                    n.Nodes.Add(new CommandListNode("Expression", f[3].EventLists[u]));
 
-                treeView1.Nodes.Add(n);
+                cmdListTree.Nodes.Add(n);
                 counter++;
             }
             isRoot = true;
             rootPath = dirPath;
             this.Text = String.Format("Main Form - {0}", dirPath);
             return f;
+        }
+        public void Rebuild()
+        {
+            foreach (TabPage p in tabControl1.TabPages)
+            {
+                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
+                if (box.CommandList.Dirty)
+                {
+                    if (!isRoot)
+                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                    else
+                        _curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                }
+            }
         }
 
         #region Display related methods
@@ -195,9 +157,10 @@ namespace Sm4shCommand
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ParseCodeBox();
+            Rebuild();
             if (isRoot)
             {
+
                 _curFighter.Main.Export(rootPath + "/game.bin");
                 _curFighter.GFX.Export(rootPath + "/effect.bin");
                 _curFighter.SFX.Export(rootPath + "/sound.bin");
@@ -205,18 +168,14 @@ namespace Sm4shCommand
                 _curFighter.MotionTable.Export(rootPath + "/Motion.mtable");
             }
             else
-                _workingFile.Export(FileName);
+                _curFile.Export(FileName);
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Rebuild();
+
             if (isRoot)
             {
-                if (_curFighter.Main.Dirty |
-                    _curFighter.GFX.Dirty |
-                    _curFighter.SFX.Dirty |
-                    _curFighter.Expression.Dirty)
-                    ParseCodeBox();
-
                 FolderSelectDialog dlg = new FolderSelectDialog();
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
@@ -231,14 +190,11 @@ namespace Sm4shCommand
             }
             else
             {
-                if (_workingFile.Dirty)
-                    ParseCodeBox();
-
                 SaveFileDialog dlg = new SaveFileDialog();
                 dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
-                    _workingFile.Export(dlg.FileName);
+                    _curFile.Export(dlg.FileName);
                 dlg.Dispose();
             }
         }
@@ -249,13 +205,13 @@ namespace Sm4shCommand
             DialogResult result = dlg.ShowDialog();
             if (result == DialogResult.OK)
             {
-                FileName =
-                rootPath = String.Empty;
-                _workingFile = null;
-                treeView1.Nodes.Clear();
+                FileName = rootPath = String.Empty;
+                _curFile = null;
+                cmdListTree.Nodes.Clear();
+                tabControl1.TabPages.Clear();
                 isRoot = true;
 
-                treeView1.ShowLines = treeView1.ShowRootLines = true;
+                cmdListTree.ShowLines = cmdListTree.ShowRootLines = true;
                 _curFighter = OpenWorkspace(dlg.SelectedPath);
             }
             dlg.Dispose();
@@ -268,16 +224,15 @@ namespace Sm4shCommand
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    FileName =
-                    rootPath = String.Empty;
+                    FileName = rootPath = String.Empty;
+                    tabControl1.TabPages.Clear();
+                    cmdListTree.Nodes.Clear();
+                    isRoot = cmdListTree.ShowLines = cmdListTree.ShowRootLines = false;
 
-                    treeView1.Nodes.Clear();
-                    isRoot = treeView1.ShowLines = treeView1.ShowRootLines = false;
-
-                    if ((_workingFile = OpenFile(dlg.FileName)) != null)
+                    if ((_curFile = OpenFile(dlg.FileName)) != null)
                     {
-                        foreach (CommandList list in _workingFile.EventLists.Values)
-                            treeView1.Nodes.Add(new NodeWrapper(String.Format("[{0:X8}]", list.AnimationCRC), _workingFile.EventLists[list.AnimationCRC]));
+                        foreach (CommandList list in _curFile.EventLists.Values)
+                            cmdListTree.Nodes.Add(new CommandListNode(String.Format("[{0:X8}]", list.AnimationCRC), _curFile.EventLists[list.AnimationCRC]));
 
                         FileName = dlg.FileName;
                         this.Text = String.Format("Main Form - {0}", FileName);
@@ -286,59 +241,50 @@ namespace Sm4shCommand
             }
         }
 
-        private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
+        private void cmdListTree_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
-            //if (tabControl1.TabCount > 0)
-            //    ParseCodeBox();
-
-            if (treeView1.SelectedNode == null)
+            if (cmdListTree.SelectedNode == null)
                 return;
 
-            if (treeView1.SelectedNode is NodeWrapper)
-                if (((NodeWrapper)treeView1.SelectedNode).CommandList.Dirty)
-                    treeView1.SelectedNode.BackColor = Color.PaleVioletRed;
+            if (cmdListTree.SelectedNode is CommandListNode)
+                if (((CommandListNode)cmdListTree.SelectedNode).CommandList.Dirty)
+                    cmdListTree.SelectedNode.BackColor = Color.PaleVioletRed;
                 else
-                    treeView1.SelectedNode.BackColor = SystemColors.Window;
+                    cmdListTree.SelectedNode.BackColor = SystemColors.Window;
         }
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        private void cmdListTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if (!(treeView1.SelectedNode is NodeWrapper))
+            if (!(cmdListTree.SelectedNode is CommandListNode))
                 return;
-            NodeWrapper w = (NodeWrapper)treeView1.SelectedNode;
 
-            if (tabControl1.TabPages.ContainsKey(w.CRC.ToString("X8")))
-            {
-                tabControl1.SelectTab(w.CRC.ToString("X8"));
-                tabControl1.SelectedTab.Controls[0].Invalidate();
-            }
+            CommandListNode w = (CommandListNode)cmdListTree.SelectedNode;
+
+            // Get the name for node, depending on whether we have animation names or not.
+            // We'll also use this + node index as a unique identifier.
+            string name = string.IsNullOrEmpty(w.AnimationName) ? w.CRC.ToString("X8") : w.AnimationName;
+
+            // If this list is already open, switch to it's tab.
+            // else, add a new tab and display it's script.
+            if (tabControl1.TabPages.ContainsKey(name + e.Node.Index))
+                tabControl1.SelectTab(name + e.Node.Index);
             else
             {
-                TabPage p = new TabPage(w.CRC.ToString("X8")) { Name = w.CRC.ToString("X8") };
-                p.Controls.Add(new ITSCodeBox(((NodeWrapper)treeView1.SelectedNode).CommandList) { Dock = DockStyle.Fill, WordWrap = false });
-                tabControl1.TabPages.Add(p);
-                tabControl1.SelectTab(p);
-                DisplayScript(((NodeWrapper)treeView1.SelectedNode).CommandList);
+                TabPage p = new TabPage(name) { Name = name + e.Node.Index };
+                p.Controls.Add(new ITSCodeBox(((CommandListNode)cmdListTree.SelectedNode).CommandList) { Dock = DockStyle.Fill, WordWrap = false });
+                tabControl1.TabPages.Insert(0, p);
+                tabControl1.SelectTab(0);
+                DisplayScript(((CommandListNode)cmdListTree.SelectedNode).CommandList);
             }
         }
 
         private void btnHexView_Click(object sender, EventArgs e)
         {
-            TreeNode n = treeView1.SelectedNode;
-            while (n.Level != 0)
-                n = n.Parent;
+            if (!(cmdListTree.SelectedNode is CommandListNode))
+                return;
 
-            uint CRC;
-            if (n.Text.Contains('['))
-            {
-                string id = n.Text.Substring(n.Text.IndexOf('[') + 1).TrimEnd(new char[] { ']' });
-                CRC = uint.Parse(id, System.Globalization.NumberStyles.HexNumber);
-            }
-            else
-                CRC = Crc32.Compute(Encoding.ASCII.GetBytes(n.Text.ToLower()));
-
-            byte[] data = ((NodeWrapper)treeView1.SelectedNode).CommandList.ToArray();
+            byte[] data = ((CommandListNode)cmdListTree.SelectedNode).CommandList.ToArray();
             HexView f = new HexView(data);
-            f.Text = String.Format("HexView - {0} - ReadOnly", treeView1.SelectedNode.Text);
+            f.Text = String.Format("HexView - {0} - ReadOnly", cmdListTree.SelectedNode.Text);
             f.Show();
         }
         private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
@@ -379,15 +325,15 @@ namespace Sm4shCommand
                         AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
                     }
 
-                    treeView1.BeginUpdate();
-                    for (int i = 0; i < treeView1.Nodes.Count; i++)
+                    cmdListTree.BeginUpdate();
+                    for (int i = 0; i < cmdListTree.Nodes.Count; i++)
                     {
-                        string s = treeView1.Nodes[i].Text.Substring(treeView1.Nodes[i].Text.IndexOf('[') + 1, 8);
+                        string s = cmdListTree.Nodes[i].Text.Substring(cmdListTree.Nodes[i].Text.IndexOf('[') + 1, 8);
                         uint hash = uint.Parse(s, System.Globalization.NumberStyles.HexNumber);
                         if (AnimHashPairs.ContainsKey(hash))
-                            treeView1.Nodes[i].Text = AnimHashPairs[hash];
+                            cmdListTree.Nodes[i].Text = AnimHashPairs[hash];
                     }
-                    treeView1.EndUpdate();
+                    cmdListTree.EndUpdate();
                 }
             }
             catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
@@ -396,43 +342,53 @@ namespace Sm4shCommand
         #region Tab Control
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
-            e.Graphics.FillRectangle(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
-            e.Graphics.DrawRectangle(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);
+            if (e.Index != tabControl1.SelectedIndex)
+            {
+                Rectangle r = tabControl1.GetTabRect(e.Index);
+                e.Graphics.FillRectangle(SystemBrushes.InactiveCaption, r);
+                e.Graphics.DrawString(tabControl1.SelectedTab.Text, Font, SystemBrushes.MenuText, r.Left + 2, r.Right + 2);
+            }
 
+            e.Graphics.FillEllipse(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
+            e.Graphics.DrawEllipse(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);
             e.Graphics.DrawString("X", new Font(e.Font, FontStyle.Bold), Brushes.Black, e.Bounds.Right - 17, e.Bounds.Top + 3);
             e.Graphics.DrawString(this.tabControl1.TabPages[e.Index].Text, e.Font, Brushes.Black, e.Bounds.Left + 17, e.Bounds.Top + 3);
             e.DrawFocusRectangle();
         }
         private void tabControl1_MouseClick(object sender, MouseEventArgs e)
         {
-            TabPage p = tabControl1.SelectedTab;
-
-            ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-            Rectangle r = tabControl1.GetTabRect(tabControl1.SelectedIndex);
-            Rectangle closeButton = new Rectangle(r.Right - 17, r.Top + 4, 11, 9);
-            if (closeButton.Contains(e.Location))
+            for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                if (box.CommandList.Dirty)
-                {
-                    if (MessageBox.Show("Save Changes?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                        this.tabControl1.TabPages.Remove(p);
+                TabPage p = tabControl1.TabPages[i];
 
-                }
-                else
+                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
+                Rectangle r = tabControl1.GetTabRect(tabControl1.SelectedIndex);
+                Rectangle closeButton = new Rectangle(r.Right - 17, r.Top + 4, 11, 9);
+                if (closeButton.Contains(e.Location))
+                {
+                    if (!isRoot)
+                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                    else
+                        _curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+
                     this.tabControl1.TabPages.Remove(p);
+                }
             }
         }
+        #endregion
     }
-    #endregion
 }
 
-public class NodeWrapper : TreeNode
+public class CommandListNode : TreeNode
 {
-    public NodeWrapper(string Name, CommandList List) { Text = Name; _list = List; _crc = List.AnimationCRC; }
-    public NodeWrapper(CommandList List) { _list = List; _crc = List.AnimationCRC; }
+    public CommandListNode(string Name, CommandList List) { Text = Name; _list = List; _crc = List.AnimationCRC; }
+    public CommandListNode(CommandList List) { _list = List; _crc = List.AnimationCRC; }
 
     public uint CRC { get { return _crc; } set { _crc = value; } }
     private uint _crc;
+
+    public string AnimationName { get { return _anim; } set { _anim = value; } }
+    private string _anim;
 
     public CommandList CommandList { get { return _list; } set { _list = value; } }
     private CommandList _list;

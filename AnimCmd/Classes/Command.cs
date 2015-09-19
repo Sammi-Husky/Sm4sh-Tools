@@ -7,15 +7,13 @@ namespace Sm4shCommand.Classes
 {
     public unsafe class Command
     {
-        public Command(Endianness _endian, CommandInfo info)
+        public Command(CommandInfo info)
         {
-            endian = _endian;
             _commandInfo = info;
         }
         public Command() { }
 
         public CommandInfo _commandInfo;
-        public Endianness endian;
 
 
         public List<object> parameters = new List<object>();
@@ -45,11 +43,11 @@ namespace Sm4shCommand.Classes
         public virtual byte[] GetArray()
         {
             byte[] tmp = new byte[CalcSize()];
-            Util.SetWord(ref tmp, _commandInfo.Identifier, 0, endian);
+            Util.SetWord(ref tmp, _commandInfo.Identifier, 0);
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
                 if (_commandInfo.ParamSpecifiers[i] == 0)
-                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4, endian);
+                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4);
                 else if (_commandInfo.ParamSpecifiers[i] == 1)
                 {
                     double HEX = Convert.ToDouble(parameters[i]);
@@ -58,7 +56,7 @@ namespace Sm4shCommand.Classes
                     int dec = BitConverter.ToInt32(bytes, 0);
                     string HexVal = dec.ToString("X");
 
-                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4, endian);
+                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4);
                 }
             }
             return tmp;

@@ -106,18 +106,18 @@ namespace Sm4shCommand.Classes
             //==========================================================================//
 
             Util.SetWordUnsafe(address + 0x04, 2, Endian); // Version (2)
-            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);                 
-                                                                                        
-            int count = 0;                                                              
-            foreach (CommandList e in EventLists.Values)                                   
-                count += e.Count;                                              
-                                                                                        
-            Util.SetWordUnsafe(address + 0x0C, count, Endian);                         
-            addr += 0x10;                                                               
-                                                                                        
+            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);
+
+            int count = 0;
+            foreach (CommandList e in EventLists.Values)
+                count += e.Count;
+
+            Util.SetWordUnsafe(address + 0x0C, count, Endian);
+            addr += 0x10;
+
             //===============Write Event List offsets and CRC's=================//              
-            for (int i = 0, prev = 0; i < EventLists.Count; i++)                         
-            { 
+            for (int i = 0, prev = 0; i < EventLists.Count; i++)
+            {
                 int dataOffset = 0x10 + (EventLists.Count * 8) + prev;
                 Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Endian);
                 Util.SetWordUnsafe(addr + 4, dataOffset, Endian);
@@ -162,7 +162,7 @@ namespace Sm4shCommand.Classes
                     }
 
                     // Get command parameters and add the command to the event list.
-                    c = new Command(Endian, info);
+                    c = new Command(info);
                     for (int i = 0; i < info.ParamSpecifiers.Count; i++)
                     {
                         if (info.ParamSpecifiers[i] == 0)
@@ -197,7 +197,7 @@ namespace Sm4shCommand.Classes
                     if (e.Identifier == Runtime._endingCommand.Identifier)
                     { info = e; break; }
 
-                c = new Command(Endian, info);
+                c = new Command(info);
                 _cur.Add(c);
                 addr += 4;
             }

@@ -10,69 +10,36 @@ using Sm4shCommand.Classes;
 
 namespace Sm4shCommand
 {
-    /// <summary>
-    /// Provides an extended RichTextBox with Intellisense like code completion and syntax highlighting.
-    /// </summary>
     class ITSCodeBox : RichTextBox
     {
-        #region Members
-        private List<CommandInfo> commandDictionary;
-        private ListBox AutocompleteBox;
-        private ITSToolTip ITSToolTip;
-        private TooltipDictionary EventDescriptions;
-        private const int WM_USER = 0x0400;
-        private const int EM_SETEVENTMASK = (WM_USER + 69);
-        private const int WM_SETREDRAW = 0x0b;
-        private IntPtr OldEventMask;
-        #endregion
-
-        #region External Methods
-        [DllImport("user32")]
-        private extern static int GetCaretPos(out Point p);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-        #endregion
-
-        #region Constructors
-
-        public ITSCodeBox()
-            : base()
+        public ITSCodeBox(CommandList list)
         {
             AutocompleteBox = new ListBox();
             AutocompleteBox.Parent = this;
             AutocompleteBox.KeyUp += OnKeyUp;
             AutocompleteBox.Visible = false;
             ITSToolTip = new ITSToolTip();
-            this.commandDictionary = new List<CommandInfo>();
+            this.commandDictionary = Runtime.commandDictionary;
 
             ITSToolTip.RichTextBox = this;
             EventDescriptions = new TooltipDictionary();
             ITSToolTip.Dictionary = EventDescriptions;
-        }
-        #endregion
 
-        #region Properties
-        /// <summary>
-        /// The autocomplete dictionary.
-        /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public List<CommandInfo> CommandDictionary
-        {
-            get { return this.commandDictionary; }
-            set { this.commandDictionary = value; }
+            foreach (CommandInfo cd in Runtime.commandDictionary)
+                if (!String.IsNullOrEmpty(cd.EventDescription))
+                    EventDescriptions.Add(cd.Name, cd.EventDescription);
         }
-        /// <summary>
-        /// The autocomplete dictionary.
-        /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ITSToolTip Tooltip
-        {
-            get { return this.ITSToolTip; }
-            set { this.ITSToolTip = value; }
-        }
-        /// <summary>
-        /// The text of the current line.
-        /// </summary>
+
+        // Properties
+        public CommandList CommandList { get { return _list; } set { _list = value; } }
+        private CommandList _list;
+
+        public List<CommandInfo> CommandDictionary { get { return commandDictionary; } set { commandDictionary = value; } }
+        private List<CommandInfo> commandDictionary;
+
+        public ITSToolTip Tooltip { get { return ITSToolTip; } set { ITSToolTip = value; } }
+        private ITSToolTip ITSToolTip;
+
         public string CurrentLineText
         {
             get
@@ -82,35 +49,34 @@ namespace Sm4shCommand
                 else return "";
             }
         }
-        /// <summary>
-        /// The index of the current line.
-        /// </summary>
         public int CurrentLineIndex
         {
             get
             {
-
                 Point cp;
-                GetCaretPos(out cp);
+                NativeMethods.GetCaretPos(out cp);
                 return GetLineFromCharIndex(GetCharIndexFromPosition(cp));
-
             }
         }
-        #endregion
 
-        #region Methods
+        // Private Members
+        private ListBox AutocompleteBox;
+        private TooltipDictionary EventDescriptions;
+
+        // Methods
         private string FomatParams(string commandName)
         {
             string Param = "";
-            foreach(CommandInfo c in commandDictionary)
+            foreach (CommandInfo c in commandDictionary)
                 if (c.Name == commandName)
                 {
-                    for(int i=0; i<c.ParamSyntax.Count;i++)
+                    for (int i = 0; i < c.ParamSyntax.Count; i++)
                         Param += String.Format("{0}={1}", c.ParamSyntax[i], i + 1 != c.ParamSyntax.Count ? ", " : "");
                     break;
                 }
             return Param;
         }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if ((e.KeyCode == Keys.Enter | e.KeyCode == Keys.Down | e.KeyCode == Keys.Space) && AutocompleteBox.Visible == true)
@@ -134,26 +100,17 @@ namespace Sm4shCommand
                 Point cp;
                 string commandName = ((ListBox)sender).SelectedItem.ToString();
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
-                GetCaretPos(out cp);
+                NativeMethods.GetCaretPos(out cp);
                 this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), commandName + String.Format("({0})", FomatParams(commandName)));
                 this.SelectionStart = GetCharIndexFromPosition(cp) + Lines[GetLineFromCharIndex(GetCharIndexFromPosition(cp))].Length;
                 AutocompleteBox.Hide();
                 this.Focus();
             }
         }
-        /// <summary>
-        /// WndProc
-        /// </summary>
-        /// <param name="m"></param>
-
-        /// <summary>
-        /// OnTextChanged event.
-        /// </summary>
-        /// <param name="e"></param>
         protected override void OnTextChanged(EventArgs e)
         {
             Point cp;
-            GetCaretPos(out cp);
+            NativeMethods.GetCaretPos(out cp);
             AutocompleteBox.SetBounds(cp.X + this.Left, cp.Y + 10, 280, 70);
 
             List<string> FilteredList =
@@ -172,10 +129,7 @@ namespace Sm4shCommand
             ProcessAllLines();
 
         }
-        /// <summary>
-        /// Process a line.
-        /// <param name="LineIndex"> The index of the line to process.</param>
-        /// </summary>
+
         public void FormatLine(string[] lines, int LineIndex)
         {
             if (lines.Length == 0)
@@ -204,13 +158,6 @@ namespace Sm4shCommand
             SelectionLength = 0;
             SelectionColor = Color.Black;
         }
-        /// <summary>
-        /// Process a regular expression, painting the matched syntax.
-        /// </summary>
-        /// <param name="line"> The line of text to process.</param>
-        /// <param name="LineIndex"> The index of the line to process.</param>
-        /// <param name="Regex">The regular expression to use in evaluation.</param>
-        /// <param name="color">The color to paint matches.</param>
         private void Format(string line, int LineIndex, string strRegex, Color color)
         {
 
@@ -228,9 +175,6 @@ namespace Sm4shCommand
             }
 
         }
-        /// <summary>
-        /// Processes all lines in the code box.
-        /// </summary>
         public void ProcessAllLines()
         {
             BeginUpdate();
@@ -240,17 +184,28 @@ namespace Sm4shCommand
             EndUpdate();
         }
 
+        private IntPtr OldEventMask;
         public void BeginUpdate()
         {
-            SendMessage(this.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
-            OldEventMask = (IntPtr)SendMessage(this.Handle, EM_SETEVENTMASK, IntPtr.Zero, IntPtr.Zero);
+            NativeMethods.SendMessage(this.Handle, NativeMethods.WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+            OldEventMask = (IntPtr)NativeMethods.SendMessage(this.Handle, NativeMethods.EM_SETEVENTMASK, IntPtr.Zero, IntPtr.Zero);
         }
-
         public void EndUpdate()
         {
-            SendMessage(this.Handle, WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
-            SendMessage(this.Handle, EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
+            NativeMethods.SendMessage(this.Handle, NativeMethods.WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+            NativeMethods.SendMessage(this.Handle, NativeMethods.EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
         }
-        #endregion
+    }
+
+    internal sealed class NativeMethods
+    {
+        [DllImport("user32")]
+        public extern static int GetCaretPos(out Point p);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        public const int WM_USER = 0x0400;
+        public const int EM_SETEVENTMASK = (WM_USER + 69);
+        public const int WM_SETREDRAW = 0x0b;
     }
 }

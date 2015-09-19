@@ -66,28 +66,19 @@ namespace Sm4shCommand
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="endian"></param>
-        public static void SetWord(ref byte[] data, long value, long offset, Endianness endian)
+        public static void SetWord(ref byte[] data, long value, long offset)
         {
             if (offset % 4 != 0) throw new Exception("Odd word offset");
             if (offset >= data.Length)
             {
                 Array.Resize<byte>(ref data, (int)offset + 4);
             }
-            if (endian == Endianness.Little)
-            {
 
-                data[offset + 3] = (byte)((value & 0xFF000000) / 0x1000000);
-                data[offset + 2] = (byte)((value & 0xFF0000) / 0x10000);
-                data[offset + 1] = (byte)((value & 0xFF00) / 0x100);
-                data[offset + 0] = (byte)((value & 0xFF) / 0x1);
-            }
-            else if (endian == Endianness.Big)
-            {
-                data[offset + 0] = (byte)((value & 0xFF000000) / 0x1000000);
-                data[offset + 1] = (byte)((value & 0xFF0000) / 0x10000);
-                data[offset + 2] = (byte)((value & 0xFF00) / 0x100);
-                data[offset + 3] = (byte)((value & 0xFF) / 0x1);
-            }
+            data[offset + 0] = (byte)((value & 0xFF000000) / 0x1000000);
+            data[offset + 1] = (byte)((value & 0xFF0000) / 0x10000);
+            data[offset + 2] = (byte)((value & 0xFF00) / 0x100);
+            data[offset + 3] = (byte)((value & 0xFF) / 0x1);
+
         }
         /// <summary>
         /// Sets a value into memory at the specified address.
@@ -112,9 +103,9 @@ namespace Sm4shCommand
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="endian"></param>
-        public static void SetFloat(ref byte[] data, float value, long offset, Endianness endian)
+        public static void SetFloat(ref byte[] data, float value, long offset)
         {
-            SetWord(ref data, FloatToHex(value), offset, endian);
+            SetWord(ref data, FloatToHex(value), offset);
         }
         /// <summary>
         /// Sets a floating point value into memory at the specified address.

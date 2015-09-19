@@ -1,6 +1,0 @@
-Project(WarioBike, WarioBike/WarioBike.fitproj):
-	type = "weapon";
-endproj;
-Project(Wario, Wario/Wario.fitproj):
-	type="fighter";
-endproj;

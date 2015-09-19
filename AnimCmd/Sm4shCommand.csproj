@@ -181,8 +181,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="ProjectExample.fitproj" />
-    <None Include="WorkspaceExample.wrkspc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -56,9 +56,9 @@ namespace Sm4shCommand
             // Don't bother selectively processing events, just clear and repopulate the whole thing.
             ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
             string[] lines = box.Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
-            _workingFile.EventLists[_linked.AnimationCRC].Commands.Clear();
+            _workingFile.EventLists[_linked.AnimationCRC].Clear();
 
-            //
+
             if (String.IsNullOrEmpty(box.Text))
             {
                 _workingFile.EventLists[_linked.AnimationCRC].isEmpty = true;
@@ -80,7 +80,7 @@ namespace Sm4shCommand
                     {
                         if (unkC != null)
                         {
-                            _workingFile.EventLists[_linked.AnimationCRC].Commands.Add(unkC);
+                            _workingFile.EventLists[_linked.AnimationCRC].Add(unkC);
                             unkC = null;
                         }
                         string temp = lines[i].Substring(lines[i].IndexOf('(')).Trim(new char[] { '(', ')' });
@@ -99,7 +99,7 @@ namespace Sm4shCommand
                             else if (e.ParamSpecifiers[counter] == 2)
                                 c.parameters.Add(decimal.Parse(Params[counter]));
                         }
-                        _workingFile.EventLists[_linked.AnimationCRC].Commands.Add(c);
+                        _workingFile.EventLists[_linked.AnimationCRC].Add(c);
                     }
             }
 
@@ -168,15 +168,15 @@ namespace Sm4shCommand
 
         #region Display related methods
         // Displays the list of commands as plain text in the code editor.
-        public void DisplayScript(CommandList s)
+        public void DisplayScript(CommandList list)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (Command cmd in s.Commands)
+            foreach (Command cmd in list)
                 sb.Append(cmd.ToString() + "\n");
 
             ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
             box.Text = sb.ToString();
-            _linked = s;
+            _linked = list;
         }
         #endregion
 
@@ -221,14 +221,14 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (_curFighter.Main.Dirty |
-                _curFighter.GFX.Dirty |
-                _curFighter.SFX.Dirty |
-                _curFighter.Expression.Dirty)
-                ParseCodeBox();
-
             if (isRoot)
             {
+                if (_curFighter.Main.Dirty |
+                    _curFighter.GFX.Dirty |
+                    _curFighter.SFX.Dirty |
+                    _curFighter.Expression.Dirty)
+                    ParseCodeBox();
+
                 FolderSelectDialog dlg = new FolderSelectDialog();
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
@@ -243,6 +243,9 @@ namespace Sm4shCommand
             }
             else
             {
+                if (_workingFile.Dirty)
+                    ParseCodeBox();
+
                 SaveFileDialog dlg = new SaveFileDialog();
                 dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
                 DialogResult result = dlg.ShowDialog();
@@ -466,6 +469,7 @@ namespace Sm4shCommand
         public ACMDFile _resource;
 
     }
+
     public enum Endianness
     {
         Little = 0,

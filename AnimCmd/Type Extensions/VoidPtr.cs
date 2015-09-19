@@ -9,11 +9,11 @@ namespace System
         //address
         public void* address;
 
-        public static VoidPtr operator +(VoidPtr p1, VoidPtr p2) { return new VoidPtr() { address = (void*)((uint)p1.address + (uint)p2.address) }; }
-        public static VoidPtr operator -(VoidPtr p1, VoidPtr p2) { return new VoidPtr() { address = (void*)((uint)p1.address - (uint)p2.address) }; }
-        public static VoidPtr operator +(VoidPtr p1, uint addr) { return new VoidPtr() { address = (void*)((uint)p1.address + addr) }; }
-        public static VoidPtr operator +(VoidPtr p1, int addr) { return new VoidPtr() { address = (void*)((uint)p1.address + addr) }; }
-        public static VoidPtr operator -(VoidPtr p1, int addr) { return new VoidPtr() { address = (void*)((uint)p1.address - (uint)addr) }; }
+        public static VoidPtr operator +(VoidPtr p1, VoidPtr p2) { return new VoidPtr() { address = (void*)((long)p1.address + (long)p2.address) }; }
+        public static VoidPtr operator -(VoidPtr p1, VoidPtr p2) { return new VoidPtr() { address = (void*)((long)p1.address - (long)p2.address) }; }
+        public static VoidPtr operator +(VoidPtr p1, uint addr) { return new VoidPtr() { address = (void*)((long)p1.address + addr) }; }
+        public static VoidPtr operator +(VoidPtr p1, int addr) { return new VoidPtr() { address = (void*)((long)p1.address + addr) }; }
+        public static VoidPtr operator -(VoidPtr p1, int addr) { return new VoidPtr() { address = (void*)((long)p1.address - addr) }; }
         public static bool operator >(VoidPtr p1, VoidPtr p2) { return p1.address > p2.address; }
         public static bool operator <(VoidPtr p1, VoidPtr p2) { return p1.address < p2.address; }
         public static bool operator >=(VoidPtr p1, VoidPtr p2) { return p1.address >= p2.address; }

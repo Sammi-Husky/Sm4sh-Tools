@@ -61,7 +61,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tGame:{");
                 if (c1 != null)
-                    foreach (Command cmd in c1.Commands)
+                    foreach (Command cmd in c1)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -69,7 +69,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tGFX:{");
                 if (c2 != null)
-                    foreach (Command cmd in c2.Commands)
+                    foreach (Command cmd in c2)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -77,7 +77,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tSFX:{");
                 if (c3 != null)
-                    foreach (Command cmd in c3.Commands)
+                    foreach (Command cmd in c3)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -85,7 +85,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tExpression:{");
                 if (c4 != null)
-                    foreach (Command cmd in c4.Commands)
+                    foreach (Command cmd in c4)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");

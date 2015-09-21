@@ -19,10 +19,6 @@ namespace Sm4shCommand
             InitializeComponent();
         }
 
-        //=================================================\\
-        // Current file that is open and free for editing. \\
-        //=================================================\\
-
         ACMDFile _curFile;
         Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
         Fighter _curFighter;
@@ -241,42 +237,6 @@ namespace Sm4shCommand
             }
         }
 
-        private void cmdListTree_BeforeSelect(object sender, TreeViewCancelEventArgs e)
-        {
-            if (cmdListTree.SelectedNode == null)
-                return;
-
-            if (cmdListTree.SelectedNode is CommandListNode)
-                if (((CommandListNode)cmdListTree.SelectedNode).CommandList.Dirty)
-                    cmdListTree.SelectedNode.BackColor = Color.PaleVioletRed;
-                else
-                    cmdListTree.SelectedNode.BackColor = SystemColors.Window;
-        }
-        private void cmdListTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            if (!(cmdListTree.SelectedNode is CommandListNode))
-                return;
-
-            CommandListNode w = (CommandListNode)cmdListTree.SelectedNode;
-
-            // Get the name for node, depending on whether we have animation names or not.
-            // We'll also use this + node index as a unique identifier.
-            string name = string.IsNullOrEmpty(w.AnimationName) ? w.CRC.ToString("X8") : w.AnimationName;
-
-            // If this list is already open, switch to it's tab.
-            // else, add a new tab and display it's script.
-            if (tabControl1.TabPages.ContainsKey(name + e.Node.Index))
-                tabControl1.SelectTab(name + e.Node.Index);
-            else
-            {
-                TabPage p = new TabPage(name) { Name = name + e.Node.Index };
-                p.Controls.Add(new ITSCodeBox(((CommandListNode)cmdListTree.SelectedNode).CommandList) { Dock = DockStyle.Fill, WordWrap = false });
-                tabControl1.TabPages.Insert(0, p);
-                tabControl1.SelectTab(0);
-                DisplayScript(((CommandListNode)cmdListTree.SelectedNode).CommandList);
-            }
-        }
-
         private void btnHexView_Click(object sender, EventArgs e)
         {
             if (!(cmdListTree.SelectedNode is CommandListNode))
@@ -304,42 +264,45 @@ namespace Sm4shCommand
                 using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
                     writer.Write(_curFighter.ToString());
         }
-        #endregion
-
-        private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void cmdListTree_DrawNode(object sender, DrawTreeNodeEventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            DialogResult result = dlg.ShowDialog();
-            try
+            Color color = SystemColors.Window;
+            if (e.Node is CommandListNode)
+                color = (e.Node as CommandListNode).CommandList.Dirty ? Color.PaleVioletRed : SystemColors.Window;
+
+            if (e.Node.IsSelected)
+                e.Graphics.FillRectangle(Brushes.DarkBlue, e.Bounds);
+            else
+                e.Graphics.FillRectangle(new SolidBrush(color), e.Bounds);
+
+            e.Graphics.DrawString(e.Node.Text, Font, e.Node.IsSelected ? Brushes.White : SystemBrushes.MenuText, e.Bounds);
+
+        }
+        private void cmdListTree_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            CommandListNode w;
+            if ((w = (CommandListNode)cmdListTree.SelectedNode) is CommandListNode)
             {
-                if (result == DialogResult.OK)
+                //CommandListNode w = (CommandListNode)cmdListTree.SelectedNode;
+
+                // Get the name for node, depending on whether we have animation names or not.
+                // We'll also use this + node index as a unique identifier.
+                string name = string.IsNullOrEmpty(w.AnimationName) ? w.CRC.ToString("X8") : w.AnimationName;
+
+                // If this list is already open, switch to it's tab.
+                // else, add a new tab and display it's script.
+                if (tabControl1.TabPages.ContainsKey(name + w.Index))
+                    tabControl1.SelectTab(name + w.Index);
+                else
                 {
-                    byte[] filebytes = File.ReadAllBytes(dlg.FileName);
-                    int count = (int)Util.GetWord(filebytes, 8, workingEndian);
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), workingEndian);
-                        string FileName = Util.GetString(filebytes, off, workingEndian);
-                        string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
-                        AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-                    }
-
-                    cmdListTree.BeginUpdate();
-                    for (int i = 0; i < cmdListTree.Nodes.Count; i++)
-                    {
-                        string s = cmdListTree.Nodes[i].Text.Substring(cmdListTree.Nodes[i].Text.IndexOf('[') + 1, 8);
-                        uint hash = uint.Parse(s, System.Globalization.NumberStyles.HexNumber);
-                        if (AnimHashPairs.ContainsKey(hash))
-                            cmdListTree.Nodes[i].Text = AnimHashPairs[hash];
-                    }
-                    cmdListTree.EndUpdate();
+                    TabPage p = new TabPage(name) { Name = name + w.Index };
+                    p.Controls.Add(new ITSCodeBox(((CommandListNode)cmdListTree.SelectedNode).CommandList) { Dock = DockStyle.Fill, WordWrap = false });
+                    tabControl1.TabPages.Insert(0, p);
+                    tabControl1.SelectedIndex = 0;
+                    DisplayScript(((CommandListNode)cmdListTree.SelectedNode).CommandList);
                 }
             }
-            catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
         }
-
-        #region Tab Control
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
             if (e.Index != tabControl1.SelectedIndex)
@@ -376,6 +339,39 @@ namespace Sm4shCommand
             }
         }
         #endregion
+
+        private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            DialogResult result = dlg.ShowDialog();
+            try
+            {
+                if (result == DialogResult.OK)
+                {
+                    byte[] filebytes = File.ReadAllBytes(dlg.FileName);
+                    int count = (int)Util.GetWord(filebytes, 8, workingEndian);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), workingEndian);
+                        string FileName = Util.GetString(filebytes, off, workingEndian);
+                        string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+                        AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
+                    }
+
+                    cmdListTree.BeginUpdate();
+                    for (int i = 0; i < cmdListTree.Nodes.Count; i++)
+                    {
+                        string s = cmdListTree.Nodes[i].Text.Substring(cmdListTree.Nodes[i].Text.IndexOf('[') + 1, 8);
+                        uint hash = uint.Parse(s, System.Globalization.NumberStyles.HexNumber);
+                        if (AnimHashPairs.ContainsKey(hash))
+                            cmdListTree.Nodes[i].Text = AnimHashPairs[hash];
+                    }
+                    cmdListTree.EndUpdate();
+                }
+            }
+            catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
+        }
     }
 }
 
@@ -392,7 +388,6 @@ public class CommandListNode : TreeNode
 
     public CommandList CommandList { get { return _list; } set { _list = value; } }
     private CommandList _list;
-
 }
 
 public enum Endianness

@@ -76,8 +76,6 @@ namespace Sm4shCommand
                 }
             return Param;
         }
-
-        // Crawls the code box and applies changes to the linked command list.
         public CommandList ParseCodeBox()
         {
             // Don't bother selectively processing events, just clear and repopulate the whole thing.

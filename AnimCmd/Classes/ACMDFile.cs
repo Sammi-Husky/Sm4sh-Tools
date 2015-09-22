@@ -93,11 +93,10 @@ namespace Sm4shCommand.Classes
 
         private void OnRebuild(VoidPtr address, int length)
         {
-            //  Make sure empty event lists at least contain the ending specifier,
-            //  otherwise the list will bleed over and read the next one.
+            //  Remove empty event lists
             for (int i = 0; i < EventLists.Count; i++)
                 if (EventLists.Values[i].isEmpty)
-                    EventLists.Values[i].Add(new Command() { _commandInfo = Runtime._endingCommand });
+                    EventLists.RemoveAt(i);
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     

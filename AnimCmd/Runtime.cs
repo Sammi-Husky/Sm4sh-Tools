@@ -7,8 +7,11 @@ using System.IO;
 
 namespace Sm4shCommand
 {
-    public static class Runtime
+    static class Runtime
     {
+        public static ACMDMain Instance { get { return _instance; } }
+        private static readonly ACMDMain _instance = new ACMDMain();
+
         public static void GetCommandInfo(string path)
         {
             using (StreamReader stream = new StreamReader(path))
@@ -56,7 +59,7 @@ namespace Sm4shCommand
 
                     //Write Parameter Specifier List
                     if (def.ParamSpecifiers.Count != 0)
-                        for(int i=0;i<def.ParamSpecifiers.Count;i++)
+                        for (int i = 0; i < def.ParamSpecifiers.Count; i++)
                         {
                             writer.Write(def.ParamSpecifiers[i].ToString());
                             if (i != def.ParamSpecifiers.Count - 1)
@@ -68,7 +71,7 @@ namespace Sm4shCommand
 
                     //Write Parameter Syntax Keywords
                     if (def.ParamSyntax.Count != 0)
-                        for(int i=0; i<def.ParamSyntax.Count;i++)
+                        for (int i = 0; i < def.ParamSyntax.Count; i++)
                         {
                             writer.Write(def.ParamSyntax[i]);
                             if (i != def.ParamSyntax.Count - 1)
@@ -112,5 +115,16 @@ namespace Sm4shCommand
         }
         public static List<CommandInfo> commandDictionary = new List<CommandInfo>();
         public static CommandInfo _endingCommand;
+
+        public static Endianness WorkingEndian { get { return _workingEndian; } set { _workingEndian = value; } }
+        private static Endianness _workingEndian;
+
+        public static bool isRoot = false;
+        public static string FileName;
+        public static string rootPath;
+
+        public static ACMDFile _curFile;
+        public static Fighter _curFighter;
+        public static Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
     }
 }

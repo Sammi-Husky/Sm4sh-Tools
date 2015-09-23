@@ -17,9 +17,81 @@ namespace Sm4shCommand
         public ACMDMain()
         {
             InitializeComponent();
+            _manager = new WorkspaceManager();
         }
 
-        public void Rebuild()
+        internal WorkspaceManager Manager { get { return _manager != null ? _manager : new WorkspaceManager(); } }
+        private WorkspaceManager _manager;
+
+        public void OpenWorkspace(string wrkspce)
+        {
+            Manager.ReadWRKSPC(wrkspce);
+            List<TreeNode> col = new List<TreeNode>();
+
+            foreach (Project p in Manager._projects)
+            {
+                string name = String.Format("{0} - [{1}]",
+                    p.ProjectName, p.ProjectType == ProjType.Fighter ? "Fighter" : "Weapon");
+
+                TreeNode pNode = new TreeNode(name);
+                TreeNode Actions = new TreeNode("MSCSB (ActionScript)");
+                TreeNode ACMD = new TreeNode("ACMD (AnimCmd)");
+                TreeNode Weapons = new TreeNode("Weapons");
+
+                Runtime._curFighter = Manager.OpenFighter(p.ACMDPath);
+                Runtime.AnimHashPairs = Manager.getAnimNames(p.AnimationFile);
+                foreach (uint u in Runtime._curFighter.MotionTable)
+                {
+                    if (u == 0)
+                        continue;
+
+                    CommandListGroup g = new CommandListGroup(Runtime._curFighter, u);
+
+                    if (Runtime.AnimHashPairs.ContainsKey(u))
+                        g.Text = Runtime.AnimHashPairs[u];
+
+                    ACMD.Nodes.Add(g);
+                }
+
+                TreeNode Parameters = new TreeNode("Parameters");
+
+                pNode.Nodes.AddRange(new TreeNode[] { Actions, ACMD, Weapons, Parameters });
+                col.Add(pNode);
+            }
+            FileTree.Nodes.AddRange(col.ToArray());
+        }
+        public void DisplayScript(CommandList list)
+        {
+
+            StringBuilder sb = new StringBuilder();
+            foreach (Command cmd in list)
+                sb.Append(cmd.ToString() + "\n");
+
+            if (list.Empty)
+                sb.Append("//    Empty List    //");
+
+            ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
+            box.Text = sb.ToString();
+            box.CommandList = list;
+        }
+
+        private void ACMDMain_Load(object sender, EventArgs e)
+        {
+
+            if (File.Exists(Application.StartupPath + "/Events.cfg"))
+                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
+            else
+                MessageBox.Show("Could not load Events.cfg");
+
+            if (!String.IsNullOrEmpty(Manager.WorkspaceRoot))
+                OpenWorkspace(Manager.WorkspaceRoot);
+        }
+        private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (TabPage p in tabControl1.TabPages)
             {
@@ -32,43 +104,7 @@ namespace Sm4shCommand
                         Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
                 }
             }
-        }
 
-        #region Display related methods
-        // Displays the list of commands as plain text in the code editor.
-        public void DisplayScript(CommandList list)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (Command cmd in list)
-                sb.Append(cmd.ToString() + "\n");
-
-            ITSCodeBox box = (ITSCodeBox)tabControl1.SelectedTab.Controls[0];
-            box.Text = sb.ToString();
-            box.CommandList = list;
-        }
-        #endregion
-
-        #region Event Handler Methods
-        private void ACMDMain_Load(object sender, EventArgs e)
-        {
-            if (File.Exists(Application.StartupPath + "/Events.cfg"))
-            {
-                Runtime.GetCommandInfo(Application.StartupPath + "/Events.cfg");
-
-                if (tabControl1.SelectedTab == null)
-                    return;
-            }
-            else
-                MessageBox.Show("Could not load Events.cfg");
-        }
-        private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            Runtime.SaveCommandInfo(Application.StartupPath + "/Events.cfg");
-        }
-
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Rebuild();
             if (Runtime.isRoot)
             {
 
@@ -83,7 +119,17 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Rebuild();
+            foreach (TabPage p in tabControl1.TabPages)
+            {
+                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
+                if (box.CommandList.Dirty)
+                {
+                    if (!Runtime.isRoot)
+                        Runtime._curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                    else
+                        Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                }
+            }
 
             if (Runtime.isRoot)
             {
@@ -123,7 +169,7 @@ namespace Sm4shCommand
                 Runtime.isRoot = true;
 
                 cmdListTree.ShowLines = cmdListTree.ShowRootLines = true;
-                FileTree.Nodes.AddRange(WorkspaceManager.OpenWorkspace(dlg.FileName));
+                OpenWorkspace(dlg.FileName);
             }
             dlg.Dispose();
         }
@@ -140,7 +186,7 @@ namespace Sm4shCommand
                     cmdListTree.Nodes.Clear();
                     Runtime.isRoot = cmdListTree.ShowLines = cmdListTree.ShowRootLines = false;
 
-                    if ((Runtime._curFile = FileManager.OpenFile(dlg.FileName)) != null)
+                    if ((Runtime._curFile = Manager.OpenFile(dlg.FileName)) != null)
                     {
                         foreach (CommandList list in Runtime._curFile.EventLists.Values)
                             cmdListTree.Nodes.Add(new CommandListNode(String.Format("[{0:X8}]", list.AnimationCRC), Runtime._curFile.EventLists[list.AnimationCRC]));
@@ -249,7 +295,6 @@ namespace Sm4shCommand
                 }
             }
         }
-        #endregion
 
         private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -259,7 +304,7 @@ namespace Sm4shCommand
             {
                 if (result == DialogResult.OK)
                 {
-                    Runtime.AnimHashPairs = getAnimNames(dlg.FileName);
+                    Runtime.AnimHashPairs = Manager.getAnimNames(dlg.FileName);
 
                     cmdListTree.BeginUpdate();
                     for (int i = 0; i < cmdListTree.Nodes.Count; i++)
@@ -276,30 +321,6 @@ namespace Sm4shCommand
             }
             catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
         }
-
-        private void testToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.ShowDialog();
-            FileTree.Nodes.AddRange(WorkspaceManager.OpenWorkspace(dlg.FileName));
-        }
-        public Dictionary<uint, string> getAnimNames(string path)
-        {
-            byte[] filebytes = File.ReadAllBytes(path);
-            int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
-            Dictionary<uint, string> hashpairs = new Dictionary<uint, string>();
-
-            for (int i = 0; i < count; i++)
-            {
-                uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
-                string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
-                string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-
-            }
-            return hashpairs;
-        }
-
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (FileTree.SelectedNode is CommandListGroup)
@@ -339,7 +360,7 @@ namespace Sm4shCommand
         {
             _fighter = fighter;
             _crc = CRC;
-            Text = String.Format("[{0}]", CRC);
+            Text = String.Format("[{0:X8}]", CRC);
 
             for (int i = 0; i < 4; i++)
             {

@@ -95,7 +95,7 @@ namespace Sm4shCommand.Classes
         {
             //  Remove empty event lists
             for (int i = 0; i < EventLists.Count; i++)
-                if (EventLists.Values[i].isEmpty)
+                if (EventLists.Values[i].Empty)
                     EventLists.RemoveAt(i);
 
             VoidPtr addr = address; // Base address. (0x00)

@@ -33,7 +33,7 @@ namespace Sm4shCommand.Classes
             }
         }
 
-        public bool isEmpty;
+        public bool Empty { get { return _commands.Count == 0; } }
 
         /// <summary>
         /// True if event list has changes.

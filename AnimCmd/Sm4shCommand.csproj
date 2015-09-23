@@ -60,8 +60,7 @@
     <Compile Include="Classes\CommandList.cs" />
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
-    <Compile Include="Classes\FileManager.cs" />
-    <Compile Include="Classes\WorkspaceManager.cs" />
+    <Compile Include="WorkspaceManager.cs" />
     <Compile Include="crc32.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />

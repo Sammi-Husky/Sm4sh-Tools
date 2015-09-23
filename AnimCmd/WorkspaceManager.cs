@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using Sm4shCommand.Classes;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 
-namespace Sm4shCommand.Classes
+namespace Sm4shCommand
 {
-    static class WorkspaceManager
+    unsafe class WorkspaceManager
     {
+        public List<Project> _projects = new List<Project>();
+        public string WorkspaceRoot = "";
 
-        public static List<Project> _projects = new List<Project>();
-        public static string WorkspaceRoot = "";
-
-        public static void ReadWRKSPC(string path)
+        public void ReadWRKSPC(string path)
         {
             WorkspaceRoot = Path.GetDirectoryName(path);
             using (StreamReader stream = new StreamReader(path))
@@ -51,57 +50,82 @@ namespace Sm4shCommand.Classes
                 }
             }
         }
-        public static TreeNode[] OpenWorkspace(string wrkspce)
-        {
-            ReadWRKSPC(wrkspce);
-            List<TreeNode> col = new List<TreeNode>();
-
-            foreach (Project p in _projects)
-            {
-                string name = String.Format("{0} - [{1}]",
-                    p.ProjectName, p.ProjectType == ProjType.Fighter ? "Fighter" : "Weapon");
-
-                TreeNode pNode = new TreeNode(name);
-                TreeNode Actions = new TreeNode("MSCSB (ActionScript)");
-                TreeNode ACMD = new TreeNode("ACMD (AnimCmd)");
-
-                Runtime._curFighter = FileManager.OpenFighter(p.ACMDPath);
-                Runtime.AnimHashPairs = getAnimNames(p.AnimationFile);
-                foreach (uint u in Runtime._curFighter.MotionTable)
-                {
-                    if (u == 0)
-                        continue;
-
-                    CommandListGroup g = new CommandListGroup(Runtime._curFighter, u);
-
-                    if (Runtime.AnimHashPairs.ContainsKey(u))
-                        g.Text = Runtime.AnimHashPairs[u];
-
-                    ACMD.Nodes.Add(g);
-                }
-
-                TreeNode Parameters = new TreeNode("Parameters");
-
-                pNode.Nodes.AddRange(new TreeNode[] { Actions, ACMD, Parameters });
-                col.Add(pNode);
-            }
-            return col.ToArray();
-        }
-        public static Dictionary<uint, string> getAnimNames(string path)
+        public Dictionary<uint, string> getAnimNames(string path)
         {
             byte[] filebytes = File.ReadAllBytes(path);
             int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
             Dictionary<uint, string> hashpairs = new Dictionary<uint, string>();
-
             for (int i = 0; i < count; i++)
             {
+
                 uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
                 string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
                 string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+
                 hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
+
+                if (AnimName.StartsWith("SpecialN") || AnimName.StartsWith("SpecialS") ||
+                    AnimName.StartsWith("SpecialLw") || AnimName.StartsWith("SpecialHi") ||
+                    AnimName.StartsWith("SpecialAirN") || AnimName.StartsWith("SpecialAirS") ||
+                    AnimName.StartsWith("SpecialAirLw") || AnimName.StartsWith("SpecialAirHi"))
+                {
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
+                }
 
             }
             return hashpairs;
+        }
+
+        public ACMDFile OpenFile(string Filepath)
+        {
+            DataSource source = new DataSource(FileMap.FromFile(Filepath));
+
+            if (*(byte*)(source.Address + 0x04) == 0x02)
+                Runtime.WorkingEndian = Endianness.Little;
+            else if ((*(byte*)(source.Address + 0x04) == 0x00))
+                Runtime.WorkingEndian = Endianness.Big;
+            else
+            {
+                return null;
+            }
+
+            return new ACMDFile(source, Runtime.WorkingEndian);
+        }
+        public Fighter OpenFighter(string dirPath)
+        {
+            Fighter f = new Fighter();
+            try
+            {
+
+                f.Main = OpenFile(dirPath + "/game.bin");
+                f.GFX = OpenFile(dirPath + "/effect.bin");
+                f.SFX = OpenFile(dirPath + "/sound.bin");
+                f.Expression = OpenFile(dirPath + "/expression.bin");
+
+                f.Main.Type = ACMDType.Main;
+                f.GFX.Type = ACMDType.GFX;
+                f.SFX.Type = ACMDType.SFX;
+                f.Expression.Type = ACMDType.Expression;
+
+                f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), Runtime.WorkingEndian);
+            }
+            catch (FileNotFoundException x) { return null; }
+
+            Runtime.isRoot = true;
+            Runtime.rootPath = dirPath;
+            Runtime.Instance.Text = String.Format("Main Form - {0}", dirPath);
+            return f;
+        }
+        public MTable ParseMTable(DataSource source, Endianness endian)
+        {
+            List<uint> CRCTable = new List<uint>();
+
+            for (int i = 0; i < source.Length; i += 4)
+                //if((uint)Util.GetWordUnsafe((source.Address + i), endian) != 0)
+                CRCTable.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
+
+            return new MTable(CRCTable, endian);
         }
     }
 
@@ -197,9 +221,9 @@ namespace Sm4shCommand.Classes
                 switch (raw.Substring(0, raw.IndexOf('=')))
                 {
                     case "TYPE":
-                        if (raw.Substring(6).Trim('\"') == "Fighter")
+                        if (raw.Substring(6).Trim('\"').Equals("fighter", StringComparison.InvariantCultureIgnoreCase))
                             _type = ProjType.Fighter;
-                        else if (raw.Substring(6).Trim('\"') == "Weapon")
+                        else if (raw.Substring(6).Trim('\"').Equals("weapon", StringComparison.InvariantCultureIgnoreCase))
                             _type = ProjType.Weapon;
                         break;
                     case "PARAM":
@@ -225,7 +249,7 @@ namespace Sm4shCommand.Classes
                         _animFile = _root + raw.Substring(6).Trim('\"');
                         break;
                     case "EXTRACTED":
-                        _extracted = _root + raw.Substring(10).Trim('\"') == "true";
+                        _extracted = raw.Substring(10).Trim('\"').Equals("true", StringComparison.InvariantCultureIgnoreCase);
                         break;
                 }
             }

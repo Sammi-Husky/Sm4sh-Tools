@@ -82,13 +82,6 @@ namespace Sm4shCommand
             string[] lines = Lines.Where(x => !string.IsNullOrWhiteSpace(x) && !x.Contains("//")).ToArray();
             _list.Clear();
 
-
-            if (String.IsNullOrEmpty(Text))
-            {
-                _list.isEmpty = true;
-                return _list;
-            }
-
             UnknownCommand unkC = null;
             for (int i = 0; i < lines.Length; i++)
             {
@@ -247,8 +240,6 @@ namespace Sm4shCommand
             NativeMethods.SendMessage(this.Handle, NativeMethods.WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
             NativeMethods.SendMessage(this.Handle, NativeMethods.EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
         }
-
-
     }
 
     internal sealed class NativeMethods

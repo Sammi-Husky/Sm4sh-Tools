@@ -30,16 +30,20 @@ namespace Sm4shCommand
 
             foreach (Project p in Manager._projects)
             {
+                Runtime._curFighter = Manager.OpenFighter(p.ACMDPath);
+                Runtime.AnimHashPairs = Manager.getAnimNames(p.AnimationFile);
+
                 string name = String.Format("{0} - [{1}]",
                     p.ProjectName, p.ProjectType == ProjType.Fighter ? "Fighter" : "Weapon");
 
                 TreeNode pNode = new TreeNode(name);
+
                 TreeNode Actions = new TreeNode("MSCSB (ActionScript)");
                 TreeNode ACMD = new TreeNode("ACMD (AnimCmd)");
                 TreeNode Weapons = new TreeNode("Weapons");
+                TreeNode Parameters = new TreeNode("Parameters");
 
-                Runtime._curFighter = Manager.OpenFighter(p.ACMDPath);
-                Runtime.AnimHashPairs = Manager.getAnimNames(p.AnimationFile);
+
                 foreach (uint u in Runtime._curFighter.MotionTable)
                 {
                     if (u == 0)
@@ -52,8 +56,6 @@ namespace Sm4shCommand
 
                     ACMD.Nodes.Add(g);
                 }
-
-                TreeNode Parameters = new TreeNode("Parameters");
 
                 pNode.Nodes.AddRange(new TreeNode[] { Actions, ACMD, Weapons, Parameters });
                 col.Add(pNode);
@@ -251,7 +253,7 @@ namespace Sm4shCommand
                     tabControl1.SelectTab(name + w.Index);
                 else
                 {
-                    TabPage p = new TabPage(name) { Name = name + w.Index };
+                    TabPage p = new TabPage(w.Text) { Name = name + w.Index };
                     p.Controls.Add(new ITSCodeBox(((CommandListNode)cmdListTree.SelectedNode).CommandList) { Dock = DockStyle.Fill, WordWrap = false });
                     tabControl1.TabPages.Insert(0, p);
                     tabControl1.SelectedIndex = 0;
@@ -292,6 +294,7 @@ namespace Sm4shCommand
                         Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
 
                     this.tabControl1.TabPages.Remove(p);
+                    return;
                 }
             }
         }

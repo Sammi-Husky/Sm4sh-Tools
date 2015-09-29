@@ -196,8 +196,8 @@ namespace Sm4shCommand
 
             // Process parenthesis
             Format(line, LineIndex, "[\x28-\x2c]", Color.Blue);
-            //// Process comments
-            Format(line, LineIndex, "\"[^\"]*\"", Color.DarkRed);
+            // Process comments
+            Format(line, LineIndex, "^/[/|*](.+)$", Color.DarkRed); // Line comments
 
             SelectionStart = nPosition;
             SelectionLength = 0;

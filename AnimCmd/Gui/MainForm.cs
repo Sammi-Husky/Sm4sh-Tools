@@ -337,6 +337,33 @@ namespace Sm4shCommand
                 cmdListTree.Nodes.Add(new CommandListNode("Expression", g.lists[3]));
             }
         }
+
+        private void fighterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Runtime.FileName = Runtime.rootPath = String.Empty;
+            Runtime._curFile = null;
+            cmdListTree.Nodes.Clear();
+            tabControl1.TabPages.Clear();
+            Runtime.isRoot = true;
+
+            FolderSelectDialog dlg = new FolderSelectDialog();
+
+            if(dlg.ShowDialog() == DialogResult.OK)
+            {
+                Runtime._curFighter = _manager.OpenFighter(dlg.SelectedPath);
+                TreeNode n = new TreeNode("ACMD");
+                for (int i = 0; i < 4; i++)
+                    foreach (CommandList list in Runtime._curFighter[i].EventLists.Values)
+                        n.Nodes.Add(new CommandListGroup(Runtime._curFighter, list.AnimationCRC));
+                FileTree.Nodes.Add(n);
+            }
+        }
+
+        private void workspaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            WorkspaceWizard dlg = new WorkspaceWizard();
+            dlg.ShowDialog();
+        }
     }
 
     public class CommandListNode : TreeNode

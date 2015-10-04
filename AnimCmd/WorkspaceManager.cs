@@ -50,6 +50,8 @@ namespace Sm4shCommand
                 }
             }
         }
+        public void WriteWRKSPC(string path) { }
+
         public Dictionary<uint, string> getAnimNames(string path)
         {
             byte[] filebytes = File.ReadAllBytes(path);

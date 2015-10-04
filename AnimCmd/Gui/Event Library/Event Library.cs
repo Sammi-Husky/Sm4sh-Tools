@@ -114,8 +114,8 @@ namespace Sm4shCommand
             {
                 RenameForm f = new RenameForm(listBox2.SelectedItem.ToString());
                 f.ShowDialog();
-                curDef.ParamSyntax[listBox2.SelectedIndex] = f.ParameterName;
-                listBox2.Items[listBox2.SelectedIndex] = f.ParameterName;
+                curDef.ParamSyntax[listBox2.SelectedIndex] = f.NewName;
+                listBox2.Items[listBox2.SelectedIndex] = f.NewName;
             }
         }
 

@@ -284,8 +284,8 @@ namespace Sm4shCommand
                 TabPage p = tabControl1.TabPages[i];
 
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                Rectangle r = tabControl1.GetTabRect(tabControl1.SelectedIndex);
-                Rectangle closeButton = new Rectangle(r.Right - 17, r.Top + 4, 11, 9);
+                Rectangle r = tabControl1.GetTabRect(i);
+                Rectangle closeButton = new Rectangle(r.Right - 17, r.Top + 4, 12, 10);
                 if (closeButton.Contains(e.Location))
                 {
                     if (!Runtime.isRoot)
@@ -348,7 +348,7 @@ namespace Sm4shCommand
 
             FolderSelectDialog dlg = new FolderSelectDialog();
 
-            if(dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog() == DialogResult.OK)
             {
                 Runtime._curFighter = _manager.OpenFighter(dlg.SelectedPath);
                 TreeNode n = new TreeNode("ACMD");
@@ -362,7 +362,21 @@ namespace Sm4shCommand
         private void workspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             WorkspaceWizard dlg = new WorkspaceWizard();
-            dlg.ShowDialog();
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                _manager.NewWorkspace(dlg.WorkspaceName, dlg.SourceDirectory, dlg.DestinationDirectory);
+
+                Runtime.FileName = Runtime.rootPath = String.Empty;
+                Runtime._curFile = null;
+                cmdListTree.Nodes.Clear();
+                tabControl1.TabPages.Clear();
+                Runtime.isRoot = true;
+                cmdListTree.ShowLines = cmdListTree.ShowRootLines = true;
+
+                OpenWorkspace(dlg.DestinationDirectory + Path.DirectorySeparatorChar + dlg.WorkspaceName +
+                                Path.DirectorySeparatorChar + dlg.WorkspaceName + ".WRKSPC");
+
+            }
         }
     }
 

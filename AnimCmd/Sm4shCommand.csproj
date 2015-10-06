@@ -66,10 +66,10 @@
     <Compile Include="Gui\Rename.Designer.cs">
       <DependentUpon>Rename.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Workspace Wizard\WorkspaceWizard.cs">
+    <Compile Include="Gui\WorkspaceWizard.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Gui\Workspace Wizard\WorkspaceWizard.Designer.cs">
+    <Compile Include="Gui\WorkspaceWizard.Designer.cs">
       <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </Compile>
     <Compile Include="WorkspaceManager.cs" />
@@ -155,7 +155,7 @@
     <EmbeddedResource Include="Gui\Rename.resx">
       <DependentUpon>Rename.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Gui\Workspace Wizard\WorkspaceWizard.resx">
+    <EmbeddedResource Include="Gui\WorkspaceWizard.resx">
       <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-//using System.Windows.Forms;
+using System.Windows.Forms;
 using Sm4shCommand.Classes;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
@@ -17,6 +17,7 @@ namespace Sm4shCommand
 
         public void ReadWRKSPC(string path)
         {
+            _projects = new List<Project>();
             WorkspaceRoot = Path.GetDirectoryName(path);
             using (StreamReader stream = new StreamReader(path))
             {
@@ -25,10 +26,9 @@ namespace Sm4shCommand
                     string raw = stream.ReadLine();
                     if (raw.StartsWith("Project"))
                     {
-
                         string _projName = raw.Substring(8, raw.IndexOf(',') - 8);
                         string _fitProj = raw.Substring(raw.IndexOf(',') + 1).TrimEnd(new char[] { ':', ')' });
-                        Project _proj = new Project(_projName, String.Format("{0}/{1}", WorkspaceRoot, _fitProj.Trim()));
+                        Project _proj = new Project(_projName, _fitProj.Trim());
 
                         Dictionary<string, string> props = new Dictionary<string, string>();
                         while ((raw = stream.ReadLine()) != "endproj;")
@@ -50,7 +50,59 @@ namespace Sm4shCommand
                 }
             }
         }
-        public void WriteWRKSPC(string path) { }
+        public void WriteWRKSPC(string path)
+        {
+            using (StreamWriter stream = new StreamWriter(path))
+            {
+                foreach (Project p in _projects)
+                {
+                    stream.WriteLine(String.Format("Project({0},{1}):", p.ProjectName, p.ProjectFile));
+                    stream.WriteLine(string.Format("\ttype= {0};", p.ProjectType));
+                    stream.WriteLine("endproj;");
+                }
+            }
+        }
+
+        public void NewWorkspace(string Name, string src, string dest)
+        {
+            string root = dest + Path.DirectorySeparatorChar + Name;
+            string projroot = root + Path.DirectorySeparatorChar + Name;
+
+            Directory.CreateDirectory(root);
+            Directory.CreateDirectory(projroot);
+            _projects.Add(ImportProject(Name, src, projroot));
+            WriteWRKSPC(root + Path.DirectorySeparatorChar + Name + ".wrkspc");
+        }
+        public Project ImportProject(string name, string src, string dest)
+        {
+            Project p = new Project(name, null);
+            string outfile = string.Format("{0}{1}{2}.fitproj", dest, Path.DirectorySeparatorChar, name);
+            p.ProjectFile = outfile;
+            Directory.CreateDirectory(dest + "/Script/AnimCmd");
+            var files = Directory.EnumerateFiles(src + "/Script/AnimCmd/Body");
+            foreach (string s in files)
+                File.Copy(s, dest + "/Script/AnimCmd/" + Path.GetFileName(s));
+
+            Directory.CreateDirectory(dest + "/Anim");
+            File.Copy(src + "/Motion/Body/Main.pac", dest + "/Anim/main.pac");
+
+            Directory.CreateDirectory(dest + "/Param");
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "Select Parameter file.";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                File.Copy(dlg.FileName, dest + "/Param/" + dlg.SafeFileName);
+                p.ParamPath = dest + "/Param/" + dlg.SafeFileName;
+            }
+            p.ACMDPath = dest + "/Script/AnimCmd";
+            p.ScriptRoot = dest + "/Script";
+            p.AnimationDirectory = dest + "/Anim";
+            p.AnimationFile = dest + "/Anim/main.pac";
+            p.ExtractedAnimations = false;
+            p.ProjectType = ProjType.Fighter;
+            p.WriteFITPROJ(outfile);
+            return p;
+        }
 
         public Dictionary<uint, string> getAnimNames(string path)
         {
@@ -65,17 +117,14 @@ namespace Sm4shCommand
                 string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
 
                 hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-
-                if (AnimName.StartsWith("SpecialN") || AnimName.StartsWith("SpecialS") ||
-                    AnimName.StartsWith("SpecialLw") || AnimName.StartsWith("SpecialHi") ||
-                    AnimName.StartsWith("SpecialAirN") || AnimName.StartsWith("SpecialAirS") ||
-                    AnimName.StartsWith("SpecialAirLw") || AnimName.StartsWith("SpecialAirHi"))
-                {
-                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
-                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
-                }
-
+                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
+                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
+                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
+                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
             }
+
+
+
             return hashpairs;
         }
 
@@ -136,9 +185,12 @@ namespace Sm4shCommand
         public Project(string Name, string projPath)
         {
             _projectName = Name;
-            _projFile = projPath;
-            _root = Path.GetDirectoryName(projPath);
-            Initialize(projPath);
+            if (projPath != null)
+            {
+                _projFile = projPath;
+                _root = Path.GetDirectoryName(projPath);
+                Initialize(projPath);
+            }
         }
 
         public string ProjectName { get { return _projectName; } set { _projectName = value; } }
@@ -201,13 +253,13 @@ namespace Sm4shCommand
                 switch (raw.Substring(0, raw.IndexOf('=')))
                 {
                     case "ROOT":
-                        _scriptRoot = _root + raw.Substring(6).Trim('\"');
+                        _scriptRoot =raw.Substring(6).Trim('\"');
                         break;
                     case "ACMD":
-                        _acmdPath = _scriptRoot + raw.Substring(6).Trim('\"');
+                        _acmdPath = raw.Substring(6).Trim('\"');
                         break;
                     case "MSCSB":
-                        _mscsbPath = _scriptRoot + raw.Substring(7).Trim('\"');
+                        _mscsbPath = raw.Substring(7).Trim('\"');
                         break;
                 }
             }
@@ -229,7 +281,7 @@ namespace Sm4shCommand
                             _type = ProjType.Weapon;
                         break;
                     case "PARAM":
-                        _paramPath = _root + raw.Substring(7).Trim('\"');
+                        _paramPath = raw.Substring(7).Trim('\"');
                         break;
                 }
             }
@@ -245,10 +297,10 @@ namespace Sm4shCommand
                 switch (raw.Substring(0, raw.IndexOf('=')))
                 {
                     case "ROOT":
-                        _animRoot = _root + raw.Substring(6).Trim('\"');
+                        _animRoot =  raw.Substring(6).Trim('\"');
                         break;
                     case "FILE":
-                        _animFile = _root + raw.Substring(6).Trim('\"');
+                        _animFile =  raw.Substring(6).Trim('\"');
                         break;
                     case "EXTRACTED":
                         _extracted = raw.Substring(10).Trim('\"').Equals("true", StringComparison.InvariantCultureIgnoreCase);
@@ -257,6 +309,26 @@ namespace Sm4shCommand
             }
         }
 
+        public void WriteFITPROJ() { WriteFITPROJ(_projFile); }
+        public void WriteFITPROJ(string path)
+        {
+            using (StreamWriter stream = new StreamWriter(path))
+            {
+                stream.WriteLine("Project\n{");
+                stream.WriteLine("\tTYPE= \"" + (_type == ProjType.Fighter ? "fighter" : "weapon") + "\"");
+                stream.WriteLine("\tPARAM= \"" + _paramPath + "\"\n}\n");
+
+                stream.WriteLine("Script\n{");
+                stream.WriteLine("\tROOT= \"" + _scriptRoot + "\"");
+                stream.WriteLine("\tACMD= \"" + _acmdPath + "\"");
+                stream.WriteLine("\tMSCSB= \"" + _mscsbPath + "\"\n}\n");
+
+                stream.WriteLine("Animation\n{");
+                stream.WriteLine("\tROOT= \"" + _animRoot + "\"");
+                stream.WriteLine("\tFILE= \"" + _animFile + "\"");
+                stream.WriteLine("\tEXTRACTED= " + (_extracted ? "true" : "false") + "\n}");
+            }
+        }
     }
     public enum ProjType
     {

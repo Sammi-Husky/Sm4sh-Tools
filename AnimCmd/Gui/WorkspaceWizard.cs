@@ -14,26 +14,21 @@ namespace Sm4shCommand
         public WorkspaceWizard()
         {
             InitializeComponent();
+            dirTextBox.Text = Application.StartupPath;
+            nameTextBox.Text = "New Project";
         }
+        FolderSelectDialog dlg = new FolderSelectDialog();
+        public string DestinationDirectory { get { return dirTextBox.Text; } }
+        public string WorkspaceName { get { return nameTextBox.Text; } }
+        public string SourceDirectory { get { return srcTextBox.Text; } }
 
-        private void button5_Click(object sender, EventArgs e)
+        private void btnLocation_Click(object sender, EventArgs e)
         {
-            FolderSelectDialog dlg = new FolderSelectDialog();
             if (dlg.ShowDialog() == DialogResult.OK)
                 dirTextBox.Text = dlg.SelectedPath;
         }
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button3_Click_1(object sender, EventArgs e)
+        private void btnWeapAdd_Click(object sender, EventArgs e)
         {
             listBox1.Items.Add("Weapon" + (listBox1.Items.Count + 1));
             listBox1.SelectedIndex = 0;
@@ -48,26 +43,31 @@ namespace Sm4shCommand
                 if (rform.ShowDialog() == DialogResult.OK)
                     listBox1.Items[listBox1.SelectedIndex] = rform.NewName;
             }
-
-
         }
 
-        private void button4_Click_1(object sender, EventArgs e)
+        private void btnWeapDel_Click(object sender, EventArgs e)
         {
             if (listBox1.Items.Count > 0)
-                listBox1.Items.RemoveAt(listBox1.Items.Count-1);
+                listBox1.Items.RemoveAt(listBox1.Items.Count - 1);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnOkay_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
+        }
+
+        private void btnSource_Click(object sender, EventArgs e)
+        {
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+                srcTextBox.Text = dlg.SelectedPath;
         }
     }
 }

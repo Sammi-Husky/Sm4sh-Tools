@@ -34,11 +34,15 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.workspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.aCMDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mSCSBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mTABLEToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.workspaceToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.fighterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.workspaceToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,10 +62,6 @@
             this.FileTree = new System.Windows.Forms.TreeView();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.cmdListTree = new System.Windows.Forms.TreeView();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.aCMDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mSCSBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mTABLEToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.nodeContextMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -118,9 +118,32 @@
             // workspaceToolStripMenuItem
             // 
             this.workspaceToolStripMenuItem.Name = "workspaceToolStripMenuItem";
-            this.workspaceToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.workspaceToolStripMenuItem.Text = "Workspace";
+            this.workspaceToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.workspaceToolStripMenuItem.Text = "Project From Existing Files";
             this.workspaceToolStripMenuItem.Click += new System.EventHandler(this.workspaceToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(196, 6);
+            // 
+            // aCMDToolStripMenuItem
+            // 
+            this.aCMDToolStripMenuItem.Name = "aCMDToolStripMenuItem";
+            this.aCMDToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.aCMDToolStripMenuItem.Text = "ACMD";
+            // 
+            // mSCSBToolStripMenuItem
+            // 
+            this.mSCSBToolStripMenuItem.Name = "mSCSBToolStripMenuItem";
+            this.mSCSBToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.mSCSBToolStripMenuItem.Text = "MSCSB";
+            // 
+            // mTABLEToolStripMenuItem
+            // 
+            this.mTABLEToolStripMenuItem.Name = "mTABLEToolStripMenuItem";
+            this.mTABLEToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.mTABLEToolStripMenuItem.Text = "MTABLE";
             // 
             // openToolStripMenuItem
             // 
@@ -133,31 +156,31 @@
             this.openToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
-            // workspaceToolStripMenuItem1
-            // 
-            this.workspaceToolStripMenuItem1.Name = "workspaceToolStripMenuItem1";
-            this.workspaceToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
-            this.workspaceToolStripMenuItem1.Text = "Workspace..";
-            this.workspaceToolStripMenuItem1.Click += new System.EventHandler(this.workspaceToolStripMenuItem1_Click);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(149, 6);
-            // 
             // fileToolStripMenuItem1
             // 
             this.fileToolStripMenuItem1.Name = "fileToolStripMenuItem1";
-            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(135, 22);
             this.fileToolStripMenuItem1.Text = "File..";
             this.fileToolStripMenuItem1.Click += new System.EventHandler(this.fileToolStripMenuItem1_Click);
             // 
             // fighterToolStripMenuItem
             // 
             this.fighterToolStripMenuItem.Name = "fighterToolStripMenuItem";
-            this.fighterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.fighterToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
             this.fighterToolStripMenuItem.Text = "Fighter";
             this.fighterToolStripMenuItem.Click += new System.EventHandler(this.fighterToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(132, 6);
+            // 
+            // workspaceToolStripMenuItem1
+            // 
+            this.workspaceToolStripMenuItem1.Name = "workspaceToolStripMenuItem1";
+            this.workspaceToolStripMenuItem1.Size = new System.Drawing.Size(135, 22);
+            this.workspaceToolStripMenuItem1.Text = "Workspace..";
+            this.workspaceToolStripMenuItem1.Click += new System.EventHandler(this.workspaceToolStripMenuItem1_Click);
             // 
             // toolStripSeparator1
             // 
@@ -345,29 +368,6 @@
             this.cmdListTree.TabIndex = 7;
             this.cmdListTree.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.cmdListTree_DrawNode);
             this.cmdListTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.cmdListTree_MouseDoubleClick);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(149, 6);
-            // 
-            // aCMDToolStripMenuItem
-            // 
-            this.aCMDToolStripMenuItem.Name = "aCMDToolStripMenuItem";
-            this.aCMDToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.aCMDToolStripMenuItem.Text = "ACMD";
-            // 
-            // mSCSBToolStripMenuItem
-            // 
-            this.mSCSBToolStripMenuItem.Name = "mSCSBToolStripMenuItem";
-            this.mSCSBToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.mSCSBToolStripMenuItem.Text = "MSCSB";
-            // 
-            // mTABLEToolStripMenuItem
-            // 
-            this.mTABLEToolStripMenuItem.Name = "mTABLEToolStripMenuItem";
-            this.mTABLEToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.mTABLEToolStripMenuItem.Text = "MTABLE";
             // 
             // ACMDMain
             // 

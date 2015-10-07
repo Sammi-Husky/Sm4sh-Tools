@@ -167,10 +167,10 @@ namespace Sm4shCommand
                 Runtime.FileName = Runtime.rootPath = String.Empty;
                 Runtime._curFile = null;
                 cmdListTree.Nodes.Clear();
+                FileTree.Nodes.Clear();
                 tabControl1.TabPages.Clear();
                 Runtime.isRoot = true;
 
-                cmdListTree.ShowLines = cmdListTree.ShowRootLines = true;
                 OpenWorkspace(dlg.FileName);
             }
             dlg.Dispose();

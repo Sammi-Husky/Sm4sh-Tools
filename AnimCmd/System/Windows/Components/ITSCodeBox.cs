@@ -144,10 +144,11 @@ namespace Sm4shCommand
             {
                 Point cp;
                 string commandName = ((ListBox)sender).SelectedItem.ToString();
+                CommandInfo info = CommandDictionary.Find(x => x.Name == commandName);
                 string TempStr = this.Text.Remove(GetFirstCharIndexFromLine(CurrentLineIndex), Lines[CurrentLineIndex].Length);
                 NativeMethods.GetCaretPos(out cp);
                 this.Text = TempStr.Insert(GetFirstCharIndexFromLine(CurrentLineIndex), commandName + String.Format("({0})", FomatParams(commandName)));
-                this.SelectionStart = GetCharIndexFromPosition(cp) + Lines[GetLineFromCharIndex(GetCharIndexFromPosition(cp))].Length;
+                this.SelectionStart = GetFirstCharIndexFromLine(CurrentLineIndex) + CurrentLineText.Length;
                 AutocompleteBox.Hide();
                 this.Focus();
             }
@@ -166,6 +167,7 @@ namespace Sm4shCommand
             {
                 AutocompleteBox.DataSource = FilteredList;
                 AutocompleteBox.Show();
+                AutocompleteBox.Update();
             }
             else
                 AutocompleteBox.Hide();

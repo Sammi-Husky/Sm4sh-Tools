@@ -292,7 +292,6 @@ namespace Sm4shCommand
                         Runtime._curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
                     else
                         Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
-
                     this.tabControl1.TabPages.Remove(p);
                     return;
                 }
@@ -307,19 +306,25 @@ namespace Sm4shCommand
             {
                 if (result == DialogResult.OK)
                 {
+                    TreeView tree = Runtime.isRoot ? FileTree : cmdListTree;
                     Runtime.AnimHashPairs = Manager.getAnimNames(dlg.FileName);
 
-                    cmdListTree.BeginUpdate();
-                    for (int i = 0; i < cmdListTree.Nodes.Count; i++)
+                    tree.BeginUpdate();
+                    for (int i = 0; i < tree.Nodes.Count; i++)
                     {
-                        if (cmdListTree.Nodes[i] is CommandListNode)
+                        if (tree.Nodes[i] is CommandListNode | tree.Nodes[i] is CommandListGroup)
                         {
-                            CommandListNode n = (CommandListNode)cmdListTree.Nodes[i];
-                            if (Runtime.AnimHashPairs.ContainsKey(n.CRC))
-                                cmdListTree.Nodes[i].Text = Runtime.AnimHashPairs[n.CRC];
+                            uint crc;
+                            if (tree.Nodes[i] is CommandListNode)
+                                crc = ((CommandListNode)tree.Nodes[i]).CRC;
+                            else
+                                crc = ((CommandListGroup)tree.Nodes[i])._crc;
+
+                            if (Runtime.AnimHashPairs.ContainsKey(crc))
+                                tree.Nodes[i].Text = Runtime.AnimHashPairs[crc];
                         }
                     }
-                    cmdListTree.EndUpdate();
+                    tree.EndUpdate();
                 }
             }
             catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
@@ -350,15 +355,15 @@ namespace Sm4shCommand
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
+                FileTree.BeginUpdate();
                 Runtime._curFighter = _manager.OpenFighter(dlg.SelectedPath);
-                TreeNode n = new TreeNode("ACMD");
                 for (int i = 0; i < 4; i++)
-                    foreach (CommandList list in Runtime._curFighter[i].EventLists.Values)
-                        n.Nodes.Add(new CommandListGroup(Runtime._curFighter, list.AnimationCRC));
-                FileTree.Nodes.Add(n);
+                    foreach (uint u in Runtime._curFighter.MotionTable)
+                        if (u != 0)
+                            FileTree.Nodes.Add(new CommandListGroup(Runtime._curFighter, u));
+                FileTree.EndUpdate();
             }
         }
-
         private void workspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             WorkspaceWizard dlg = new WorkspaceWizard();

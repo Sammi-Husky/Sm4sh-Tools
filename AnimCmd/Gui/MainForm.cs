@@ -263,7 +263,6 @@ namespace Sm4shCommand
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
-
             if (e.Index != tabControl1.SelectedIndex)
             {
                 Rectangle r = tabControl1.GetTabRect(e.Index);

@@ -188,6 +188,10 @@ namespace Sm4shCommand.Classes
                 }
             }
 
+            if (unkC != null)
+                _cur.Add(unkC);
+
+
             // If we hit a script_end command, add it to the the Event List and terminate looping.
             if (Util.GetWordUnsafe(addr, Endian) == Runtime._endingCommand.Identifier)
             {

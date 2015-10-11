@@ -54,6 +54,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\ACMDFile.cs" />
+    <Compile Include="Classes\Command.cs" />
+    <Compile Include="Classes\CommandInfo.cs" />
+    <Compile Include="Classes\CommandList.cs" />
+    <Compile Include="Classes\Fighter.cs" />
+    <Compile Include="Classes\Mtable.cs" />
+    <Compile Include="Gui\Rename.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\Rename.Designer.cs">
+      <DependentUpon>Rename.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\WorkspaceWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\WorkspaceWizard.Designer.cs">
+      <DependentUpon>WorkspaceWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WorkspaceManager.cs" />
+    <Compile Include="crc32.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Gui\Event Library\Event Library.cs">
@@ -61,12 +81,6 @@
     </Compile>
     <Compile Include="Gui\Event Library\Event Library.Designer.cs">
       <DependentUpon>Event Library.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\Event Library\Rename.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Gui\Event Library\Rename.Designer.cs">
-      <DependentUpon>Rename.cs</DependentUpon>
     </Compile>
     <Compile Include="Gui\MainForm.cs">
       <SubType>Form</SubType>
@@ -135,11 +149,14 @@
     <EmbeddedResource Include="Gui\Event Library\Event Library.resx">
       <DependentUpon>Event Library.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Gui\Event Library\Rename.resx">
-      <DependentUpon>Rename.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Gui\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Rename.resx">
+      <DependentUpon>Rename.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\WorkspaceWizard.resx">
+      <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

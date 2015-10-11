@@ -16,7 +16,7 @@ namespace Sm4shCommand
             InitializeComponent();
             textBox1.Text = text;
         }
-        public string ParameterName
+        public string NewName
         {
             get { return textBox1.Text; }
         }

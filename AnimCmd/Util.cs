@@ -66,28 +66,19 @@ namespace Sm4shCommand
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="endian"></param>
-        public static void SetWord(ref byte[] data, long value, long offset, Endianness endian)
+        public static void SetWord(ref byte[] data, long value, long offset)
         {
             if (offset % 4 != 0) throw new Exception("Odd word offset");
             if (offset >= data.Length)
             {
                 Array.Resize<byte>(ref data, (int)offset + 4);
             }
-            if (endian == Endianness.Little)
-            {
 
-                data[offset + 3] = (byte)((value & 0xFF000000) / 0x1000000);
-                data[offset + 2] = (byte)((value & 0xFF0000) / 0x10000);
-                data[offset + 1] = (byte)((value & 0xFF00) / 0x100);
-                data[offset + 0] = (byte)((value & 0xFF) / 0x1);
-            }
-            else if (endian == Endianness.Big)
-            {
-                data[offset + 0] = (byte)((value & 0xFF000000) / 0x1000000);
-                data[offset + 1] = (byte)((value & 0xFF0000) / 0x10000);
-                data[offset + 2] = (byte)((value & 0xFF00) / 0x100);
-                data[offset + 3] = (byte)((value & 0xFF) / 0x1);
-            }
+            data[offset + 0] = (byte)((value & 0xFF000000) / 0x1000000);
+            data[offset + 1] = (byte)((value & 0xFF0000) / 0x10000);
+            data[offset + 2] = (byte)((value & 0xFF00) / 0x100);
+            data[offset + 3] = (byte)((value & 0xFF) / 0x1);
+
         }
         /// <summary>
         /// Sets a value into memory at the specified address.
@@ -112,9 +103,9 @@ namespace Sm4shCommand
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="endian"></param>
-        public static void SetFloat(ref byte[] data, float value, long offset, Endianness endian)
+        public static void SetFloat(ref byte[] data, float value, long offset)
         {
-            SetWord(ref data, FloatToHex(value), offset, endian);
+            SetWord(ref data, FloatToHex(value), offset);
         }
         /// <summary>
         /// Sets a floating point value into memory at the specified address.
@@ -211,6 +202,23 @@ namespace Sm4shCommand
             for (int i = 0; i < length; i++)
                 arr[i] = *(byte*)(Address + i);
             return arr;
+        }
+        /// <summary>
+        /// Returns a string from an array of bytes at the specified offset
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
+        public static string GetString(byte[] data, long offset, Endianness endian)
+        {
+            if (offset >= data.Length) throw new Exception("Offset outside of expected value range.");
+            string s = "";
+
+            while (data[offset] != 0)
+                s += (char)data[offset++];
+
+            return s;
         }
     }
 }

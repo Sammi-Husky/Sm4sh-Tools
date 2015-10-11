@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sm4shCommand.Classes;
 using System.IO;
 
 namespace Sm4shCommand
 {
-    public static class Runtime
+    static class Runtime
     {
+        public static ACMDMain Instance { get { return _instance; } }
+        private static readonly ACMDMain _instance = new ACMDMain();
+
         public static void GetCommandInfo(string path)
         {
             using (StreamReader stream = new StreamReader(path))
@@ -18,7 +22,7 @@ namespace Sm4shCommand
                 for (int i = 0; i < raw.Count; i += 5)
                 {
 
-                    CommandDefinition h = new CommandDefinition();
+                    CommandInfo h = new CommandInfo();
                     h.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
                     h.Name = raw[i + 1];
                     string[] paramList = raw[i + 2].Split(',').Where(x => x != "NONE").ToArray();
@@ -34,7 +38,7 @@ namespace Sm4shCommand
 
                     if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
                         while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
-                            h.ParamSyntax.Add("Unknown");
+                            h.ParamSyntax.Add("unknown");
 
                     commandDictionary.Add(h);
                 }
@@ -45,7 +49,7 @@ namespace Sm4shCommand
             using (StreamWriter writer = new StreamWriter(path))
             {
                 WriteConfigHelp(writer);
-                foreach (CommandDefinition def in commandDictionary)
+                foreach (CommandInfo def in commandDictionary)
                 {
                     //Write Ident
                     writer.WriteLine(def.Identifier.ToString("X"));
@@ -55,7 +59,7 @@ namespace Sm4shCommand
 
                     //Write Parameter Specifier List
                     if (def.ParamSpecifiers.Count != 0)
-                        for(int i=0;i<def.ParamSpecifiers.Count;i++)
+                        for (int i = 0; i < def.ParamSpecifiers.Count; i++)
                         {
                             writer.Write(def.ParamSpecifiers[i].ToString());
                             if (i != def.ParamSpecifiers.Count - 1)
@@ -67,7 +71,7 @@ namespace Sm4shCommand
 
                     //Write Parameter Syntax Keywords
                     if (def.ParamSyntax.Count != 0)
-                        for(int i=0; i<def.ParamSyntax.Count;i++)
+                        for (int i = 0; i < def.ParamSyntax.Count; i++)
                         {
                             writer.Write(def.ParamSyntax[i]);
                             if (i != def.ParamSyntax.Count - 1)
@@ -109,7 +113,18 @@ namespace Sm4shCommand
 
 
         }
-        public static List<CommandDefinition> commandDictionary = new List<CommandDefinition>();
-        public static CommandDefinition _endingCommand;
+        public static List<CommandInfo> commandDictionary = new List<CommandInfo>();
+        public static CommandInfo _endingCommand;
+
+        public static Endianness WorkingEndian { get { return _workingEndian; } set { _workingEndian = value; } }
+        private static Endianness _workingEndian;
+
+        public static bool isRoot = false;
+        public static string FileName;
+        public static string rootPath;
+
+        public static ACMDFile _curFile;
+        public static Fighter _curFighter;
+        public static Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
     }
 }

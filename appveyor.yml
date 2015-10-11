@@ -1,11 +1,26 @@
 configuration: Release
 
-artifacts:
-  - path: AnimCmd/bin/Release
-    name: AnimCmd
-    
+version: "0.52-[{build}]-dev"
+
+branches:
+  only:
+    - master
+    - Stable
+
 build:
   verbosity: minimal
-  
+
 deploy:
-- provider: Local
+  - provider: FTP
+    host: animcmd.net16.net
+    protocol: ftp
+    username: a2743571
+    password:
+      secure: XDMi7RoQ6O8Mx+fPKLafCQ==
+    folder: public_html/Downloads/dev
+    artifact: "AnimCmd-v$(APPVEYOR_BUILD_VERSION).zip"
+  
+after_build:
+  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\Events.cfg
+  - appveyor PushArtifact AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip

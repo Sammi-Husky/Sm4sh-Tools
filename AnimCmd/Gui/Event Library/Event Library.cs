@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Sm4shCommand.Classes;
 
 namespace Sm4shCommand
 {
@@ -20,13 +21,13 @@ namespace Sm4shCommand
                     listBox1.Items.Add(Runtime.commandDictionary[i].Name);
 
         }
-        public CommandDefinition curDef
+        public CommandInfo curDef
         {
             get
             {
                 if (listBox1.SelectedItem != null)
                 {
-                    CommandDefinition tmp = null;
+                    CommandInfo tmp = null;
                     int i = 0;
                     while (tmp == null)
                     {
@@ -113,8 +114,8 @@ namespace Sm4shCommand
             {
                 RenameForm f = new RenameForm(listBox2.SelectedItem.ToString());
                 f.ShowDialog();
-                curDef.ParamSyntax[listBox2.SelectedIndex] = f.ParameterName;
-                listBox2.Items[listBox2.SelectedIndex] = f.ParameterName;
+                curDef.ParamSyntax[listBox2.SelectedIndex] = f.NewName;
+                listBox2.Items[listBox2.SelectedIndex] = f.NewName;
             }
         }
 

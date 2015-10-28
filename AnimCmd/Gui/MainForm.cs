@@ -326,7 +326,7 @@ namespace Sm4shCommand
                     tree.EndUpdate();
                 }
             }
-            catch { MessageBox.Show("Could not read .omo files from " + dlg.FileName); }
+            catch(Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -398,6 +398,7 @@ namespace Sm4shCommand
         public CommandList CommandList { get { return _list; } set { _list = value; } }
         private CommandList _list;
     }
+
     public class CommandListGroup : TreeNode
     {
 

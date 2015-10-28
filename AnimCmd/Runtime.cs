@@ -87,7 +87,6 @@ namespace Sm4shCommand
                     else
                         writer.WriteLine("NONE\n");
                 }
-                writer.Close();
             }
         }
         public static void WriteConfigHelp(StreamWriter writer)

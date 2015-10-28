@@ -106,25 +106,47 @@ namespace Sm4shCommand
 
         public Dictionary<uint, string> getAnimNames(string path)
         {
-            byte[] filebytes = File.ReadAllBytes(path);
-            int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
             Dictionary<uint, string> hashpairs = new Dictionary<uint, string>();
-            for (int i = 0; i < count; i++)
+
+            if (path.EndsWith(".pac"))
             {
+                byte[] filebytes = File.ReadAllBytes(path);
+                int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
 
-                uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
-                string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
-                string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+                for (int i = 0; i < count; i++)
+                {
 
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
-                hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
+                    uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
+                    string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
+                    string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
+                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
+                }
             }
-
-
-
+            else if (path.EndsWith(".bch"))
+            {
+                DataSource src = new DataSource(FileMap.FromFile(path));
+                int off = *(int*)(src.Address + 0x0C);
+                VoidPtr addr = src.Address + off;
+                while (*(byte*)addr != 0)
+                {
+                    string s = new string((sbyte*)addr);
+                    string AnimName = Regex.Match(s, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
+                    if (AnimName != "")
+                    {
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
+                    }
+                    addr += s.Length + 1;
+                }
+            }
             return hashpairs;
         }
 
@@ -253,7 +275,7 @@ namespace Sm4shCommand
                 switch (raw.Substring(0, raw.IndexOf('=')))
                 {
                     case "ROOT":
-                        _scriptRoot =raw.Substring(6).Trim('\"');
+                        _scriptRoot = raw.Substring(6).Trim('\"');
                         break;
                     case "ACMD":
                         _acmdPath = raw.Substring(6).Trim('\"');
@@ -297,10 +319,10 @@ namespace Sm4shCommand
                 switch (raw.Substring(0, raw.IndexOf('=')))
                 {
                     case "ROOT":
-                        _animRoot =  raw.Substring(6).Trim('\"');
+                        _animRoot = raw.Substring(6).Trim('\"');
                         break;
                     case "FILE":
-                        _animFile =  raw.Substring(6).Trim('\"');
+                        _animFile = raw.Substring(6).Trim('\"');
                         break;
                     case "EXTRACTED":
                         _extracted = raw.Substring(10).Trim('\"').Equals("true", StringComparison.InvariantCultureIgnoreCase);

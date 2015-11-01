@@ -176,6 +176,7 @@ namespace Sm4shCommand.Classes
                     _cur.Add(c);
                     addr += c.CalcSize();
                 }
+
                 // If there is no command definition, this is unknown data.
                 // Add the current word to the unk command and continue adding
                 // until we hit a known command
@@ -243,7 +244,6 @@ namespace Sm4shCommand.Classes
                 tmp[i] = *(byte*)(src.Address + i);
             return tmp;
         }
-
     }
 
     public enum ACMDType : int

@@ -43,11 +43,11 @@ namespace Sm4shCommand.Classes
         public virtual byte[] GetArray()
         {
             byte[] tmp = new byte[CalcSize()];
-            Util.SetWord(ref tmp, _commandInfo.Identifier, 0);
+            Util.SetWord(ref tmp, _commandInfo.Identifier, 0, Runtime.WorkingEndian);
             for (int i = 0; i < _commandInfo.ParamSpecifiers.Count; i++)
             {
                 if (_commandInfo.ParamSpecifiers[i] == 0)
-                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4);
+                    Util.SetWord(ref tmp, Convert.ToInt32(parameters[i]), (i + 1) * 4, Runtime.WorkingEndian);
                 else if (_commandInfo.ParamSpecifiers[i] == 1)
                 {
                     double HEX = Convert.ToDouble(parameters[i]);
@@ -56,12 +56,13 @@ namespace Sm4shCommand.Classes
                     int dec = BitConverter.ToInt32(bytes, 0);
                     string HexVal = dec.ToString("X");
 
-                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4);
+                    Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4, Runtime.WorkingEndian);
                 }
             }
             return tmp;
         }
     }
+
     public unsafe class UnknownCommand : Command
     {
         public List<int> data = new List<int>();
@@ -78,13 +79,17 @@ namespace Sm4shCommand.Classes
         {
             // ew this sux; you better fix this later, me.
             byte[] _data = new byte[data.Count * 4];
-            for(int i=0; i<_data.Length; i+=4)
-            {
-                _data[i] = (byte)(data[i/4] >> 24);
-                _data[i+1] = (byte)(data[i/4] >> 16);
-                _data[i+2] = (byte)(data[i/4] >> 8);
-                _data[i+3] = (byte)(data[i/4]);
-            }
+            for (int i = 0; i < _data.Length; i += 4)
+                Util.SetWord(ref _data, data[i / 4], i, Runtime.WorkingEndian);
+
+            //for(int i=0; i<_data.Length; i+=4)
+            //{
+            //    _data[i] = (byte)(data[i/4] >> 24);
+            //    _data[i+1] = (byte)(data[i/4] >> 16);
+            //    _data[i+2] = (byte)(data[i/4] >> 8);
+            //    _data[i+3] = (byte)(data[i/4]);
+            //}
+
             return _data;
         }
     }

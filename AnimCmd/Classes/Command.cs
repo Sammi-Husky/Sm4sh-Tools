@@ -77,18 +77,9 @@ namespace Sm4shCommand.Classes
         }
         public override byte[] GetArray()
         {
-            // ew this sux; you better fix this later, me.
             byte[] _data = new byte[data.Count * 4];
             for (int i = 0; i < _data.Length; i += 4)
                 Util.SetWord(ref _data, data[i / 4], i, Runtime.WorkingEndian);
-
-            //for(int i=0; i<_data.Length; i+=4)
-            //{
-            //    _data[i] = (byte)(data[i/4] >> 24);
-            //    _data[i+1] = (byte)(data[i/4] >> 16);
-            //    _data[i+2] = (byte)(data[i/4] >> 8);
-            //    _data[i+3] = (byte)(data[i/4]);
-            //}
 
             return _data;
         }

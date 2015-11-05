@@ -98,13 +98,10 @@ namespace Sm4shCommand
             foreach (TabPage p in tabControl1.TabPages)
             {
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                if (box.CommandList.Dirty)
-                {
-                    if (!Runtime.isRoot)
-                        Runtime._curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
-                    else
-                        Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
-                }
+                if (!Runtime.isRoot)
+                    Runtime._curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                else
+                    Runtime._curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
             }
 
             if (Runtime.isRoot)
@@ -326,7 +323,7 @@ namespace Sm4shCommand
                     tree.EndUpdate();
                 }
             }
-            catch(Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
+            catch (Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {

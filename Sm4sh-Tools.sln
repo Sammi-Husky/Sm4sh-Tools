@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unPACKer", "unPACKer\unPACKer.csproj", "{6EB31A51-9898-49FF-A541-7AC576C5297D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTLS", "DTLS\DTLS.csproj", "{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6EB31A51-9898-49FF-A541-7AC576C5297D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

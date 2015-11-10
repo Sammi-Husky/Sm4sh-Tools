@@ -10,14 +10,8 @@ namespace DTLS
 {
     internal class Program
     {
-        public static DataSource DtSource;
-        public static DataSource LsSource;
-
-        public static int LsCount;
-
-        public static Dictionary<uint, uint[]> DtOffsets = new Dictionary<uint, uint[]>();
-        public static DataSource ResourceData;
         public static DataSource ResourceDec;
+        public static string[] dtPaths;
 
         public static byte[][] StrSegments;
         public static string[] Extensions;
@@ -25,57 +19,56 @@ namespace DTLS
 
         private static void Main(string[] args)
         {
-            if (args.Length == 3)
+
+            if (args.Length < 3)
+                Console.WriteLine("Usage: <dt file> <ls file> <output path>");
+            else
+            {
+                string lspath = args[args.Length - 2];
+                string outpath = args.Last();
+                dtPaths = args.Take(args.Length - 2).ToArray();
+
                 try
                 {
-                    Unpack(args[0], args[1], args[2]);
+                    Unpack(dtPaths, lspath, outpath);
                 }
                 catch (Exception x)
                 {
                     Console.WriteLine(x.Message);
                     Logstream.WriteLine(x.Message);
+                    throw x;
                 }
-            else
-                Console.WriteLine("Usage: <dt file> <ls file> <output path>");
+            }
         }
 
-        private static unsafe void Unpack(string dt, string ls, string output)
+        private static unsafe void Unpack(string[] dt, string ls, string output)
         {
-            DtSource = new DataSource(FileMap.FromFile(dt));
-            LsSource = new DataSource(FileMap.FromFile(ls));
+            LSFile lsFile = new LSFile(ls);
 
-            LsCount = *(int*)(LsSource.Address + 4);
-
-            for (var i = 0; i < LsCount; i++)
+            LSEntryObject _resource = lsFile.Entries[calc_crc("resource")];
+            RFHeader rfHeader;
+            fixed (byte* ptr = GetFileDataDecompressed(
+                _resource.DTOffset + (uint)_resource.PaddingLength, _resource.Size, _resource.DTIndex))
             {
-                LSEntry entry = *(LSEntry*)(LsSource.Address + 8 + 0x0C * i);
-                DtOffsets.Add(entry._crc, new[] { entry._start, entry._size });
+                rfHeader = *(RFHeader*)ptr;
             }
 
-            var resource = DtOffsets[calc_crc("resource")];
-            ResourceData = new DataSource(DtSource.Address + resource[0], (int)resource[1]);
-            RFHeader RFHeader = *(RFHeader*)ResourceData.Address;
-
-            var z = 0;
-            while (*(byte*)(ResourceData.Address + z) != 0x78)
-                z += 2;
-
-            File.WriteAllBytes("resource.dec", DeCompress(ResourceData.Slice(z, ResourceData.Length - z)));
+            File.WriteAllBytes("resource.dec", GetFileDataDecompressed(
+                _resource.DTOffset + rfHeader._headerLen1, _resource.Size, _resource.DTIndex));
             ResourceDec = new DataSource(FileMap.FromFile("resource.dec"));
 
-            var segCount = *(int*)(ResourceDec.Address + RFHeader._strsPlus - RFHeader._headerLen1);
+            var segCount = *(int*)(ResourceDec.Address + rfHeader._strsPlus - rfHeader._headerLen1);
             StrSegments = new byte[segCount][];
             for (int i = 0, pos = 0; i < segCount; i++, pos += 0x2000)
-                StrSegments[i]= ResourceDec.Slice((int)(RFHeader._strsPlus - RFHeader._headerLen1 + 4) + pos, 0x2000);
+                StrSegments[i] = ResourceDec.Slice((int)(rfHeader._strsPlus - rfHeader._headerLen1 + 4) + pos, 0x2000);
 
-            uint offsetsPos = (uint)(RFHeader._strsPlus - RFHeader._headerLen1 + 4 + segCount * 0x2000);
+            uint offsetsPos = (uint)(rfHeader._strsPlus - rfHeader._headerLen1 + 4 + segCount * 0x2000);
 
-            var numOffsets = *(int*)(ResourceDec.Address + offsetsPos);
-            var extOffs = new uint[numOffsets];
-            for (var i = 0; i < numOffsets; i++)
+            var extOffs = new uint[*(int*)(ResourceDec.Address + offsetsPos)];
+            for (var i = 0; i < extOffs.Length; i++)
                 extOffs[i] = *(uint*)(ResourceDec.Address + offsetsPos + 4 + i * 4);
 
-            Extensions = new string[numOffsets];
+            Extensions = new string[extOffs.Length];
             for (int i = 0; i < Extensions.Length; i++)
             {
                 var ext = Encoding.ASCII.GetString(str_from_offset((int)extOffs[i], 64));
@@ -83,13 +76,12 @@ namespace DTLS
             }
 
             uint position = 0;
-            var num8Sized = *(uint*)ResourceDec.Address;
-            position += num8Sized * 8 + 4;
+            position += (*(uint*)ResourceDec.Address) * 8 + 4;
             position += *(uint*)(ResourceDec.Address + position) + 4;
 
             var pathParts = new string[20];
             var offsetParts = new uint[20][];
-            while (position < RFHeader._0x18EntriesLen)
+            while (position < rfHeader._0x18EntriesLen)
             {
                 ResourceEntry entry = *(ResourceEntry*)(ResourceDec.Address + position);
                 position += 0x18;
@@ -113,27 +105,30 @@ namespace DTLS
 
                 name += Extensions[(int)ext];
 
-                var nestingLevel = entry.nesting & 0xff;
-                var localized = (entry.nesting & 0x800) > 0;
-                var final = (entry.nesting & 0x400) > 0;
-                var compressed = (entry.nesting & 0x200) > 0;
+                var FolderDepth = entry.flags & 0xff;
+                var localized = (entry.flags & 0x800) > 0;
+                var final = (entry.flags & 0x400) > 0;
+                var compressed = (entry.flags & 0x200) > 0;
 
-                pathParts[(int)nestingLevel - 1] = name;
-                Array.Clear(pathParts, (int)nestingLevel, pathParts.Length - ((int)nestingLevel + 1));
+                pathParts[(int)FolderDepth - 1] = name;
+                Array.Clear(pathParts, (int)FolderDepth, pathParts.Length - ((int)FolderDepth + 1));
                 var path = string.Join("", pathParts);
 
-                uint[] offset;
+                LSEntryObject fileEntry;
                 if (final)
                 {
                     var crcPath = "data/" + path.TrimEnd('/') + (compressed ? "/packed" : "");
                     var crc = calc_crc(crcPath);
-                    offset = DtOffsets[crc];
+                    fileEntry = lsFile.Entries[crc];
                 }
                 else
-                    offset = null;
+                    fileEntry = null;
 
-                offsetParts[(int)nestingLevel - 1] = offset;
-                Array.Clear(offsetParts, (int)nestingLevel, offsetParts.Length - ((int)nestingLevel + 1));
+                offsetParts[(int)FolderDepth - 1] =
+                     fileEntry != null ? new uint[] { fileEntry.DTOffset, fileEntry.Size, (uint)fileEntry.DTIndex } :
+                     null;
+
+                Array.Clear(offsetParts, (int)FolderDepth, offsetParts.Length - ((int)FolderDepth + 1));
 
                 var outfn = $"{output}/{path}";
                 if (path.EndsWith("/"))
@@ -143,7 +138,7 @@ namespace DTLS
                 }
                 else
                 {
-                    uint chunkStart = 0, chunkLen = 0;
+                    uint chunkStart = 0, chunkLen = 0, dtIndex = 0;
 
                     //Instead of reversing the array, we'll just traverse it backwards.
                     for (var i = 14; i > -1; i--)
@@ -151,24 +146,23 @@ namespace DTLS
                         if (offsetParts[i] == null)
                             continue;
 
-                        if (offsetParts[i][0] == 0 || offsetParts[i][1] == 0)
+                        if (offsetParts[i][1] == 0)
                             continue;
 
                         chunkStart = offsetParts[i][0];
                         chunkLen = offsetParts[i][1];
+                        dtIndex = offsetParts[i][2];
                         break;
                     }
 
-
-                    var cmpData = DtSource.Slice((int)(chunkStart + entry.offInChunk), entry.cmpSize);
                     var fileData = new byte[0];
 
-                    Console.WriteLine(outfn);
-                    Logstream.WriteLine($"{outfn} : size: {entry.decSize}");
+                    if (entry.cmpSize > 0)
+                        fileData = GetFileDataDecompressed(chunkStart + entry.offInChunk, (uint)entry.cmpSize, (int)dtIndex);
 
-                    if (cmpData.Length > 0)
-                        fileData = cmpData[0] == 0x78 && cmpData[1] == 0x9c ?
-                            DeCompress(cmpData) : cmpData;
+
+                    Console.WriteLine(outfn);
+                    Logstream.WriteLine($"{outfn} : size: {entry.decSize:X8}");
 
                     if (fileData.Length != entry.decSize)
                     {
@@ -181,15 +175,66 @@ namespace DTLS
                     File.WriteAllBytes(outfn, fileData);
                 }
             }
-            ResourceData.Close();
-            ResourceDec.Close();
-            DtSource.Close();
-            LsSource.Close();
-            Logstream.Close();
 
             // clean up
+            ResourceDec.Close();
+            Logstream.Close();
+
             if (File.Exists("resource.dec"))
                 File.Delete("resource.dec");
+        }
+
+        /// <summary>
+        /// Returns file data from the dt file with an index of "dtIndex"
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="size"></param>
+        /// <param name="dtIndex"></param>
+        /// <returns></returns>
+        private static byte[] GetFileDataDecompressed(uint start, uint size, int dtIndex)
+        {
+            uint chunk_start = start.RoundDown(0x10000);
+            uint difference = start - chunk_start;
+            uint chunk_len = difference + size;
+
+            DataSource src = GetFileChunk(chunk_start, chunk_len, dtIndex);
+
+            byte[] b = src.Slice((int)difference, (int)size);
+
+            if (b.Length >= 4)
+            {
+                var z = 0;
+                if (BitConverter.ToUInt32(b, 0) == 0xCCCCCCCC)
+                {
+                    while (b[z] != 0x78)
+                        z += 2;
+                }
+
+                if (b[0] == 0x78 && b[1] == 0x9c)
+                    b = DeCompress(b.Skip(z).ToArray());
+            }
+            src.Close();
+
+            return b;
+        }
+        /// <summary>
+        /// Returns a DataSource object containing data at "Start". 
+        /// </summary>
+        /// <param name="start"> Start of chunk. Must be multiple of System Allocation Granularity</param>
+        /// <param name="size"></param>
+        /// <param name="dtIndex"></param>
+        /// <returns></returns>
+        private static unsafe DataSource GetFileChunk(uint start, uint size, int dtIndex)
+        {
+            uint chunk_start = start;
+            uint chunk_len = size;
+            if (start % 0x10000 != 0)
+            {
+                chunk_start = start.RoundDown(0x10000);
+                var difference = start - chunk_start;
+                chunk_len = difference + size;
+            }
+            return new DataSource(FileMap.FromFile(dtPaths[dtIndex], FileMapProtect.ReadWrite, chunk_start, (int)chunk_len));
         }
 
         private static uint calc_crc(string filename)
@@ -226,5 +271,6 @@ namespace DTLS
             var str = StrSegments[start / 0x2000].Skip(segOff).Take(len).ToArray();
             return str;
         }
+
     }
 }

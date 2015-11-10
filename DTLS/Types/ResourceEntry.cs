@@ -13,7 +13,7 @@ namespace DTLS.Types
         public int cmpSize;
         public int decSize;
         public uint timestamp;
-        public uint nesting;
+        public uint flags;
 
 
 

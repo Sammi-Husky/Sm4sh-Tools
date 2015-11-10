@@ -23,7 +23,7 @@ namespace System.IO
         public string FilePath { get { return _path; } }
 
         ~FileMap() { Dispose(); }
-        public virtual void Dispose() 
+        public virtual void Dispose()
         {
             if (_baseStream != null)
             {
@@ -31,16 +31,16 @@ namespace System.IO
                 _baseStream.Dispose();
                 _baseStream = null;
             }
-//#if DEBUG
-//            Console.WriteLine("Closing file map: {0}", _path);
-//#endif
-            GC.SuppressFinalize(this); 
+            //#if DEBUG
+            //            Console.WriteLine("Closing file map: {0}", _path);
+            //#endif
+            GC.SuppressFinalize(this);
         }
 
         public static FileMap FromFile(string path) { return FromFile(path, FileMapProtect.ReadWrite, 0, 0); }
         public static FileMap FromFile(string path, FileMapProtect prot) { return FromFile(path, prot, 0, 0); }
-        public static FileMap FromFile(string path, FileMapProtect prot, int offset, int length) { return FromFile(path, prot, 0, 0, FileOptions.RandomAccess); }
-        public static FileMap FromFile(string path, FileMapProtect prot, int offset, int length, FileOptions options)
+        public static FileMap FromFile(string path, FileMapProtect prot, uint offset, int length) { return FromFile(path, prot, offset, length, FileOptions.RandomAccess); }
+        public static FileMap FromFile(string path, FileMapProtect prot, uint offset, int length, FileOptions options)
         {
             FileStream stream;
             FileMap map;
@@ -66,7 +66,7 @@ namespace System.IO
 
         public static FileMap FromStream(FileStream stream) { return FromStream(stream, FileMapProtect.ReadWrite, 0, 0); }
         public static FileMap FromStream(FileStream stream, FileMapProtect prot) { return FromStream(stream, prot, 0, 0); }
-        public static FileMap FromStream(FileStream stream, FileMapProtect prot, int offset, int length)
+        public static FileMap FromStream(FileStream stream, FileMapProtect prot, uint offset, int length)
         {
             //FileStream newStream = new FileStream(stream.Name, FileMode.Open, prot == FileMapProtect.Read ? FileAccess.Read : FileAccess.ReadWrite, FileShare.Read, 8, FileOptions.RandomAccess);
             //try { return FromStreamInternal(newStream, prot, offset, length); }
@@ -83,12 +83,12 @@ namespace System.IO
                     return new cFileMap(stream, prot, offset, length) { _path = stream.Name };
             }
 
-//#if DEBUG
-//            Console.WriteLine("Opening file map: {0}", stream.Name);
-//#endif
+            //#if DEBUG
+            //            Console.WriteLine("Opening file map: {0}", stream.Name);
+            //#endif
         }
 
-        public static FileMap FromStreamInternal(FileStream stream, FileMapProtect prot, int offset, int length)
+        public static FileMap FromStreamInternal(FileStream stream, FileMapProtect prot, uint offset, int length)
         {
             if (length == 0)
                 length = (int)stream.Length;
@@ -100,11 +100,11 @@ namespace System.IO
                 default:
                     return new cFileMap(stream, prot, offset, length) { _baseStream = stream, _path = stream.Name };
             }
-            
-//#if DEBUG
-//            Console.WriteLine("Opening file map: {0}", stream.Name);
-//#endif
-            
+
+            //#if DEBUG
+            //            Console.WriteLine("Opening file map: {0}", stream.Name);
+            //#endif
+
         }
 
     }
@@ -117,7 +117,7 @@ namespace System.IO
 
     public class wFileMap : FileMap
     {
-        internal wFileMap(VoidPtr hFile, FileMapProtect protect, long offset, uint length)
+        internal wFileMap(VoidPtr hFile, FileMapProtect protect, uint offset, uint length)
         {
             long maxSize = offset + length;
             uint maxHigh = (uint)(maxSize >> 32);
@@ -137,7 +137,8 @@ namespace System.IO
             using (Win32.SafeHandle h = Win32.CreateFileMapping(hFile, null, mProtect, maxHigh, maxLow, null))
             {
                 h.ErrorCheck();
-                _addr = Win32.MapViewOfFile(h.Handle, mAccess, (uint)(offset >> 32), (uint)offset, length);
+                long off = offset;
+                _addr = Win32.MapViewOfFile(h.Handle, mAccess, (uint)(off >> 32), offset, length);
                 if (!_addr) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                 _length = (int)length;
             }
@@ -145,7 +146,7 @@ namespace System.IO
 
         public override void Dispose()
         {
-            if (_addr) 
+            if (_addr)
             {
                 Win32.FlushViewOfFile(_addr, 0);
                 Win32.UnmapViewOfFile(_addr);
@@ -154,14 +155,14 @@ namespace System.IO
             base.Dispose();
         }
     }
- 
+
 
     public unsafe class cFileMap : FileMap
     {
         protected MemoryMappedFile _mappedFile;
         protected MemoryMappedViewAccessor _mappedFileAccessor;
 
-        public cFileMap(FileStream stream, FileMapProtect protect, int offset, int length)
+        public cFileMap(FileStream stream, FileMapProtect protect, long offset, int length)
         {
             MemoryMappedFileAccess cProtect = (protect == FileMapProtect.ReadWrite) ? MemoryMappedFileAccess.ReadWrite : MemoryMappedFileAccess.Read;
             _length = length;
@@ -172,9 +173,9 @@ namespace System.IO
 
         public override void Dispose()
         {
-            if (_mappedFile != null) 
+            if (_mappedFile != null)
                 _mappedFile.Dispose();
-            if (_mappedFileAccessor != null) 
+            if (_mappedFileAccessor != null)
                 _mappedFileAccessor.Dispose();
             base.Dispose();
         }

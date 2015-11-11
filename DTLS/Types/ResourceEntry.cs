@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DTLS.Types
 {
-    public unsafe struct ResourceEntry
+    public struct ResourceEntry
     {
         public uint offInChunk;
         public uint nameOffsetEtc;
@@ -14,9 +14,5 @@ namespace DTLS.Types
         public int decSize;
         public uint timestamp;
         public uint flags;
-
-
-
-        private VoidPtr Address { get { fixed (void* ptr = &this) return ptr; } }
     }
 }

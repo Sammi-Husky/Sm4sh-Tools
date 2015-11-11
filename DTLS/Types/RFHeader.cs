@@ -18,6 +18,7 @@ namespace DTLS.Types
         public uint _decompressedLen;
         public uint _strsPlus;
         public uint _strsLen;
+        public uint _resourceEntries;
 
         private VoidPtr Address { get { fixed (void* ptr = &this) return ptr; } }
     }

@@ -51,10 +51,12 @@
   <ItemGroup>
     <Compile Include="IO\DataSource.cs" />
     <Compile Include="IO\FileMap.cs" />
+    <Compile Include="IO\Util.cs" />
     <Compile Include="IO\Win32.cs" />
     <Compile Include="LSFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RFFile.cs" />
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
     <Compile Include="Type Extensions\ByteExtension.cs" />
     <Compile Include="Type Extensions\DoubleExtension.cs" />
@@ -88,7 +90,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

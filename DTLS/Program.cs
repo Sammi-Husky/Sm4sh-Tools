@@ -93,7 +93,7 @@ namespace DTLS
                 }
                 else
                 {
-                    LSEntryObject lsentry = offsetParts.Last(x => x != null && x.Size > 0);
+                    LSEntryObject lsentry = offsetParts.Last(x => x != null);
 
                     var fileData = new byte[0];
 

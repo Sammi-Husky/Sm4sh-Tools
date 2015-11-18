@@ -25,7 +25,7 @@ namespace DTLS
         public int EntryCount { get { return _entryCount; } set { _entryCount = value; } }
         private int _entryCount;
 
-        public Dictionary<uint, LSEntryObject> Entries;
+        public SortedList<uint, LSEntryObject> Entries;
 
         public void Parse(string path)
         {
@@ -36,7 +36,7 @@ namespace DTLS
                 return;
             _version = *(short*)(_workingSource.Address + 0x02);
             _entryCount = *(int*)(_workingSource.Address + 0x04);
-            Entries = new Dictionary<uint, LSEntryObject>(_entryCount);
+            Entries = new SortedList<uint, LSEntryObject>(_entryCount);
 
             for (int i = 0; i < _entryCount; i++)
             {
@@ -58,6 +58,39 @@ namespace DTLS
                     lsobj.PaddingLength = entry._padlen;
                 }
                 Entries.Add(lsobj.FileNameCRC, lsobj);
+            }
+        }
+
+        public void UpdateEntries()
+        {
+            VoidPtr addr = _workingSource.Address;
+            addr += 0x08;
+
+            for (int i = 0; i < _entryCount; i++)
+            {
+                LSEntryObject lsobj = Entries.Values[i];
+                if (Version == 1)
+                {
+                    LSEntry_v1* entry = (LSEntry_v1*)(addr + (i * 0x0C));
+                    *entry = new LSEntry_v1()
+                    {
+                        _crc = lsobj.FileNameCRC,
+                        _start = lsobj.DTOffset,
+                        _size = lsobj.Size
+                    };
+                }
+                else if (Version == 2)
+                {
+                    LSEntry_v2* entry = (LSEntry_v2*)(addr + (i * 0x10));
+                    *entry = new LSEntry_v2()
+                    {
+                        _crc = lsobj.FileNameCRC,
+                        _start = lsobj.DTOffset,
+                        _size = lsobj.Size,
+                        _dtIndex = lsobj.DTIndex,
+                        _padlen = lsobj.PaddingLength
+                    };
+                }
             }
         }
     }

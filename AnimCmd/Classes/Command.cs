@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class Command
+    public class Command
     {
         public Command(CommandInfo info)
         {
@@ -30,7 +28,7 @@ namespace Sm4shCommand.Classes
                     Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
 
                 if (parameters[i] is int | parameters[i] is bint)
-                    Param += String.Format("0x{0:X}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                    Param += String.Format("0x{0:X8}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float | parameters[i] is bfloat)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is decimal)
@@ -63,7 +61,7 @@ namespace Sm4shCommand.Classes
         }
     }
 
-    public unsafe class UnknownCommand : Command
+    public class UnknownCommand : Command
     {
         public List<int> data = new List<int>();
 

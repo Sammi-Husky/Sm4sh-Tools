@@ -8,10 +8,10 @@ namespace DTLS.Types
 {
     public struct ResourceEntry
     {
-        public uint offInChunk;
+        public uint offInPack;
         public uint nameOffsetEtc;
-        public int cmpSize;
-        public int decSize;
+        public uint cmpSize;
+        public uint decSize;
         public uint timestamp;
         public uint flags;
     }

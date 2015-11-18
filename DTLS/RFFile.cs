@@ -11,6 +11,7 @@ namespace DTLS
 {
     public unsafe class RFFile
     {
+        public DataSource _workingSource;
         public RFFile(string filename)
         {
             DataSource cmpSource = new DataSource(FileMap.FromFile(filename));
@@ -31,7 +32,7 @@ namespace DTLS
 
         public void Parse(string fileDecomp)
         {
-            DataSource _workingSource = new DataSource(FileMap.FromFile(fileDecomp));
+            _workingSource = new DataSource(FileMap.FromFile(fileDecomp));
             RFHeader rfheader = *(RFHeader*)_workingSource.Address;
             Header = new RfHeaderObject
             {
@@ -69,8 +70,11 @@ namespace DTLS
             }
 
             addr = _workingSource.Address + Header.EntriesChunkOffset;
-            addr += *(uint*)addr * 8 + 4;
-            addr += *(uint*)addr + 4;
+            uint size1 = *(uint*)addr * 8 + 4;
+            addr += size1;
+            uint size2 = *(uint*)addr + 4;
+            addr += size2;
+
             ResourceEntries = new ResourceEntryObject[Header.EntryCount];
 
             for (int i = 0; i < Header.EntryCount; i++, addr += 0x18)
@@ -78,7 +82,7 @@ namespace DTLS
                 ResourceEntry entry = *(ResourceEntry*)addr;
                 ResourceEntryObject rsobj = new ResourceEntryObject()
                 {
-                    OffInChunk = entry.offInChunk,
+                    OffInPack = entry.offInPack,
                     NameOffsetEtc = entry.nameOffsetEtc,
                     CmpSize = entry.cmpSize,
                     DecSize = entry.decSize,
@@ -86,7 +90,7 @@ namespace DTLS
                     Flags = entry.flags,
                 };
 
-                if (rsobj.OffInChunk == 0xBBBBBBBB)
+                if (rsobj.OffInPack == 0xBBBBBBBB)
                 {
                     ResourceEntries[i] = null;
                     continue;
@@ -109,8 +113,51 @@ namespace DTLS
                 rsobj.EntryString = name + Extensions[rsobj.extIndex];
                 ResourceEntries[i] = rsobj;
             }
-            _workingSource.Close();
+            //_workingSource.Close();
         }
+
+        public void UpdateEntries()
+        {
+
+            VoidPtr addr = _workingSource.Address + Header.EntriesChunkOffset;
+            uint size1 = *(uint*)addr * 8 + 4;
+            addr += size1;
+            uint size2 = *(uint*)addr + 4;
+            addr += size2;
+
+            for (int i = 0; i < Header.EntryCount; i++)
+            {
+                if (ResourceEntries[i] == null)
+                {
+                    ResourceEntry* entry = (ResourceEntry*)addr;
+                    *entry = new ResourceEntry()
+                    {
+                        offInPack = 0xBBBBBBBB,
+                        nameOffsetEtc = 0xBBBBBBBB,
+                        cmpSize = 0xBBBBBBBB,
+                        decSize = 0xBBBBBBBB,
+                        timestamp = 0xBBBBBBBB,
+                        flags = 0xBBBBBBBB
+                    };
+                    addr += 0x18;
+                }
+                else
+                {
+                    ResourceEntry* entry = (ResourceEntry*)addr;
+                    *entry = new ResourceEntry()
+                    {
+                        offInPack = ResourceEntries[i].OffInPack,
+                        nameOffsetEtc = ResourceEntries[i].NameOffsetEtc,
+                        cmpSize = ResourceEntries[i].CmpSize,
+                        decSize = ResourceEntries[i].DecSize,
+                        timestamp = ResourceEntries[i].Timestamp,
+                        flags = ResourceEntries[i].Flags
+                    };
+                    addr += 0x18;
+                }
+            }
+        }
+
         public static byte[] str_from_offset(int start, int len)
         {
             var segOff = start & 0x1fff;
@@ -143,6 +190,27 @@ namespace DTLS
         private uint strsChunkLen;
         public uint EntryCount { get { return entryCount; } set { entryCount = value; } }
         private uint entryCount;
+
+        public byte[] ToArray()
+        {
+            byte[] b = new byte[0x80];
+            Util.SetWord(ref b, tag, 0);
+            Util.SetWord(ref b, headerLen1, 4);
+            Util.SetWord(ref b, pad, 8);
+            Util.SetWord(ref b, EntriesChunkOffset, 0x0C);
+            Util.SetWord(ref b, entriesChunkLen, 0x10);
+            Util.SetWord(ref b, unixTimestamp, 0x14);
+            Util.SetWord(ref b, compressedLen, 0x18);
+            Util.SetWord(ref b, decompressedLen, 0x1c);
+            Util.SetWord(ref b, strsChunkOffset, 0x20);
+            Util.SetWord(ref b, strsChunkLen, 0x24);
+            Util.SetWord(ref b, entryCount, 0x28);
+
+            for (int i = 0; i < 0x15; i++)
+                Util.SetWord(ref b, 0xAAAAAAAA, 0x2C + i*4);
+
+            return b;
+        }
     }
 
     public class ResourceEntryObject
@@ -150,14 +218,14 @@ namespace DTLS
         public string EntryString { get { return _string; } set { _string = value; } }
         private string _string;
 
-        public uint OffInChunk { get { return offInChunk; } set { offInChunk = value; } }
-        private uint offInChunk;
+        public uint OffInPack { get { return offInPack; } set { offInPack = value; } }
+        private uint offInPack;
         public uint NameOffsetEtc { get { return nameOffsetEtc; } set { nameOffsetEtc = value; } }
         private uint nameOffsetEtc;
-        public int CmpSize { get { return cmpSize; } set { cmpSize = value; } }
-        private int cmpSize;
-        public int DecSize { get { return decSize; } set { decSize = value; } }
-        private int decSize;
+        public uint CmpSize { get { return cmpSize; } set { cmpSize = value; } }
+        private uint cmpSize;
+        public uint DecSize { get { return decSize; } set { decSize = value; } }
+        private uint decSize;
         public uint Timestamp { get { return timestamp; } set { timestamp = value; } }
         private uint timestamp;
         public uint Flags { get { return flags; } set { flags = value; } }
@@ -167,8 +235,8 @@ namespace DTLS
         public uint NameOffset { get { return nameOffsetEtc & 0xfffff; } }
         public int FolderDepth { get { return (int)flags & 0xff; } }
         public bool Localized { get { return (flags & 0x800) > 0; } }
-        public bool HasFiles { get { return (flags & 0x400) > 0; } }
+        public bool HasPack { get { return (flags & 0x400) > 0; } }
         public bool Compressed { get { return (flags & 0x200) > 0; } }
-        public bool inPatch { get { return (flags & 0xFFF) <0xc00; } }
+        public bool inPatch { get { return (flags & 0xFFF) < 0xc00; } }
     }
 }

@@ -125,6 +125,10 @@ namespace Sm4shCommand
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
+
+                    if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
+                       AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
+                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.Substring(0, AnimName.Length - 1).ToLower())), AnimName.Substring(0, AnimName.Length - 1));
                 }
             }
             else if (path.EndsWith(".bch"))
@@ -143,6 +147,10 @@ namespace Sm4shCommand
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
+
+                        if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
+                           AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
+                            hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.Substring(0, AnimName.Length - 1).ToLower())), AnimName.Substring(0, AnimName.Length - 1));
                     }
                     addr += s.Length + 1;
                 }

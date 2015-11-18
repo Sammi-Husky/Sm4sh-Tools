@@ -78,6 +78,7 @@ namespace DTLS
                         _start = lsobj.DTOffset,
                         _size = lsobj.Size
                     };
+                    LSEntry_v1* entry2 = (LSEntry_v1*)(addr + (i * 0x0C));
                 }
                 else if (Version == 2)
                 {

@@ -15,7 +15,6 @@ namespace DTLS
 
         private static void Main(string[] args)
         {
-
             if (args.Length >= 2)
             {
                 string[] options = args.Where(x => x.StartsWith("-")).ToArray();
@@ -62,9 +61,9 @@ namespace DTLS
         private static void PrintUsage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("Unpack dt: <dt file(s)> <ls file>");
-            Console.WriteLine("Unpack Update: <resource file>");
-            Console.WriteLine("Patch Archive: -r <dt file(s)> <ls file> <patch folder>");
+            Console.WriteLine("\tUnpack dt: <dt file(s)> <ls file>");
+            Console.WriteLine("\tUnpack Update: <resource file>");
+            Console.WriteLine("\tPatch Archive: -r <dt file(s)> <ls file> <patch folder>");
         }
 
         /// <summary>
@@ -309,8 +308,9 @@ namespace DTLS
             rfFile.Header.DecompressedLen = (uint)dec.Length;
             byte[] header = rfFile.Header.ToArray();
             byte[] full = header.Concat(cmp).ToArray();
-            _resource.Size = (uint)full.Length;
+            lsFile.Entries[Util.calc_crc(resourceString)].Size = (uint)full.Length;
             lsFile.UpdateEntries();
+            lsFile.WorkingSource.Close();
 
             // Patch the resource data back into the DT file.
             uint diff;

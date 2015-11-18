@@ -8,10 +8,11 @@ Miscellaneous tools for dealing with Smash 4 files.
   - Aims to be a fully fledged moveset editor including features like syntax highlighting and a model/animation/hitbox previewer.
 
 - **[DTLSExtractor](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/DTLS)**
-  - Extractor for 3ds and wiiU dt archives. Also supports extracting game patches.
+  - Extractor for 3ds and wiiU dt archives. Also supports extracting game patches and patching the DT archive. Though currently cannot fully rebuild it, and the patched files must not be larger than the original.
    ```
-  - Unpack dt :  <dt file(s)> <ls file> <output path>
-  - Unpack patch : <resource file>
+  - Unpack dt: <dt file(s)> <ls file>
+  - Unpack Update: <resource file>
+  - Patch Archive: -r <dt file(s)> <ls file> <patch folder>
    ```
   
 - **[UNPacker](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/unPACKer)**

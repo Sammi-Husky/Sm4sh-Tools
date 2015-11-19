@@ -25,8 +25,7 @@ namespace DTLS.IO
             {
                 using (var destStream = new MemoryStream())
                 {
-                    using (
-                        var compressor = new ZLibStream(destStream, CompressionMode.Compress, CompressionLevel.Level6))
+                    using (var compressor = new ZLibStream(destStream, CompressionMode.Compress, CompressionLevel.Level6))
                     {
                         source.CopyTo(compressor);
                     }

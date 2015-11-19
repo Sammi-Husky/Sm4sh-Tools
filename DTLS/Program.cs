@@ -313,7 +313,6 @@ namespace DTLS
             byte[] full = header.Concat(cmp).ToArray();
             lsFile.Entries[Util.calc_crc(resourceString)].Size = (uint)full.Length;
             lsFile.UpdateEntries();
-            lsFile.WorkingSource.Close();
 
             // Patch the resource data back into the DT file.
             uint diff;

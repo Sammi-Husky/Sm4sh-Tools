@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DTLS.IO;
@@ -8,8 +7,8 @@ namespace DTLS
 {
     internal class Program
     {
-        public static DataSource ResourceDec;
         public static string[] DtPaths;
+        public static LSFile lsFile;
 
         public static StreamWriter Logstream = new StreamWriter("log.txt");
 
@@ -17,32 +16,43 @@ namespace DTLS
         {
             if (args.Length >= 2)
             {
-                string[] options = args.Where(x => x.StartsWith("-")).ToArray();
-                args = args.Skip(options.Length).Take(args.Length - options.Length).ToArray();
-
-                if (options.Contains("-r", StringComparer.InvariantCultureIgnoreCase))
+                try
                 {
-                    DtPaths = args.Take(args.Length - 2).ToArray();
-                    string lspath = args[DtPaths.Length];
-                    if (args.Length < 3)
+                    string[] options = args.Where(x => x.StartsWith("-")).ToArray();
+                    args = args.Skip(options.Length).Take(args.Length - options.Length).ToArray();
+
+                    if (options.Contains("-r", StringComparer.InvariantCultureIgnoreCase))
                     {
-                        PrintUsage();
+                        if (args.Length < 3)
+                        {
+                            PrintUsage();
+                            return;
+                        }
+
+                        DtPaths = args.Take(args.Length - 2).ToArray();
+                        string lspath = args[DtPaths.Length];
+                        string patchFolder = args.Last();
+
+                        lsFile = new LSFile(lspath);
+                        PatchArchive("resource", patchFolder);
+                        PatchArchive("resource(us_en)", patchFolder);
+                        PatchArchive("resource(us_fr)", patchFolder);
+                        PatchArchive("resource(us_sp)", patchFolder);
+                        lsFile.WorkingSource.Close();
                         return;
                     }
 
-                    string patchFolder = args.Last();
-                    PatchArchive("resource", lspath, patchFolder);
-                    PatchArchive("resource(us_en)", lspath, patchFolder);
-                    PatchArchive("resource(us_fr)", lspath, patchFolder);
-                    PatchArchive("resource(us_sp)", lspath, patchFolder);
-                    return;
-                }
+                    else
+                    {
+                        DtPaths = args.Take(args.Length - 1).ToArray();
+                        string lspath = args[DtPaths.Length];
 
-                try
-                {
-                    DtPaths = args.Take(args.Length - 1).ToArray();
-                    string lspath = args[DtPaths.Length];
-                    Unpack_default("resource", lspath);
+                        lsFile = new LSFile(lspath);
+                        Unpack_default("resource");
+                        lsFile.WorkingSource.Close();
+                        return;
+                    }
+
                 }
                 catch (Exception x)
                 {
@@ -51,13 +61,11 @@ namespace DTLS
                     throw;
                 }
             }
-            else if (args.Length == 1)
+            if (args.Length == 1)
                 Unpack_update(args[0]);
             else
                 PrintUsage();
-
         }
-
         private static void PrintUsage()
         {
             Console.WriteLine("Usage:");
@@ -70,14 +78,13 @@ namespace DTLS
         /// Unpacks data from the game archive using the default resource file.
         /// </summary>
         /// <param name="resourceStr">The resource file (embedded or otherwise) to use in extraction</param>
-        /// <param name="ls">path to the ls file to use.</param>
-        private static void Unpack_default(string resourceStr, string ls)
+        private static void Unpack_default(string resourceStr)
         {
             string region = "";
             if (resourceStr.Contains("("))
                 region = resourceStr.Substring(resourceStr.IndexOf("(", StringComparison.Ordinal), 7);
 
-            LSFile lsFile = new LSFile(ls);
+
 
             LSEntryObject _resource = lsFile.Entries[Util.calc_crc(resourceStr)];
 
@@ -142,7 +149,6 @@ namespace DTLS
                 }
             }
             // clean up
-            ResourceDec.Close();
             Logstream.Close();
 
             Console.WriteLine("Extraction finished");
@@ -152,17 +158,17 @@ namespace DTLS
             if (File.Exists("resource"))
                 File.Delete("resource");
         }
-        private static void Unpack_update(string resPath)
+        private static void Unpack_update(string resFile)
         {
             Console.WriteLine("Parsing resource file..");
-            RFFile rfFile = new RFFile(resPath);
+            RFFile rfFile = new RFFile(resFile);
             var pathParts = new string[20];
             DataSource _curPacked = new DataSource();
             string mainfolder = "";
             string region = "";
 
-            if (resPath.Contains("("))
-                region = resPath.Substring(resPath.IndexOf("(", StringComparison.Ordinal), 7);
+            if (resFile.Contains("("))
+                region = resFile.Substring(resFile.IndexOf("(", StringComparison.Ordinal), 7);
 
             foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries)
             {
@@ -228,11 +234,8 @@ namespace DTLS
             if (File.Exists($"resource{region}.dec"))
                 File.Delete($"resource{region}.dec");
         }
-
-        private static unsafe void PatchArchive(string resourceString, string ls, string patchFolder)
+        private static unsafe void PatchArchive(string resourceString, string patchFolder)
         {
-            LSFile lsFile = new LSFile(ls);
-
             LSEntryObject _resource = lsFile.Entries[Util.calc_crc(resourceString)];
             byte[] resource = GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength,
                 _resource.Size,

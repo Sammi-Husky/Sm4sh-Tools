@@ -94,6 +94,32 @@ namespace DTLS
                 }
             }
         }
+
+        public void ConvertToV2()
+        {
+            int size = 0x08 + Entries.Count * 0x10;
+            string path = _workingSource.Map.FilePath;
+            _workingSource.Close();
+            _workingSource = new DataSource(FileMap.FromTempFile(size));
+            VoidPtr addr = _workingSource.Address;
+            *(uint*)addr = 0x0002666f;
+            *(int*)(addr + 4) = Entries.Count;
+            addr += 0x08;
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                LSEntryObject lsobj = Entries.Values[i];
+                LSEntry_v2* entry = (LSEntry_v2*)(addr + (i * 0x10));
+                *entry = new LSEntry_v2()
+                {
+                    _crc = lsobj.FileNameCRC,
+                    _start = lsobj.DTOffset,
+                    _size = lsobj.Size,
+                    _dtIndex = lsobj.DTIndex,
+                    _padlen = lsobj.PaddingLength
+                };
+            }
+            _workingSource.Export(path);
+        }
     }
 
     // Proxy class for LSEntries to deal with multiple versions

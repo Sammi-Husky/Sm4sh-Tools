@@ -295,8 +295,8 @@ namespace Sm4shCommand
         {
             OpenFileDialog dlg = new OpenFileDialog();
             DialogResult result = dlg.ShowDialog();
-            try
-            {
+            //try
+            //{
                 if (result == DialogResult.OK)
                 {
                     TreeView tree = isRoot ? FileTree : cmdListTree;
@@ -327,8 +327,8 @@ namespace Sm4shCommand
                     }
                     tree.EndUpdate();
                 }
-            }
-            catch (Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
+            //}
+            //catch (Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {

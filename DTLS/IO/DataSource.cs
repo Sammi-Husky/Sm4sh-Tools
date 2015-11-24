@@ -43,6 +43,18 @@ namespace System.IO
         }
         public override int GetHashCode() { return base.GetHashCode(); }
 
+        public void Export(FileStream outStream)
+        {
+            Export(outStream);
+        }
+        public void Export(string filePath)
+        {
+            FileStream outStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite);
+            outStream.SetLength(Length);
+            using (FileMap map = FileMap.FromStream(outStream))
+                Win32.MoveMemory(map.Address, Address, (uint)Length);
+        }
+
         public byte[] ToArray()
         {
             byte[] b = new byte[Length];

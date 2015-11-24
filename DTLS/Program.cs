@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using DTLS.IO;
+using ZLibNet;
 
 namespace DTLS
 {
@@ -83,10 +86,10 @@ namespace DTLS
             string region = "";
             if (resourceStr.Contains("("))
                 region = resourceStr.Substring(resourceStr.IndexOf("(", StringComparison.Ordinal), 7);
+            int totalSize = 0;
 
 
-
-            LSEntryObject _resource = lsFile.Entries[Util.calc_crc(resourceStr)];
+            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceStr)];
 
             File.WriteAllBytes(resourceStr,
                 GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength, _resource.Size,
@@ -110,8 +113,9 @@ namespace DTLS
                 if (rsobj.HasPack)
                 {
                     var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Compressed ? "/packed" : "")}";
-                    var crc = Util.calc_crc(crcPath);
+                    var crc = calc_crc(crcPath);
                     lsFile.Entries.TryGetValue(crc, out fileEntry);
+                    totalSize += (int)fileEntry.Size;
                 }
                 else
                     fileEntry = null;
@@ -132,7 +136,7 @@ namespace DTLS
                     var fileData = new byte[0];
 
                     if (rsobj.CmpSize > 0)
-                        fileData = GetFileDataDecompressed(lsentry.DTOffset + rsobj.OffInPack, (uint)rsobj.CmpSize,
+                        fileData = GetFileDataDecompressed(lsentry.DTOffset + rsobj.OffInPack, rsobj.CmpSize,
                             lsentry.DTIndex);
 
 
@@ -149,6 +153,7 @@ namespace DTLS
                 }
             }
             // clean up
+            rfFile._workingSource.Close();
             Logstream.Close();
 
             Console.WriteLine("Extraction finished");
@@ -229,6 +234,7 @@ namespace DTLS
                 }
             }
             Logstream.Close();
+            rfFile._workingSource.Close();
             Console.WriteLine("Extraction finished.");
 
             if (File.Exists($"resource{region}.dec"))
@@ -236,18 +242,18 @@ namespace DTLS
         }
         private static unsafe void PatchArchive(string resourceString, string patchFolder)
         {
-            LSEntryObject _resource = lsFile.Entries[Util.calc_crc(resourceString)];
+            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceString)];
             byte[] resource = GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength,
                 _resource.Size,
                 _resource.DTIndex);
             File.WriteAllBytes(resourceString, resource);
-
 
             Console.WriteLine($"Patching {resourceString}");
             RFFile rfFile = new RFFile(resourceString);
 
             var pathParts = new string[20];
             var offsetParts = new LSEntryObject[20];
+
             foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries)
             {
                 if (rsobj == null)
@@ -261,7 +267,7 @@ namespace DTLS
                 if (rsobj.HasPack)
                 {
                     var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Compressed ? "/packed" : "")}";
-                    var crc = Util.calc_crc(crcPath);
+                    var crc = calc_crc(crcPath);
                     lsFile.Entries.TryGetValue(crc, out fileEntry);
                 }
                 else
@@ -279,7 +285,7 @@ namespace DTLS
                         LSEntryObject lsentry = offsetParts.Last(x => x != null);
                         byte[] raw = File.ReadAllBytes($"{patchFolder}/{path}");
                         byte[] compressed = Util.Compress(raw);
-                        if (compressed.Length > rsobj.CmpSize + 0x10)
+                        if (compressed.Length > rsobj.CmpSize + 1)
                         {
                             Console.WriteLine("Patching files larger than original not yet supported, skipping");
                             continue;
@@ -288,6 +294,7 @@ namespace DTLS
                         rsobj.DecSize = (uint)raw.Length;
                         uint difference = 0;
                         DataSource src = GetFileChunk(lsentry.DTOffset, lsentry.Size, lsentry.DTIndex, out difference);
+
                         VoidPtr addr = src.Address + difference;
                         addr += rsobj.OffInPack;
                         for (int i = 0; i < compressed.Length; i++)
@@ -302,6 +309,7 @@ namespace DTLS
                         src.Close();
                     }
             }
+
             // Update resource and LS files.
             rfFile.UpdateEntries();
             byte[] dec = rfFile._workingSource.Slice((int)rfFile.Header.HeaderLen1,
@@ -311,7 +319,7 @@ namespace DTLS
             rfFile.Header.DecompressedLen = (uint)dec.Length;
             byte[] header = rfFile.Header.ToArray();
             byte[] full = header.Concat(cmp).ToArray();
-            lsFile.Entries[Util.calc_crc(resourceString)].Size = (uint)full.Length;
+            lsFile.Entries[calc_crc(resourceString)].Size = (uint)full.Length;
             lsFile.UpdateEntries();
 
             // Patch the resource data back into the DT file.
@@ -330,7 +338,6 @@ namespace DTLS
             if (File.Exists(resourceString + ".dec"))
                 File.Delete(resourceString + ".dec");
         }
-
         /// <summary>
         /// Returns file data from the dt file with an index of "dtIndex"
         /// </summary>
@@ -395,6 +402,15 @@ namespace DTLS
                 chunk_len = difference + size;
             }
             return new DataSource(FileMap.FromFile(DtPaths[dtIndex], FileMapProtect.ReadWrite, chunk_start, (int)chunk_len));
+        }
+
+        public static uint calc_crc(string filename)
+        {
+            var b = Encoding.ASCII.GetBytes(filename);
+            for (var i = 0; i < 4; i++)
+                b[i] = (byte)(~filename[i] & 0xff);
+
+            return CrcCalculator.CaclulateCRC32(b) & 0xFFFFFFFF;
         }
     }
 }

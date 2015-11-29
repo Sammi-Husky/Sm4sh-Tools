@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using DTLS.IO;
-using DTLS.Types;
 
 namespace DTLS
 {
@@ -129,22 +128,22 @@ namespace DTLS
             {
                 if (ResourceEntries[i] == null)
                 {
-                    ResourceEntry* entry = (ResourceEntry*)addr;
-                    *entry = new ResourceEntry()
-                    {
-                        offInPack = 0xBBBBBBBB,
-                        nameOffsetEtc = 0xBBBBBBBB,
-                        cmpSize = 0xBBBBBBBB,
-                        decSize = 0xBBBBBBBB,
-                        timestamp = 0xBBBBBBBB,
-                        flags = 0xBBBBBBBB
-                    };
+                    //ResourceEntry* entry = (ResourceEntry*)addr;
+                    //*entry = new ResourceEntry
+                    //{
+                    //    offInPack = 0xBBBBBBBB,
+                    //    nameOffsetEtc = 0xBBBBBBBB,
+                    //    cmpSize = 0xBBBBBBBB,
+                    //    decSize = 0xBBBBBBBB,
+                    //    timestamp = 0xBBBBBBBB,
+                    //    flags = 0xBBBBBBBB
+                    //};
                     addr += 0x18;
                 }
                 else
                 {
                     ResourceEntry* entry = (ResourceEntry*)addr;
-                    *entry = new ResourceEntry()
+                    *entry = new ResourceEntry
                     {
                         offInPack = ResourceEntries[i].OffInPack,
                         nameOffsetEtc = ResourceEntries[i].NameOffsetEtc,
@@ -212,6 +211,22 @@ namespace DTLS
             return b;
         }
     }
+    public unsafe struct RFHeader
+    {
+        public uint _rf;
+        public uint _headerLen1;
+        public uint _pad0;
+        public uint _headerLen2;
+        public uint _0x18EntriesLen;
+        public uint _unixTimestamp;
+        public uint _compressedLen;
+        public uint _decompressedLen;
+        public uint _strsPlus;
+        public uint _strsLen;
+        public uint _resourceEntries;
+
+        private VoidPtr Address { get { fixed (void* ptr = &this) return ptr; } }
+    }
 
     public class ResourceEntryObject
     {
@@ -222,21 +237,30 @@ namespace DTLS
         private uint offInPack;
         public uint NameOffsetEtc { get { return nameOffsetEtc; } set { nameOffsetEtc = value; } }
         private uint nameOffsetEtc;
-        public uint CmpSize { get { return cmpSize; } set { cmpSize = value; } }
-        private uint cmpSize;
-        public uint DecSize { get { return decSize; } set { decSize = value; } }
-        private uint decSize;
+        public int CmpSize { get { return cmpSize; } set { cmpSize = value; } }
+        private int cmpSize;
+        public int DecSize { get { return decSize; } set { decSize = value; } }
+        private int decSize;
         public uint Timestamp { get { return timestamp; } set { timestamp = value; } }
         private uint timestamp;
         public uint Flags { get { return flags; } set { flags = value; } }
         private uint flags;
 
-        public uint extIndex { get { return nameOffsetEtc >> 24; } }
-        public uint NameOffset { get { return nameOffsetEtc & 0xfffff; } }
-        public int FolderDepth { get { return (int)flags & 0xff; } }
-        public bool Localized { get { return (flags & 0x800) > 0; } }
-        public bool HasPack { get { return (flags & 0x400) > 0; } }
-        public bool Compressed { get { return (flags & 0x200) > 0; } }
-        public bool inPatch { get { return (flags & 0xFFF) < 0xc00; } }
+        public uint extIndex => nameOffsetEtc >> 24;
+        public uint NameOffset => nameOffsetEtc & 0xfffff;
+        public int FolderDepth => (int)flags & 0xff;
+        public bool Localized => (flags & 0x800) == 0x800;
+        public bool HasPack => (flags & 0x400) > 0;
+        public bool Compressed => (flags & 0x200) > 0;
+        public bool inPatch => (flags & 0xFFF) < 0xc00;
+    }
+    public struct ResourceEntry
+    {
+        public uint offInPack;
+        public uint nameOffsetEtc;
+        public int cmpSize;
+        public int decSize;
+        public uint timestamp;
+        public uint flags;
     }
 }

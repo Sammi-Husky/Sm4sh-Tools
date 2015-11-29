@@ -1,6 +1,6 @@
 ﻿namespace Sm4shCommand
 {
-    partial class ACMDMain
+    partial class AcmdMain
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ACMDMain));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AcmdMain));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -371,7 +371,7 @@
             this.cmdListTree.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.cmdListTree_DrawNode);
             this.cmdListTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.cmdListTree_MouseDoubleClick);
             // 
-            // ACMDMain
+            // AcmdMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -381,7 +381,7 @@
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
-            this.Name = "ACMDMain";
+            this.Name = "AcmdMain";
             this.Text = "AnimCmd";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ACMDMain_FormClosing);

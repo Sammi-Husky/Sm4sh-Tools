@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DTLS.Types;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -121,7 +120,6 @@ namespace DTLS
             _workingSource.Export(path);
         }
     }
-
     // Proxy class for LSEntries to deal with multiple versions
     public class LSEntryObject
     {
@@ -129,11 +127,25 @@ namespace DTLS
         private uint _crc;
         public uint DTOffset { get { return _dtOffset; } set { _dtOffset = value; } }
         private uint _dtOffset;
-        public uint Size { get { return _dataSize; } set { _dataSize = value; } }
-        private uint _dataSize;
+        public int Size { get { return _dataSize; } set { _dataSize = value; } }
+        private int _dataSize;
         public short DTIndex { get { return _dtIndex; } set { _dtIndex = value; } }
         private short _dtIndex = 0;
         public short PaddingLength { get { return _padLen; } set { _padLen = value; } }
         private short _padLen;
+    }
+    public struct LSEntry_v1
+    {
+        public uint _crc;
+        public uint _start;
+        public int _size;
+    }
+    public struct LSEntry_v2
+    {
+        public uint _crc;
+        public uint _start;
+        public int _size;
+        public short _dtIndex;
+        public short _padlen;
     }
 }

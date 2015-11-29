@@ -10,16 +10,16 @@ using static Sm4shCommand.Runtime;
 
 namespace Sm4shCommand
 {
-    public partial class ACMDMain : Form
+    public partial class AcmdMain : Form
     {
-        public ACMDMain()
+        public AcmdMain()
         {
             InitializeComponent();
             _manager = new WorkspaceManager();
         }
 
-        internal WorkspaceManager Manager { get { return _manager ?? new WorkspaceManager(); } }
-        private WorkspaceManager _manager;
+        internal WorkspaceManager Manager => _manager ?? new WorkspaceManager();
+        private readonly WorkspaceManager _manager;
 
         public void OpenWorkspace(string wrkspce)
         {
@@ -118,13 +118,12 @@ namespace Sm4shCommand
             foreach (TabPage p in tabControl1.TabPages)
             {
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                if (box.CommandList.Dirty)
-                {
-                    if (!isRoot)
-                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
-                    else
-                        _curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
-                }
+
+                if (!isRoot)
+                    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+                else
+                    _curFighter[(int)box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ParseCodeBox();
+
             }
 
             if (isRoot)
@@ -143,8 +142,7 @@ namespace Sm4shCommand
             }
             else
             {
-                SaveFileDialog dlg = new SaveFileDialog();
-                dlg.Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*";
+                SaveFileDialog dlg = new SaveFileDialog { Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*" };
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                     _curFile.Export(dlg.FileName);
@@ -177,19 +175,18 @@ namespace Sm4shCommand
                 DialogResult result = dlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    FileName = rootPath = String.Empty;
+                    FileName = rootPath = string.Empty;
                     tabControl1.TabPages.Clear();
                     cmdListTree.Nodes.Clear();
                     isRoot = cmdListTree.ShowLines = cmdListTree.ShowRootLines = false;
 
-                    if ((_curFile = Manager.OpenFile(dlg.FileName)) != null)
-                    {
-                        foreach (CommandList list in _curFile.EventLists.Values)
-                            cmdListTree.Nodes.Add(new CommandListNode($"[{list.AnimationCRC:X8}]", _curFile.EventLists[list.AnimationCRC]));
+                    if ((_curFile = Manager.OpenFile(dlg.FileName)) == null) return;
 
-                        FileName = dlg.FileName;
-                        Text = $"Main Form - {FileName}";
-                    }
+                    foreach (CommandList list in _curFile.EventLists.Values)
+                        cmdListTree.Nodes.Add(new CommandListNode($"[{list.AnimationCRC:X8}]", _curFile.EventLists[list.AnimationCRC]));
+
+                    FileName = dlg.FileName;
+                    Text = $"Main Form - {FileName}";
                 }
             }
         }
@@ -213,18 +210,17 @@ namespace Sm4shCommand
             if (!isRoot)
                 return;
 
-            SaveFileDialog dlg = new SaveFileDialog();
-            dlg.Filter = "Plain Text (.txt) | *.txt";
+            SaveFileDialog dlg = new SaveFileDialog { Filter = "Plain Text (.txt) | *.txt" };
             DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-                using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
-                    writer.Write(_curFighter.ToString());
+            if (result != DialogResult.OK) return;
+            using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
+                writer.Write(_curFighter.ToString());
         }
         private void cmdListTree_DrawNode(object sender, DrawTreeNodeEventArgs e)
         {
             Color color = SystemColors.Window;
             if (e.Node is CommandListNode)
-                color = (e.Node as CommandListNode).CommandList.Dirty ? Color.Red : Color.Black;
+                color = ((CommandListNode)e.Node).CommandList.Dirty ? Color.Red : Color.Black;
 
             if (e.Node.IsSelected)
                 e.DrawDefault = true;
@@ -297,52 +293,49 @@ namespace Sm4shCommand
             DialogResult result = dlg.ShowDialog();
             //try
             //{
-                if (result == DialogResult.OK)
+            if (result == DialogResult.OK)
+            {
+                TreeView tree = isRoot ? FileTree : cmdListTree;
+                AnimHashPairs = Manager.getAnimNames(dlg.FileName);
+
+                tree.BeginUpdate();
+                for (int i = 0; i < tree.Nodes.Count; i++)
                 {
-                    TreeView tree = isRoot ? FileTree : cmdListTree;
-                    AnimHashPairs = Manager.getAnimNames(dlg.FileName);
+                    if (!(tree.Nodes[i] is CommandListNode | tree.Nodes[i] is CommandListGroup)) continue;
 
-                    tree.BeginUpdate();
-                    for (int i = 0; i < tree.Nodes.Count; i++)
+                    uint crc;
+                    if (tree.Nodes[i] is CommandListNode)
+                        crc = ((CommandListNode)tree.Nodes[i]).CRC;
+                    else
+                        crc = ((CommandListGroup)tree.Nodes[i])._crc;
+
+                    if (AnimHashPairs.ContainsKey(crc))
                     {
-                        if (tree.Nodes[i] is CommandListNode | tree.Nodes[i] is CommandListGroup)
-                        {
-                            uint crc;
-                            if (tree.Nodes[i] is CommandListNode)
-                                crc = ((CommandListNode)tree.Nodes[i]).CRC;
-                            else
-                                crc = ((CommandListGroup)tree.Nodes[i])._crc;
+                        string name = AnimHashPairs[crc];
 
-                            if (AnimHashPairs.ContainsKey(crc))
-                            {
-                                string name = AnimHashPairs[crc];
-
-                                tree.Nodes[i].Text = name;
-                                if (tree.Nodes[i] is CommandListNode)
-                                    ((CommandListNode)tree.Nodes[i]).AnimationName = name;
-                                else if (tree.Nodes[i] is CommandListGroup)
-                                    ((CommandListGroup)tree.Nodes[i]).animname = name;
-                            }
-                        }
+                        tree.Nodes[i].Text = name;
+                        if (tree.Nodes[i] is CommandListNode)
+                            ((CommandListNode)tree.Nodes[i]).AnimationName = name;
+                        else ((CommandListGroup)tree.Nodes[i]).animname = name;
                     }
-                    tree.EndUpdate();
                 }
+                tree.EndUpdate();
+            }
             //}
             //catch (Exception x) { MessageBox.Show("Error reading animation file\n: " + x.Message); }
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (FileTree.SelectedNode is CommandListGroup)
-            {
-                cmdListTree.Nodes.Clear();
-                CommandListGroup g = (CommandListGroup)FileTree.SelectedNode;
+            if (!(FileTree.SelectedNode is CommandListGroup)) return;
+
+            cmdListTree.Nodes.Clear();
+            CommandListGroup g = (CommandListGroup)FileTree.SelectedNode;
 
 
-                cmdListTree.Nodes.Add(new CommandListNode("Main", g.lists[0]) { AnimationName = g.animname });
-                cmdListTree.Nodes.Add(new CommandListNode("GFX", g.lists[1]) { AnimationName = g.animname });
-                cmdListTree.Nodes.Add(new CommandListNode("SFX", g.lists[2]) { AnimationName = g.animname });
-                cmdListTree.Nodes.Add(new CommandListNode("Expression", g.lists[3]) { AnimationName = g.animname });
-            }
+            cmdListTree.Nodes.Add(new CommandListNode("Main", g.lists[0]) { AnimationName = g.animname });
+            cmdListTree.Nodes.Add(new CommandListNode("GFX", g.lists[1]) { AnimationName = g.animname });
+            cmdListTree.Nodes.Add(new CommandListNode("SFX", g.lists[2]) { AnimationName = g.animname });
+            cmdListTree.Nodes.Add(new CommandListNode("Expression", g.lists[3]) { AnimationName = g.animname });
         }
 
         private void fighterToolStripMenuItem_Click(object sender, EventArgs e)
@@ -360,8 +353,8 @@ namespace Sm4shCommand
             {
                 FileTree.BeginUpdate();
                 _curFighter = _manager.OpenFighter(dlg.SelectedPath);
-                    foreach (uint u in from uint u in _curFighter.MotionTable where u != 0 select u)
-                        FileTree.Nodes.Add(new CommandListGroup(_curFighter, u) { ToolTipText = $"[{u:X8}]" });
+                foreach (uint u in from uint u in _curFighter.MotionTable where u != 0 select u)
+                    FileTree.Nodes.Add(new CommandListGroup(_curFighter, u) { ToolTipText = $"[{u:X8}]" });
                 FileTree.EndUpdate();
             }
         }

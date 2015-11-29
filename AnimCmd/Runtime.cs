@@ -9,8 +9,8 @@ namespace Sm4shCommand
 {
     static class Runtime
     {
-        public static ACMDMain Instance { get { return _instance; } }
-        private static readonly ACMDMain _instance = new ACMDMain();
+        public static AcmdMain Instance { get { return _instance; } }
+        private static readonly AcmdMain _instance = new AcmdMain();
 
         public static void GetCommandInfo(string path)
         {

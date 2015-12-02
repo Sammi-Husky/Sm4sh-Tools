@@ -16,32 +16,26 @@ namespace Sm4shCommand
         public EventLibrary()
         {
             InitializeComponent();
-            if (Runtime.commandDictionary != null)
-                for (int i = 0; i < Runtime.commandDictionary.Count; i++)
-                    listBox1.Items.Add(Runtime.commandDictionary[i].Name);
-
+            if (Runtime.commandDictionary == null) return;
+            for (int i = 0; i < Runtime.commandDictionary.Count; i++)
+                listBox1.Items.Add(Runtime.commandDictionary[i].Name);
         }
         public CommandInfo curDef
         {
             get
             {
-                if (listBox1.SelectedItem != null)
+                if (listBox1.SelectedItem == null) return null;
+                CommandInfo tmp = null;
+                int i = 0;
+                while (tmp == null)
                 {
-                    CommandInfo tmp = null;
-                    int i = 0;
-                    while (tmp == null)
-                    {
-                        if (listBox1.SelectedItem.ToString() == Runtime.commandDictionary[i].Name)
-                            tmp = Runtime.commandDictionary[i];
-                        i++;
-                    }
-                    return tmp;
+                    if (listBox1.SelectedItem.ToString() == Runtime.commandDictionary[i].Name)
+                        tmp = Runtime.commandDictionary[i];
+                    i++;
                 }
-                else
-                    return null;
+                return tmp;
             }
         }
-
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -52,13 +46,9 @@ namespace Sm4shCommand
             listBox2.Items.Clear();
 
             for (int i = 0; i < curDef.ParamSpecifiers.Count; i++)
-            {
-                if (curDef.ParamSyntax.Count <= i)
-                    listBox2.Items.Add("Unknown");
-                else
-                    listBox2.Items.Add(curDef.ParamSyntax[i]);
-            }
-            richTextBox1.Text = richTextBox2.Text
+                listBox2.Items.Add(curDef.ParamSyntax.Count <= i ? "Unknown" : curDef.ParamSyntax[i]);
+
+            richTextBox2.Text
             = curDef.EventDescription;
             numericUpDown1.Value =
             curDef.ParamSpecifiers.Count;
@@ -66,23 +56,21 @@ namespace Sm4shCommand
         }
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listBox2.SelectedItem != null)
-            {
-                comboBox1.Enabled = true;
-                comboBox1.SelectedIndex = curDef.ParamSpecifiers[listBox2.SelectedIndex];
-            }
+            if (listBox2.SelectedItem == null) return;
+
+            comboBox1.Enabled = true;
+            comboBox1.SelectedIndex = curDef.ParamSpecifiers[listBox2.SelectedIndex];
         }
 
         private void richTextBox2_TextChanged(object sender, EventArgs e)
         {
-            curDef.EventDescription = richTextBox1.Text = richTextBox2.Text;
+            curDef.EventDescription = richTextBox2.Text;
         }
 
         private void comboBox1_TextChanged(object sender, EventArgs e)
         {
             curDef.ParamSpecifiers[listBox2.SelectedIndex] = comboBox1.SelectedIndex;
         }
-
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
@@ -102,30 +90,28 @@ namespace Sm4shCommand
 
         private void listBox2_MouseClick(object sender, MouseEventArgs e)
         {
-            if (listBox2.SelectedItem != null)
-                if (e.Button == MouseButtons.Right)
-                    paramContextMenu.Show(e.Location);
+            if (listBox2.SelectedItem == null) return;
 
+            if (e.Button == MouseButtons.Right)
+                paramContextMenu.Show(e.Location);
         }
 
         private void renameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (listBox2.SelectedItem != null)
-            {
-                RenameForm f = new RenameForm(listBox2.SelectedItem.ToString());
-                f.ShowDialog();
-                curDef.ParamSyntax[listBox2.SelectedIndex] = f.NewName;
-                listBox2.Items[listBox2.SelectedIndex] = f.NewName;
-            }
+            if (listBox2.SelectedItem == null) return;
+
+            RenameForm f = new RenameForm(listBox2.SelectedItem.ToString());
+            f.ShowDialog();
+            curDef.ParamSyntax[listBox2.SelectedIndex] = f.NewName;
+            listBox2.Items[listBox2.SelectedIndex] = f.NewName;
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            if (listBox1.SelectedItem != null)
-            {
-                curDef.Name = textBox1.Text;
-                listBox1.Items[listBox1.SelectedIndex] = textBox1.Text;
-            }
+            if (listBox1.SelectedItem == null) return;
+
+            curDef.Name = textBox1.Text;
+            listBox1.Items[listBox1.SelectedIndex] = textBox1.Text;
         }
     }
 }

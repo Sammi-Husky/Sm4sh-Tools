@@ -17,8 +17,6 @@ namespace Sm4shCommand.Classes
             AnimationCRC = CRC;
             _parent = Parent;
         }
-
-
         /// <summary>
         /// Returns size in bytes.
         /// </summary>
@@ -32,9 +30,10 @@ namespace Sm4shCommand.Classes
                 return size;
             }
         }
-
+        /// <summary>
+        /// Returns true if the List is empty
+        /// </summary>
         public bool Empty { get { return _commands.Count == 0; } }
-
         /// <summary>
         /// True if event list has changes.
         /// </summary>
@@ -53,22 +52,27 @@ namespace Sm4shCommand.Classes
                 return false;
             }
         }
-
         /// <summary>
         /// CRC32 of the animation name linked to this list of commands.
         /// </summary>
         public uint AnimationCRC;
 
-        public Command this[int i]
+        public override string ToString()
         {
-            get { return _commands[i]; }
-            set { _commands[i] = value; }
+            if (_parent.AnimationHashPairs.ContainsKey(AnimationCRC))
+                return _parent.AnimationHashPairs[AnimationCRC];
+            else
+                return $"[{AnimationCRC:X8}]";
         }
-
         public void Initialize()
         {
             _data = ToArray();
         }
+        /// <summary>
+        /// Rebuilds data, applying changes made
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="size"></param>
         public void Rebuild(VoidPtr address, int size)
         {
             VoidPtr addr = address;
@@ -83,7 +87,6 @@ namespace Sm4shCommand.Classes
                 addr += _commands[x].CalcSize();
             }
         }
-
         /// <summary>
         /// Applies changes, then exports data to file.
         /// </summary>
@@ -93,7 +96,6 @@ namespace Sm4shCommand.Classes
             byte[] file = ToArray();
             File.WriteAllBytes(path, file);
         }
-
         /// <summary>
         /// Returns an array of bytes representing this object.
         /// </summary>
@@ -112,7 +114,13 @@ namespace Sm4shCommand.Classes
             return file;
         }
 
+        public Command this[int i]
+        {
+            get { return _commands[i]; }
+            set { _commands[i] = value; }
+        }
         private List<Command> _commands = new List<Command>();
+
 
         #region IEnumerable Implemntation
         public int Count { get { return _commands.Count; } }
@@ -197,6 +205,4 @@ namespace Sm4shCommand.Classes
         }
         #endregion
     }
-
-
 }

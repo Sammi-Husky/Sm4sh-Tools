@@ -113,6 +113,7 @@ namespace DTLS
                 ResourceEntries[i] = rsobj;
             }
             //_workingSource.Close();
+
         }
 
         public void UpdateEntries()

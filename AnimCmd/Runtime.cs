@@ -19,18 +19,20 @@ namespace Sm4shCommand
                 List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
                 raw.RemoveAll(x => String.IsNullOrEmpty(x) || String.IsNullOrWhiteSpace(x) || x.Contains("//"));
 
-                for (int i = 0; i < raw.Count; i += 5)
+                for (int i = 0; i < raw.Count; i += 6)
                 {
 
-                    CommandInfo h = new CommandInfo();
-                    h.Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
-                    h.Name = raw[i + 1];
+                    CommandInfo h = new CommandInfo
+                    {
+                        Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber),
+                        Name = raw[i + 1]
+                    };
                     string[] paramList = raw[i + 2].Split(',').Where(x => x != "NONE").ToArray();
                     string[] paramSyntax = raw[i + 3].Split(',').Where(x => x != "NONE").ToArray();
                     foreach (string kw in paramSyntax)
                         h.ParamSyntax.Add(kw);
                     foreach (string s in paramList)
-                        h.ParamSpecifiers.Add(Int32.Parse(s));
+                        h.ParamSpecifiers.Add(int.Parse(s));
                     if (raw[i + 4] != "NONE")
                         h.EventDescription = raw[i + 4];
                     if (h.Identifier == 0x5766F889 || h.Identifier == 0x89F86657)
@@ -39,7 +41,7 @@ namespace Sm4shCommand
                     if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
                         while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
                             h.ParamSyntax.Add("unknown");
-
+                    h.IndentLevel = int.Parse(raw[i + 5]);
                     commandDictionary.Add(h);
                 }
             }
@@ -83,9 +85,11 @@ namespace Sm4shCommand
 
                     //Write Command Description
                     if (!string.IsNullOrEmpty(def.EventDescription))
-                        writer.WriteLine(def.EventDescription + "\n");
+                        writer.WriteLine(def.EventDescription);
                     else
-                        writer.WriteLine("NONE\n");
+                        writer.WriteLine("NONE");
+
+                    writer.WriteLine(def.IndentLevel+"\n");
                 }
             }
         }
@@ -94,19 +98,19 @@ namespace Sm4shCommand
             writer.WriteLine("//===========================================\\\\");
             writer.WriteLine("//**********How to use this File*************\\\\");
             writer.WriteLine("//===========================================\\\\");
-            writer.WriteLine("// 	The structure of this file is as follows:\\\\");
-            writer.WriteLine("// 		-Command Identifier:				 \\\\");
-            writer.WriteLine("// 		-Display Name / Dictionary Name:	 \\\\");
-            writer.WriteLine("// 		-Parameters, separated by comma:	 \\\\");
-            writer.WriteLine("//				0 = Integer					 \\\\");
-            writer.WriteLine("//				1 = Float					 \\\\");
-            writer.WriteLine("//				2 = Decimal					 \\\\");
-            writer.WriteLine("//			 NONE = no params				 \\\\");
-            writer.WriteLine("//											 \\\\");
-            writer.WriteLine("//		-Parameters Keywords List			 \\\\");
-            writer.WriteLine("//			-NONE = no keywords				 \\\\");
-            writer.WriteLine("//		-Event Description / tooltip		 \\\\");
-            writer.WriteLine("//			-NONE = no description			 \\\\");
+            writer.WriteLine("//\tThe structure of this file is as follows:\\\\");
+            writer.WriteLine("//\t\t-Command Identifier:				 \\\\");
+            writer.WriteLine("//\t\t-Display Name / Dictionary Name:	 \\\\");
+            writer.WriteLine("//\t\t-Parameters, separated by comma:	 \\\\");
+            writer.WriteLine("//\t\t\t\t0 = Integer					 \\\\");
+            writer.WriteLine("//\t\t\t\t1 = Float					 \\\\");
+            writer.WriteLine("//\t\t\t\t2 = Decimal					 \\\\");
+            writer.WriteLine("//\t\t\tNONE = no params				 \\\\");
+            writer.WriteLine("//\t\t\t\t\t\t\t\t\t\t\t\\\\");
+            writer.WriteLine("//\t\t-Parameters Keywords List			 \\\\");
+            writer.WriteLine("//\t\t\t-NONE = no keywords				 \\\\");
+            writer.WriteLine("//\t\t-Event Description / tooltip		 \\\\");
+            writer.WriteLine("//\t\t\t-NONE = no description			 \\\\");
             writer.WriteLine("//===========================================\\\\");
             writer.WriteLine("//===========================================\\\\\n");
 

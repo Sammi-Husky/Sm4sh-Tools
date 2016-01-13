@@ -17,32 +17,25 @@ namespace Sm4shCommand
         {
             InitializeComponent();
             if (Runtime.commandDictionary == null) return;
-            for (int i = 0; i < Runtime.commandDictionary.Count; i++)
-                listBox1.Items.Add(Runtime.commandDictionary[i].Name);
+            _list = Runtime.commandDictionary;
+            listBox1.DataSource = _list;
+            listBox1.DisplayMember = "Name";
         }
         public CommandInfo curDef
         {
             get
             {
-                if (listBox1.SelectedItem == null) return null;
-                CommandInfo tmp = null;
-                int i = 0;
-                while (tmp == null)
-                {
-                    if (listBox1.SelectedItem.ToString() == Runtime.commandDictionary[i].Name)
-                        tmp = Runtime.commandDictionary[i];
-                    i++;
-                }
-                return tmp;
+                return (CommandInfo)listBox1.SelectedItem;
             }
         }
+        List<CommandInfo> _list;
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBox1.SelectedIndex == -1)
                 return;
 
-            comboBox1.Enabled = false;
+            cboType.Enabled = false;
             listBox2.Items.Clear();
 
             for (int i = 0; i < curDef.ParamSpecifiers.Count; i++)
@@ -50,16 +43,17 @@ namespace Sm4shCommand
 
             richTextBox2.Text
             = curDef.EventDescription;
-            numericUpDown1.Value =
+            numParamCount.Value =
             curDef.ParamSpecifiers.Count;
-            textBox1.Text = listBox1.SelectedItem.ToString();
+            txtName.Text = curDef.Name;
+            txtIdentifier.Text = curDef.Identifier.ToString("X8");
         }
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBox2.SelectedItem == null) return;
 
-            comboBox1.Enabled = true;
-            comboBox1.SelectedIndex = curDef.ParamSpecifiers[listBox2.SelectedIndex];
+            cboType.Enabled = true;
+            cboType.SelectedIndex = curDef.ParamSpecifiers[listBox2.SelectedIndex];
         }
 
         private void richTextBox2_TextChanged(object sender, EventArgs e)
@@ -69,22 +63,22 @@ namespace Sm4shCommand
 
         private void comboBox1_TextChanged(object sender, EventArgs e)
         {
-            curDef.ParamSpecifiers[listBox2.SelectedIndex] = comboBox1.SelectedIndex;
+            curDef.ParamSpecifiers[listBox2.SelectedIndex] = cboType.SelectedIndex;
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
-            if (curDef.ParamSpecifiers.Count < numericUpDown1.Value)
+            if (curDef.ParamSpecifiers.Count < numParamCount.Value)
             {
                 listBox2.Items.Add("New Parameter");
                 curDef.ParamSpecifiers.Add(0);
                 curDef.ParamSyntax.Add("New Parameter");
             }
-            else if (curDef.ParamSpecifiers.Count > numericUpDown1.Value)
+            else if (curDef.ParamSpecifiers.Count > numParamCount.Value)
             {
-                curDef.ParamSpecifiers.RemoveAt((int)numericUpDown1.Value);
-                listBox2.Items.RemoveAt((int)numericUpDown1.Value);
-                curDef.ParamSyntax.RemoveAt((int)numericUpDown1.Value);
+                curDef.ParamSpecifiers.RemoveAt((int)numParamCount.Value);
+                listBox2.Items.RemoveAt((int)numParamCount.Value);
+                curDef.ParamSyntax.RemoveAt((int)numParamCount.Value);
             }
         }
 
@@ -110,8 +104,40 @@ namespace Sm4shCommand
         {
             if (listBox1.SelectedItem == null) return;
 
-            curDef.Name = textBox1.Text;
-            listBox1.Items[listBox1.SelectedIndex] = textBox1.Text;
+            curDef.Name = txtName.Text;
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            _list.Add(new CommandInfo() { Name = "New Command" });
+        }
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+            listBox1.DataSource =
+                _list.Where(x =>
+                x.Name.ToLower().Contains(textBox2.Text.ToLower())).ToList();
+        }
+
+        private void txtIdentifier_TextChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtIdentifier.Text))
+            {
+                try {
+                    curDef.Identifier = UInt32.Parse(txtIdentifier.Text, System.Globalization.NumberStyles.HexNumber);
+                }
+                catch { MessageBox.Show("Invalid characters in textbox. Must be a hex number with digits 0-F"); txtIdentifier.Undo(); }
+            }
+        }
+
+        private void EventLibrary_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Runtime.commandDictionary = _list;
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            _list.Remove(curDef);
         }
     }
 }

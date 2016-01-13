@@ -60,6 +60,15 @@
     <Compile Include="Classes\CommandList.cs" />
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
+    <Compile Include="Classes\Nodes\BaseNode.cs" />
+    <Compile Include="Classes\Nodes\CommandListGroupNode.cs" />
+    <Compile Include="Classes\Nodes\CommandListNode.cs" />
+    <Compile Include="Gui\CodeEditControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Gui\CodeEditControl.Designer.cs">
+      <DependentUpon>CodeEditControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Gui\Rename.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -146,6 +155,10 @@
     <Compile Include="Type Extensions\UInt16Extension.cs" />
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
+    <EmbeddedResource Include="Gui\CodeEditControl.resx">
+      <DependentUpon>CodeEditControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Gui\Event Library\Event Library.resx">
       <DependentUpon>Event Library.cs</DependentUpon>
     </EmbeddedResource>
@@ -159,7 +172,7 @@
       <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>

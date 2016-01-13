@@ -54,7 +54,7 @@
     <Compile Include="IO\Util.cs" />
     <Compile Include="IO\Win32.cs" />
     <Compile Include="Types\LSFile.cs" />
-    <Compile Include="Types\Program.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types\RFFile.cs" />
     <Compile Include="Type Extensions\BigEndianTypes.cs" />

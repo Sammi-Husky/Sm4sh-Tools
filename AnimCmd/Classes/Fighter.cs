@@ -10,6 +10,12 @@ namespace Sm4shCommand.Classes
     /// </summary>
     public class Fighter
     {
+        public Fighter() { _hashPairs = new Dictionary<uint, string>(); }
+        /// <summary>
+        /// Linked list containing all animation names and their CRC32 hash.
+        /// </summary>
+        public Dictionary<uint, string> AnimationHashPairs { get { return _hashPairs; } set { _hashPairs = value; } }
+        private Dictionary<uint, string> _hashPairs;
         /// <summary>
         /// Main ACMD file.
         /// </summary>
@@ -40,7 +46,7 @@ namespace Sm4shCommand.Classes
         /// Dumps a fighters script in it's entirety as text for use in version diffing.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public string Serialize()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -93,19 +99,19 @@ namespace Sm4shCommand.Classes
             }
             return sb.ToString();
         }
-        public ACMDFile this[int i]
+        public ACMDFile this[ACMDType type]
         {
             get
             {
-                switch (i)
+                switch (type)
                 {
-                    case 0:
+                    case ACMDType.Main:
                         return Main;
-                    case 1:
+                    case ACMDType.GFX:
                         return GFX;
-                    case 2:
+                    case ACMDType.SFX:
                         return SFX;
-                    case 3:
+                    case ACMDType.Expression:
                         return Expression;
                     default:
                         return null;
@@ -114,18 +120,18 @@ namespace Sm4shCommand.Classes
             }
             set
             {
-                switch (i)
+                switch (type)
                 {
-                    case 0:
+                    case ACMDType.Main:
                         Main = value;
                         break;
-                    case 1:
+                    case ACMDType.GFX:
                         GFX = value;
                         break;
-                    case 2:
+                    case ACMDType.SFX:
                         SFX = value;
                         break;
-                    case 3:
+                    case ACMDType.Expression:
                         Expression = value;
                         break;
                 }

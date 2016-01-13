@@ -12,13 +12,16 @@ namespace Sm4shCommand
 {
     unsafe class WorkspaceManager
     {
-        public List<Project> _projects = new List<Project>();
-        public string WorkspaceRoot = "";
+        public List<Project> Projects { get { return _projects; } set { _projects = value; } }
+        private List<Project> _projects;
+
+        public string WorkspaceRoot { get { return _workspaceRoot; } set { _workspaceRoot = value; } }
+        private string _workspaceRoot;
 
         public void ReadWRKSPC(string path)
         {
             _projects = new List<Project>();
-            WorkspaceRoot = Path.GetDirectoryName(path);
+            _workspaceRoot = Path.GetDirectoryName(path);
             using (StreamReader stream = new StreamReader(path))
             {
                 while (!stream.EndOfStream)
@@ -123,8 +126,6 @@ namespace Sm4shCommand
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
-                    //hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
-                    //hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
 
                     if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
                        AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
@@ -145,8 +146,6 @@ namespace Sm4shCommand
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
                         hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
-                        //hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "r").ToLower())), AnimName + "r");
-                        //hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "l").ToLower())), AnimName + "l");
 
                         if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
                            AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
@@ -160,6 +159,10 @@ namespace Sm4shCommand
 
         public ACMDFile OpenFile(string Filepath)
         {
+            return OpenFile(Filepath, ACMDType.NONE);
+        }
+        public ACMDFile OpenFile(string Filepath, ACMDType type)
+        {
             DataSource source = new DataSource(FileMap.FromFile(Filepath));
 
             if (*(byte*)(source.Address + 0x04) == 0x02)
@@ -167,43 +170,30 @@ namespace Sm4shCommand
             else if ((*(byte*)(source.Address + 0x04) == 0x00))
                 Runtime.WorkingEndian = Endianness.Big;
             else
-            {
                 return null;
-            }
 
-            return new ACMDFile(source, Runtime.WorkingEndian);
+
+            return new ACMDFile(source, Runtime.WorkingEndian) { Type = type };
         }
+
         public Fighter OpenFighter(string dirPath)
         {
-            Fighter f = new Fighter();
-            try
+            return new Fighter()
             {
 
-                f.Main = OpenFile(dirPath + "/game.bin");
-                f.GFX = OpenFile(dirPath + "/effect.bin");
-                f.SFX = OpenFile(dirPath + "/sound.bin");
-                f.Expression = OpenFile(dirPath + "/expression.bin");
+                Main = OpenFile(dirPath + "/game.bin", ACMDType.Main),
+                GFX = OpenFile(dirPath + "/effect.bin", ACMDType.GFX),
+                SFX = OpenFile(dirPath + "/sound.bin", ACMDType.SFX),
+                Expression = OpenFile(dirPath + "/expression.bin", ACMDType.Expression),
 
-                f.Main.Type = ACMDType.Main;
-                f.GFX.Type = ACMDType.GFX;
-                f.SFX.Type = ACMDType.SFX;
-                f.Expression.Type = ACMDType.Expression;
-
-                f.MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), Runtime.WorkingEndian);
-            }
-            catch (FileNotFoundException x) { return null; }
-
-            Runtime.isRoot = true;
-            Runtime.rootPath = dirPath;
-            Runtime.Instance.Text = String.Format("Main Form - {0}", dirPath);
-            return f;
+                MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), Runtime.WorkingEndian)
+            };
         }
         public MTable ParseMTable(DataSource source, Endianness endian)
         {
             List<uint> CRCTable = new List<uint>();
 
             for (int i = 0; i < source.Length; i += 4)
-                //if((uint)Util.GetWordUnsafe((source.Address + i), endian) != 0)
                 CRCTable.Add((uint)Util.GetWordUnsafe((source.Address + i), endian));
 
             return new MTable(CRCTable, endian);

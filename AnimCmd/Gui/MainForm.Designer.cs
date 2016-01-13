@@ -54,26 +54,16 @@
             this.parseAnimationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nodeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnHexView = new System.Windows.Forms.ToolStripMenuItem();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.FileTree = new System.Windows.Forms.TreeView();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.cmdListTree = new System.Windows.Forms.TreeView();
+            this.pnlRight = new System.Windows.Forms.Panel();
+            this.splitter1 = new System.Windows.Forms.Splitter();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.menuStrip1.SuspendLayout();
             this.nodeContextMenu.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.Panel2.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
+            this.pnlRight.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -143,7 +133,7 @@
             this.workspaceToolStripMenuItem.Name = "workspaceToolStripMenuItem";
             this.workspaceToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.workspaceToolStripMenuItem.Text = "Project From Existing Files";
-            this.workspaceToolStripMenuItem.Click += new System.EventHandler(this.workspaceToolStripMenuItem_Click);
+            this.workspaceToolStripMenuItem.Click += new System.EventHandler(this.newWorkspaceToolStripMenuItem_Click);
             // 
             // openToolStripMenuItem
             // 
@@ -184,6 +174,7 @@
             // 
             // toolStripSeparator1
             // 
+            this.toolStripSeparator1.ForeColor = System.Drawing.SystemColors.ControlText;
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(185, 6);
             // 
@@ -206,6 +197,7 @@
             // 
             // toolStripSeparator2
             // 
+            this.toolStripSeparator2.ForeColor = System.Drawing.SystemColors.ControlText;
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(185, 6);
             // 
@@ -250,76 +242,26 @@
             this.nodeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnHexView});
             this.nodeContextMenu.Name = "nodeContextMenu";
-            this.nodeContextMenu.Size = new System.Drawing.Size(133, 26);
+            this.nodeContextMenu.Size = new System.Drawing.Size(68, 26);
             // 
             // btnHexView
             // 
             this.btnHexView.Name = "btnHexView";
-            this.btnHexView.Size = new System.Drawing.Size(132, 22);
-            this.btnHexView.Text = "Hex Editor..";
-            this.btnHexView.Click += new System.EventHandler(this.btnHexView_Click);
-            // 
-            // richTextBox1
-            // 
-            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.richTextBox1.Location = new System.Drawing.Point(0, 458);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(671, 146);
-            this.richTextBox1.TabIndex = 8;
-            this.richTextBox1.Text = "";
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.richTextBox1);
-            this.splitContainer1.Panel1.Controls.Add(this.tabControl1);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(844, 604);
-            this.splitContainer1.SplitterDistance = 671;
-            this.splitContainer1.TabIndex = 9;
+            this.btnHexView.Size = new System.Drawing.Size(67, 22);
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl1.ItemSize = new System.Drawing.Size(150, 18);
-            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Location = new System.Drawing.Point(0, 24);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(671, 463);
+            this.tabControl1.Size = new System.Drawing.Size(655, 490);
             this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.tabControl1.TabIndex = 9;
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseClick);
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.groupBox1);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer2.Size = new System.Drawing.Size(169, 604);
-            this.splitContainer2.SplitterDistance = 302;
-            this.splitContainer2.TabIndex = 0;
             // 
             // groupBox1
             // 
@@ -327,7 +269,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(169, 302);
+            this.groupBox1.Size = new System.Drawing.Size(186, 604);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Workspace";
@@ -340,36 +282,38 @@
             this.FileTree.Location = new System.Drawing.Point(3, 16);
             this.FileTree.Name = "FileTree";
             this.FileTree.ShowNodeToolTips = true;
-            this.FileTree.Size = new System.Drawing.Size(163, 283);
+            this.FileTree.Size = new System.Drawing.Size(180, 585);
             this.FileTree.TabIndex = 0;
             this.FileTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.FileTree_MouseDoubleClick);
             // 
-            // groupBox2
+            // pnlRight
             // 
-            this.groupBox2.Controls.Add(this.cmdListTree);
-            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox2.Location = new System.Drawing.Point(0, 0);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(169, 298);
-            this.groupBox2.TabIndex = 0;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Command Lists";
+            this.pnlRight.Controls.Add(this.groupBox1);
+            this.pnlRight.Dock = System.Windows.Forms.DockStyle.Right;
+            this.pnlRight.Location = new System.Drawing.Point(658, 24);
+            this.pnlRight.Name = "pnlRight";
+            this.pnlRight.Size = new System.Drawing.Size(186, 604);
+            this.pnlRight.TabIndex = 10;
             // 
-            // cmdListTree
+            // splitter1
             // 
-            this.cmdListTree.ContextMenuStrip = this.nodeContextMenu;
-            this.cmdListTree.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmdListTree.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this.cmdListTree.HideSelection = false;
-            this.cmdListTree.Location = new System.Drawing.Point(3, 16);
-            this.cmdListTree.Name = "cmdListTree";
-            this.cmdListTree.ShowLines = false;
-            this.cmdListTree.ShowPlusMinus = false;
-            this.cmdListTree.ShowRootLines = false;
-            this.cmdListTree.Size = new System.Drawing.Size(163, 279);
-            this.cmdListTree.TabIndex = 7;
-            this.cmdListTree.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.cmdListTree_DrawNode);
-            this.cmdListTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.cmdListTree_MouseDoubleClick);
+            this.splitter1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.splitter1.Location = new System.Drawing.Point(655, 24);
+            this.splitter1.Name = "splitter1";
+            this.splitter1.Size = new System.Drawing.Size(3, 604);
+            this.splitter1.TabIndex = 11;
+            this.splitter1.TabStop = false;
+            // 
+            // richTextBox1
+            // 
+            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTextBox1.Enabled = false;
+            this.richTextBox1.ForeColor = System.Drawing.Color.Lime;
+            this.richTextBox1.Location = new System.Drawing.Point(0, 514);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(655, 114);
+            this.richTextBox1.TabIndex = 13;
+            this.richTextBox1.Text = "";
             // 
             // AcmdMain
             // 
@@ -377,7 +321,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(844, 628);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.splitter1);
+            this.Controls.Add(this.pnlRight);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
@@ -389,16 +336,8 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.nodeContextMenu.ResumeLayout(false);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
-            this.splitContainer2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
+            this.pnlRight.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -414,12 +353,10 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
-        private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eventLibraryToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip nodeContextMenu;
         private System.Windows.Forms.ToolStripMenuItem btnHexView;
-        private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ToolStripMenuItem dumpAsTextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -431,18 +368,17 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.ToolStripMenuItem parseAnimationsToolStripMenuItem;
         #endregion
-
-        private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TreeView FileTree;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.TreeView cmdListTree;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem fighterToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem aCMDToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mSCSBToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mTABLEToolStripMenuItem;
+        private System.Windows.Forms.Panel pnlRight;
+        private System.Windows.Forms.Splitter splitter1;
+        private System.Windows.Forms.RichTextBox richTextBox1;
     }
 }
 

@@ -8,6 +8,21 @@ namespace Sm4shCommand.Classes
 {
     public unsafe class ACMDFile
     {
+        public ACMDFile() { _hashPairs = new Dictionary<uint, string>(); }
+        public ACMDFile(DataSource source, Endianness endian)
+        {
+            _eventLists = new SortedList<uint, CommandList>();
+            _hashPairs = new Dictionary<uint, string>();
+            Type = ACMDType.NONE;
+
+            _workingSource = source;
+            Endian = endian;
+
+            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, endian);
+            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, endian);
+
+            Initialize();
+        }
         private VoidPtr WorkingSource => _replSource != DataSource.Empty ? _replSource.Address : _workingSource.Address;
         private DataSource _workingSource, _replSource;
 
@@ -21,32 +36,23 @@ namespace Sm4shCommand.Classes
         public ACMDType Type;
 
         /// <summary>
-        /// List of all EventLists in this file.
+        /// List of all CommandLists in this file.
         /// </summary>
-        public SortedList<uint, CommandList> EventLists = new SortedList<uint, CommandList>();
-
+        public SortedList<uint, CommandList> EventLists { get { return _eventLists; } set { _eventLists = value; } }
+        private SortedList<uint, CommandList> _eventLists;
+        /// <summary>
+        /// Linked list containing all animation names and their CRC32 hash.
+        /// </summary>
+        public Dictionary<uint, string> AnimationHashPairs { get { return _hashPairs; } set { _hashPairs = value; } }
+        private Dictionary<uint, string> _hashPairs;
         /// <summary>
         /// Total size in bytes.
         /// </summary>
-        public int Size =>
-            0x10 + (EventLists.Count * 8) + EventLists.Values.Sum(e => e.Size);
-
+        public int Size => 0x10 + (EventLists.Count * 8) + EventLists.Values.Sum(e => e.Size);
         /// <summary>
         /// True if the file has changes.
         /// </summary>
-        public bool Dirty =>
-            EventLists.Values.Any(cl => cl.Dirty);
-
-        public ACMDFile(DataSource source, Endianness endian)
-        {
-            _workingSource = source;
-            Endian = endian;
-
-            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, endian);
-            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, endian);
-
-            Initialize();
-        }
+        public bool Dirty => EventLists.Values.Any(cl => cl.Dirty);
         private void Initialize()
         {
             for (int i = 0; i < _actionCount; i++)
@@ -57,7 +63,6 @@ namespace Sm4shCommand.Classes
                 EventLists.Add(_crc, ParseEventList(_crc, _offset));
             }
         }
-
         /// <summary>
         /// Applies changes.
         /// </summary>
@@ -71,10 +76,9 @@ namespace Sm4shCommand.Classes
             // Close backing source.
             _replSource.Close();
             // set backing source to new source from temp map.
-            _replSource = new DataSource(temp.Address, temp.Length) {Map = temp};
+            _replSource = new DataSource(temp.Address, temp.Length) { Map = temp };
             // Set backing source's map to the temp map.
         }
-
         private void OnRebuild(VoidPtr address, int length)
         {
             //  Remove empty event lists
@@ -114,7 +118,6 @@ namespace Sm4shCommand.Classes
                 addr += e.Size;
             }
         }
-
         private CommandList ParseEventList(uint CRC, int Offset)
         {
             CommandList _list = new CommandList(CRC, this);
@@ -215,7 +218,6 @@ namespace Sm4shCommand.Classes
                 tmp[i] = *(byte*)(src.Address + i);
             File.WriteAllBytes(path, tmp);
         }
-
         /// <summary>
         /// Returns an array of bytes representing this ACMDFile.
         /// </summary>
@@ -235,6 +237,7 @@ namespace Sm4shCommand.Classes
         Main = 0,
         GFX = 1,
         SFX = 2,
-        Expression = 3
+        Expression = 3,
+        NONE = 255
     }
 }

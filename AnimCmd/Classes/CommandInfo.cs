@@ -11,10 +11,11 @@ namespace Sm4shCommand.Classes
     public unsafe class CommandInfo
     {
 
-        public uint Identifier;
-        public string Name;
-        public string EventDescription;
-
+        public uint Identifier = 0;
+        public string Name { get { return _name; } set { _name = value; } }
+        private string _name;
+        public string EventDescription = "NONE";
+        public int IndentLevel = 0;
 
         public List<int> ParamSpecifiers = new List<int>();
         public List<string> ParamSyntax = new List<string>();

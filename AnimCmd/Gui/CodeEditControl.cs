@@ -18,16 +18,16 @@ namespace Sm4shCommand
             InitializeComponent();
             pnlParams.Enabled = true;
             TabPage p = new TabPage("Main");
-            p.Controls.Add(new ITSCodeBox(group.lists[0]) { Dock = DockStyle.Fill });
+            //p.Controls.Add(new ITSCodeBox(group.lists[0]) { Dock = DockStyle.Fill });
             tabControl1.TabPages.Add(p);
             p = new TabPage("GFX");
-            p.Controls.Add(new ITSCodeBox(group.lists[1]) { Dock = DockStyle.Fill });
+            //p.Controls.Add(new ITSCodeBox(group.lists[1]) { Dock = DockStyle.Fill });
             tabControl1.TabPages.Add(p);
             p = new TabPage("SFX");
-            p.Controls.Add(new ITSCodeBox(group.lists[2]) { Dock = DockStyle.Fill });
+            //p.Controls.Add(new ITSCodeBox(group.lists[2]) { Dock = DockStyle.Fill });
             tabControl1.TabPages.Add(p);
             p = new TabPage("Expression");
-            p.Controls.Add(new ITSCodeBox(group.lists[3]) { Dock = DockStyle.Fill });
+            //p.Controls.Add(new ITSCodeBox(group.lists[3]) { Dock = DockStyle.Fill });
             tabControl1.TabPages.Add(p);
         }
         public CodeEditControl(CommandListNode node)

@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using static Sm4shCommand.Runtime;
 using Sm4shCommand.Nodes;
-
 namespace Sm4shCommand
 {
     public partial class AcmdMain : Form
@@ -89,10 +88,10 @@ namespace Sm4shCommand
             foreach (TabPage p in tabControl1.TabPages)
             {
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                if (!isRoot)
-                    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                else
-                    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //if (!isRoot)
+                //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //else
+                //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
             }
 
             if (isRoot)
@@ -113,10 +112,10 @@ namespace Sm4shCommand
             {
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
 
-                if (!isRoot)
-                    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                else
-                    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //if (!isRoot)
+                //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //else
+                //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
 
             }
 
@@ -228,10 +227,10 @@ namespace Sm4shCommand
                     for (int x = 0; x < tmp.TabCount; x++)
                     {
                         ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
-                        if (!isRoot)
-                            _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                        else
-                            _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                        //if (!isRoot)
+                        //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                        //else
+                        //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
 
                     }
                     tabControl1.TabPages.Remove(p);

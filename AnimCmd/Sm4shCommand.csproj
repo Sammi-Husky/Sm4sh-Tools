@@ -109,7 +109,7 @@
       <DependentUpon>FolderSelectDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="System\Windows\Components\ITSCodeBox.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="System\Windows\Components\ITSToolTip.cs" />
     <Compile Include="System\Windows\Forms\HexBox\BuiltInContextMenu.cs">

@@ -30,7 +30,7 @@ namespace Sm4shCommand.Classes
                 if (parameters[i] is int | parameters[i] is bint)
                     Param += String.Format("0x{0:X8}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float | parameters[i] is bfloat)
-                    Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                    Param += String.Format("{0}f{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is decimal)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
 

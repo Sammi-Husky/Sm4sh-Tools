@@ -61,6 +61,7 @@ namespace Sm4shCommand
         private ListBox AutocompleteBox;
         private TooltipDictionary EventDescriptions;
         int curIndent = 0;
+        bool processing = false;
         // Methods
         private string FomatParams(string commandName)
         {
@@ -226,6 +227,8 @@ namespace Sm4shCommand
         }
         protected override void OnTextChanged(EventArgs e)
         {
+            if (processing) return;
+
             BeginUpdate();
             ProcessAllLines();
             EndUpdate();
@@ -273,9 +276,11 @@ namespace Sm4shCommand
         }
         public void ProcessAllLines()
         {
+            processing = true;
             string[] lines = Lines;
             for (int i = 0; i < lines.Length; i++)
                 FormatLine(lines, i);
+            processing = false;
         }
 
         private IntPtr OldEventMask;

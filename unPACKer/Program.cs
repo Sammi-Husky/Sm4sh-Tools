@@ -18,35 +18,33 @@ namespace DPack
                 List<int> dataOffsets = new List<int>();
                 List<int> sizes = new List<int>();
 
-                DataSource source = new DataSource(FileMap.FromFile(args[0]));
-                string magic = new String((sbyte*)source.Address);
-                Endianness endian = Endianness.little;
+                if (args[0].Equals("-r", StringComparison.InvariantCultureIgnoreCase) && args.Length >= 2)
+                {
+                    if (args.Length == 3 && args[1].Equals("-el")) { new PACKManager(Endianness.little).Pack(args[2]); }
+                    else { new PACKManager(Endianness.big).Pack(args[1]); }
 
-                if (magic == "PACK")
-                    endian = Endianness.little;
-                else if (magic == "KCAP")
-                    endian = Endianness.big;
+                    Console.WriteLine("Files successfully rePACKed.");
+                }
                 else
-                    Console.WriteLine("Not a valid PACK file");
-
+                {
                     try
                     {
                         if (args.Length == 2)
-                            new Unpacker(source).Unpack(endian,args[1]);
-                        else { new Unpacker(source).Unpack(endian); }
+                            new PACKManager(args[0]).Unpack(args[1]);
+                        else { new PACKManager(args[0]).Unpack("Output"); }
 
                         Console.WriteLine("Files successfully unpacked.");
                     }
                     catch (Exception x) { Console.WriteLine(x.Message); }
-
-                source.Close();
+                }
             }
             else
             {
-                Console.WriteLine("\n \n Usage: 'unpacker.exe <File Path> <Output Path>' \n If no output path"+
-                    " is specified, files will be extracted to 'Output'.");
+                Console.WriteLine("\nUsage: 'unpacker.exe [options] <Path>' \nOptions\n-r: rePACK. Default byte sex is Big Endian."
+                    + "\n-eb: Endianness = big.\n-el: Endianness = little");
             }
         }
+
     }
     public enum Endianness
     {

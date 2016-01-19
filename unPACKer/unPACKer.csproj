@@ -57,6 +57,7 @@
     <Compile Include="Type Extensions\Int16Extension.cs" />
     <Compile Include="Type Extensions\Int32Extension.cs" />
     <Compile Include="Type Extensions\Int64Extension.cs" />
+    <Compile Include="Type Extensions\RoundingExtensions.cs" />
     <Compile Include="Type Extensions\ShortExtension.cs" />
     <Compile Include="Type Extensions\StringExtension.cs" />
     <Compile Include="Type Extensions\UInt16Extension.cs" />

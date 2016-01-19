@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4shCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unPACKer", "unPACKer\unPACKer.csproj", "{6EB31A51-9898-49FF-A541-7AC576C5297D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PACKManager", "PACKManager\PACKManager.csproj", "{6EB31A51-9898-49FF-A541-7AC576C5297D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTLS", "DTLS\DTLS.csproj", "{2FA9BF13-2602-4ECE-A33C-F263FBAD0DA6}"
 EndProject

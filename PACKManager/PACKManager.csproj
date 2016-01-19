@@ -7,8 +7,8 @@
     <ProjectGuid>{6EB31A51-9898-49FF-A541-7AC576C5297D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>unPACKer</RootNamespace>
-    <AssemblyName>unPACKer</AssemblyName>
+    <RootNamespace>PACKManager</RootNamespace>
+    <AssemblyName>PACKManager</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -63,7 +63,7 @@
     <Compile Include="Type Extensions\UInt16Extension.cs" />
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
-    <Compile Include="Unpacker.cs" />
+    <Compile Include="PACKManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

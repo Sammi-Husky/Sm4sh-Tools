@@ -23,14 +23,13 @@ namespace Sm4shCommand.Classes
             string Param = "";
             for (int i = 0; i < parameters.Count; i++)
             {
-
                 if (_commandInfo.ParamSyntax.Count > 0)
                     Param += String.Format("{0}=", _commandInfo.ParamSyntax[i]);
 
                 if (parameters[i] is int | parameters[i] is bint)
                     Param += String.Format("0x{0:X8}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is float | parameters[i] is bfloat)
-                    Param += String.Format("{0}f{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
+                    Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
                 if (parameters[i] is decimal)
                     Param += String.Format("{0}{1}", parameters[i], i + 1 != parameters.Count ? ", " : "");
 
@@ -63,21 +62,18 @@ namespace Sm4shCommand.Classes
 
     public class UnknownCommand : Command
     {
-        public List<int> data = new List<int>();
+        public uint ident;
 
-        public override int CalcSize() { return data.Count * 4; }
+        public override int CalcSize() { return 0x04; }
         public override string ToString()
         {
-            string s1 = "";
-            for (int i = 0; i < data.Count; i++)
-                s1 += String.Format("0x{0:X8}{1}", data[i], i + 1 != data.Count ? "\n" : "");
-            return s1;
+
+            return String.Format("0x{0:X8}", ident);
         }
         public override byte[] GetArray()
         {
-            byte[] _data = new byte[data.Count * 4];
-            for (int i = 0; i < _data.Length; i += 4)
-                Util.SetWord(ref _data, data[i / 4], i, Runtime.WorkingEndian);
+            byte[] _data = new byte[4];
+            Util.SetWord(ref _data, ident, 0, Runtime.WorkingEndian);
 
             return _data;
         }

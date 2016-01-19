@@ -120,10 +120,9 @@ namespace Sm4shCommand.Classes
         }
         private CommandList ParseEventList(uint CRC, int Offset)
         {
-            CommandList _list = new CommandList(CRC, this);
+            CommandList _list = new CommandList(CRC);
 
             Command c;
-            UnknownCommand unkC = null;
 
             VoidPtr addr = (_workingSource.Address + Offset);
 
@@ -137,13 +136,6 @@ namespace Sm4shCommand.Classes
                 // If a command definition exists, use that info to deserialize.
                 if (info != null)
                 {
-                    // If previous commands were unknown, add them here.
-                    if (unkC != null)
-                    {
-                        _list.Add(unkC);
-                        unkC = null;
-                    }
-
                     // Get command parameters and add the command to the event list.
                     c = new Command(info);
                     for (int i = 0; i < info.ParamSpecifiers.Count; i++)
@@ -173,16 +165,10 @@ namespace Sm4shCommand.Classes
                 // until we hit a known command
                 else
                 {
-                    if (unkC == null)
-                        unkC = new UnknownCommand();
-                    unkC.data.Add(Util.GetWordUnsafe(addr, Endian));
+                    _list.Add(new UnknownCommand() { ident = (uint)Util.GetWordUnsafe(addr, Endian) });
                     addr += 0x04;
                 }
             }
-
-            if (unkC != null)
-                _list.Add(unkC);
-
 
             // If we hit a script_end command, add it to the the Event List and terminate looping.
             if (Util.GetWordUnsafe(addr, Endian) == Runtime._endingCommand.Identifier)

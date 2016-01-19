@@ -11,7 +11,7 @@ Miscellaneous tools for dealing with Smash 4 files.
 - **[SM4SHCommand](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/AnimCmd)**
   - Aims to be a fully fledged moveset editor including features like syntax highlighting and a model/animation/hitbox previewer.
 
-- **[DTLSExtractor](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/DTLS)**
+- **[DTLS](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/DTLS)**
   - Extractor for 3ds and wiiU dt archives. Also supports extracting game patches and patching the DT archive. Though currently cannot fully rebuild it, and the patched files must not be larger than the original.
    ```
   - Unpack dt: <dt file(s)> <ls file>
@@ -19,7 +19,7 @@ Miscellaneous tools for dealing with Smash 4 files.
   - Patch Archive: -r <dt file(s)> <ls file> <patch folder>
    ```
   
-- **[PACKManager](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/unPACKer)**
+- **[PACKManager](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/PACKManager)**
   - Used to unpack and repack .pac files, most commonly used to pack .omo animation files together.
 
 ## Building

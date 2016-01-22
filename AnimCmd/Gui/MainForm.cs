@@ -270,7 +270,7 @@ namespace Sm4shCommand
                 if (node is CommandListGroup)
                     p.Controls.Add(new CodeEditControl((CommandListGroup)node) { Dock = DockStyle.Fill });
                 else if (node is CommandListNode)
-                    p.Controls.Add(new CodeEditControl((CommandListNode)node) { Dock = DockStyle.Fill });
+                    p.Controls.Add(new ITSCodeBox(((CommandListNode)node).CommandList) { Dock = DockStyle.Fill });
                 tabControl1.TabPages.Insert(0, p);
                 tabControl1.SelectedIndex = 0;
             }

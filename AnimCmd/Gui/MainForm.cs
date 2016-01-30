@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using static Sm4shCommand.Runtime;
 using Sm4shCommand.Nodes;
+
 namespace Sm4shCommand
 {
     public partial class AcmdMain : Form
@@ -167,6 +168,7 @@ namespace Sm4shCommand
                 {
                     FileName = rootPath = string.Empty;
                     tabControl1.TabPages.Clear();
+                    FileTree.Nodes.Clear();
                     isRoot = false;
 
                     if ((_curFile = Manager.OpenFile(dlg.FileName)) == null) return;
@@ -227,10 +229,13 @@ namespace Sm4shCommand
                     for (int x = 0; x < tmp.TabCount; x++)
                     {
                         ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
-                        //if (!isRoot)
-                        //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                        //else
-                        //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                        if (box.CommandList.Empty)
+                            continue;
+                        box.ApplyChanges();
+                        if (!isRoot)
+                            _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                        else
+                            _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
 
                     }
                     tabControl1.TabPages.Remove(p);
@@ -250,7 +255,7 @@ namespace Sm4shCommand
                     var node = ((BaseNode)tree.Nodes[i]);
                     string str = "";
                     AnimHashPairs.TryGetValue(node.CRC, out str);
-                    if(string.IsNullOrEmpty(str))
+                    if (string.IsNullOrEmpty(str))
                         str = node.Name;
                     tree.Nodes[i].Text = str;
                 }
@@ -270,7 +275,7 @@ namespace Sm4shCommand
                 if (node is CommandListGroup)
                     p.Controls.Add(new CodeEditControl((CommandListGroup)node) { Dock = DockStyle.Fill });
                 else if (node is CommandListNode)
-                    p.Controls.Add(new ITSCodeBox(((CommandListNode)node).CommandList) { Dock = DockStyle.Fill });
+                    p.Controls.Add(new CodeEditControl((CommandListNode)node) { Dock = DockStyle.Fill });
                 tabControl1.TabPages.Insert(0, p);
                 tabControl1.SelectedIndex = 0;
             }
@@ -324,12 +329,13 @@ namespace Sm4shCommand
 
         private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using(OpenFileDialog dlg = new OpenFileDialog())
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                     parseAnimations(dlg.FileName);
             }
         }
+
     }
 
     public enum Endianness

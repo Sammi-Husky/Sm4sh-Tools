@@ -7,28 +7,29 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Sm4shCommand.Classes;
-using static Tokenizer;
+using static Sm4shCommand.Tokenizer;
 using System.Text;
 
 namespace Sm4shCommand
 {
     public class ITSCodeBox : UserControl
     {
-        private Timer _tooltipTimer;
-        public ITSCodeBox(CommandList list)
+        private Timer tooltipTimer;
+        private eToolTip toolTip;
+
+        public ITSCodeBox(CommandList list, List<CommandInfo> commandDict)
         {
-            _list = list;
-            Lines = list.Select(x => x.ToString()).ToList();
             this.SizeChanged += ITSCodeBox_SizeChanged;
-            this.Cursor = Cursors.IBeam;
+            this.toolTip = new eToolTip();
+            Cursor = Cursors.IBeam;
             this.KeyPress += ITSCodeBox_KeyPress;
             this.PreviewKeyDown += ITSCodeBox_PreviewKeyDown;
-            this.Font = new Font(FontFamily.GenericMonospace, 9.75f);
-            this.HorizontalScroll.Visible = this.VerticalScroll.Visible = true;
-            this.VerticalScroll.Maximum = Math.Max(0, ClientSize.Height);
-            this._tooltipTimer = new Timer();
-            _tooltipTimer.Interval = 500;
-            _tooltipTimer.Tick += _tooltipTimer_Tick;
+            Font = new Font(FontFamily.GenericMonospace, 9.75f);
+            HorizontalScroll.Visible = this.VerticalScroll.Visible = true;
+            VerticalScroll.Maximum = Math.Max(0, ClientSize.Height);
+            tooltipTimer = new Timer();
+            tooltipTimer.Interval = 500;
+            tooltipTimer.Tick += tooltipTimer_Tick;
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -36,27 +37,47 @@ namespace Sm4shCommand
 
             CharWidth = (int)Math.Round(MeasureChar(Font, 'A').Width);
             CharHeight = Font.Height + 2;
-        }
 
-        private void _tooltipTimer_Tick(object sender, EventArgs e)
+            // Set source after everything is setup to mitigate shenanigans
+            SetSource(list);
+            commandDictionary = commandDict;
+        }
+        public void SetSource(CommandList list)
         {
-            _tooltipTimer.Stop();
-            int yIndex = oldLocation.Y.RoundDown(CharHeight) / CharHeight;
+            _list = list;
+            Lines = new List<Line>();
+            for (int i = 0; i < list.Count; i++)
+                Lines.Add(new Line(list[i].ToString(), this));
+            if (list.Empty)
+                Lines.Add(new Line("// Empty List", this));
+            DoFormat();
+        }
+        private void tooltipTimer_Tick(object sender, EventArgs e)
+        {
+            tooltipTimer.Stop();
+
+            int yIndex = lastMouseCoords.Y.RoundDown(CharHeight) / CharHeight;
 
             if (yIndex >= Lines.Count | yIndex >= _list.Count)
                 return;
-            if (iCharFromPoint(oldLocation) >= Lines[yIndex].Length)
+            if (iCharFromPoint(lastMouseCoords) >= Lines[yIndex].Length)
                 return;
 
-            if (!String.IsNullOrEmpty(_list[yIndex]._commandInfo?.EventDescription))
+            string str = TokenFromPoint(lastMouseCoords).Token;
+            if (!String.IsNullOrEmpty(str))
             {
-                CommandInfo cmi = _list[yIndex]._commandInfo;
-                toolTip.ToolTipTitle = cmi.Name;
-                toolTip.ToolTipDescription = cmi.EventDescription;
-                toolTip.Show(cmi.Name, this, oldLocation, 5000);
+                CommandInfo cmi;
+                if ((cmi = commandDictionary.FirstOrDefault(x => x.Name.StartsWith(str))) != null)
+                {
+                    if (cmi.EventDescription == "NONE")
+                        return;
+
+                    toolTip.ToolTipTitle = cmi.Name;
+                    toolTip.ToolTipDescription = cmi.EventDescription;
+                    toolTip.Show(cmi.Name, this, lastMouseCoords, 5000);
+                }
             }
         }
-
         private void ITSCodeBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             switch (e.KeyCode)
@@ -75,7 +96,6 @@ namespace Sm4shCommand
                     return;
             }
         }
-        Point oldLocation;
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -83,10 +103,9 @@ namespace Sm4shCommand
             {
                 SelectionEnd = SelectionStart = Point.Empty;
                 IsDrag = true;
-                LineIndex = iLineFromPoint(e.Location);
+                SelectionStart.Y = iLineFromPoint(e.Location);
 
-                SelectionStart.Y = LineIndex;
-                SelectionStart.X = iCharFromPoint(e.Location);
+                SelectionStart = new Point(iCharFromPoint(e.Location), SelectionStart.Y);
 
                 Point caret = CaretPosFromPoint(e.Location);
                 DestroyCaret();
@@ -96,33 +115,33 @@ namespace Sm4shCommand
                 Invalidate();
             }
         }
+        Point lastMouseCoords;
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (!ClientRectangle.Contains(e.Location))
+            if (lastMouseCoords != e.Location)
             {
-                _tooltipTimer.Stop();
-                toolTip.SetToolTip(this, null);
-                toolTip.Hide();
-                return;
-            }
-            if (oldLocation != e.Location)
-            {
-                _tooltipTimer.Stop();
-                _tooltipTimer.Start();
+                tooltipTimer.Stop();
+                tooltipTimer.Start();
                 toolTip.SetToolTip(this, null);
                 toolTip.Hide(this);
             }
-            oldLocation = e.Location;
+            lastMouseCoords = e.Location;
 
             if (IsDrag)
             {
-                SelectionEnd.X = iCharFromPoint(e.Location);
-                SelectionEnd.Y = iLineFromPoint(e.Location);
+                SelectionEnd = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
                 var caret = CaretPosFromPoint(e.Location);
                 SetCaretPos(caret.X, caret.Y);
                 Invalidate();
             }
+        }
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            tooltipTimer.Stop();
+            toolTip.SetToolTip(this, null);
+            toolTip.Hide();
         }
         protected override void OnMouseUp(MouseEventArgs e)
         {
@@ -139,24 +158,26 @@ namespace Sm4shCommand
             }
             else if (e.KeyChar == '\r')
             {
-                if (SelectionStart.X < Lines[LineIndex].Length)
+                if (SelectionStart.X < Lines[SelectionStart.Y].Length)
                 {
-                    string str = Lines[LineIndex].Substring(SelectionStart.X);
-                    Lines[LineIndex] = Lines[LineIndex].Remove(SelectionStart.X);
-                    Lines.Insert(LineIndex + 1, str);
+                    string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
+                    Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
+                    Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
+                    _list.Insert(SelectionStart.Y + 1, null);
                     CaretNextLine();
                     //CaretMoveLeft(str.Length);
                 }
-                else if (SelectionStart.X == Lines[LineIndex].Length)
+                else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
                 {
-                    Lines.Insert(LineIndex + 1, string.Empty);
+                    Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
+                    _list.Insert(SelectionStart.Y + 1, null);
                     CaretNextLine();
                 }
                 e.Handled = true;
             }
             else
             {
-                Lines[LineIndex] = Lines[LineIndex].Insert(SelectionStart.X, e.KeyChar.ToString());
+                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Insert(SelectionStart.X, e.KeyChar.ToString());
                 CaretMoveRight(1);
                 e.Handled = true;
             }
@@ -169,33 +190,41 @@ namespace Sm4shCommand
         }
         private void DoBackspace()
         {
-            if (SelectionStart.X == 0 && LineIndex > 0)
+            if (SelectionStart.X == 0 && SelectionStart.Y > 0)
             {
-                if (!String.IsNullOrEmpty(Lines[LineIndex - 1]))
+                if (!Lines[SelectionStart.Y - 1].Empty)
                 {
-                    var str = Lines[LineIndex];
-                    Lines[LineIndex - 1] += str;
-                    Lines.RemoveAt(LineIndex);
+                    var str = Lines[SelectionStart.Y].Text;
+                    Lines[SelectionStart.Y - 1].Text += str;
+                    Lines.RemoveAt(SelectionStart.Y);
                     CaretPrevLine();
                     CaretMoveLeft(str.Length);
                 }
                 else
                 {
-                    Lines.RemoveAt(LineIndex - 1);
+                    Lines.RemoveAt(SelectionStart.Y - 1);
                     CaretMoveUp(1);
                 }
             }
             else if (SelectionStart.X > 0)
             {
-                Lines[LineIndex] = Lines[LineIndex].Remove(SelectionStart.X - 1, SelectionStart.X - SelectionEnd.X);
+                Lines[SelectionStart.Y].Text =
+                    Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
                 CaretMoveLeft(1);
             }
+        }
+        public StringToken TokenFromPoint(Point val)
+        {
+            int cIndex = iCharFromPoint(val);
+            int lIndex = iLineFromPoint(val);
+
+            return Tokenize(Lines[lIndex].Text).FirstOrDefault(x => x.Length + x.Index >= cIndex);
         }
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             UpdateRectPositions();
-            IndentWidth = CreateGraphics().MeasureString(" ", Font).Width * 5;
+            IndentWidth = CharWidth * 4;
         }
         public new void Invalidate()
         {
@@ -214,26 +243,22 @@ namespace Sm4shCommand
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<CommandInfo> CommandDictionary { get { return commandDictionary; } set { commandDictionary = value; } }
         private List<CommandInfo> commandDictionary;
+
+        public Rectangle ContentRect { get { return _contentRect; } private set { _contentRect = value; } }
+        private Rectangle _contentRect;
+        public Rectangle LInfoRect { get { return _lInfoRect; } private set { _lInfoRect = value; } }
+        private Rectangle _lInfoRect;
+        public int CharWidth { get; set; }
+        public int CharHeight { get; set; }
+        public float IndentWidth { get; set; }
+        public Point SelectionStart;
+        public Point SelectionEnd;
         #endregion
         #region Members
-        Rectangle _rectLineInfo;
-        Rectangle _rectContent;
 
-        public eToolTip toolTip = new eToolTip();
-
-        int CharWidth;
-        int CharHeight;
         bool IsDrag = false;
-        /// <summary>
-        /// Indent width 
-        /// </summary>
-        private float IndentWidth;
-        public List<string> Lines;
+        public List<Line> Lines;
 
-        private int curIndent = 0;
-        private int LineIndex = 0;
-        private Point SelectionStart = new Point();
-        private Point SelectionEnd = new Point();
 
         #endregion
         #region Painting Methods
@@ -247,51 +272,68 @@ namespace Sm4shCommand
             g.FillRectangle(Brushes.White, ClientRectangle);
             g.DrawRectangle(Pens.Black, ClientRectangle);
             //Draw linInfo background
-            g.FillRectangle(Brushes.LightGray, _rectLineInfo);
-            g.DrawRectangle(Pens.Black, _rectLineInfo);
+            g.FillRectangle(Brushes.LightGray, LInfoRect);
+            g.DrawRectangle(Pens.Black, LInfoRect);
 
             for (int i = 0; i < Lines.Count; i++)
             {
                 // Line Number
-                g.DrawString(i.ToString(), Font, SystemBrushes.MenuText, _rectLineInfo.X, CharHeight * i);
+                g.DrawString(i.ToString(), Font, SystemBrushes.MenuText, LInfoRect.X, CharHeight * i);
 
+                // Selection
                 //if (SelectionEnd != Point.Empty)
                 //    using (var b = new SolidBrush(Color.LightSteelBlue))
                 //    {
-                //        if (i == SelectionEnd.Y)
-                //            g.FillRectangle(b, _rectContent.X + (curIndent * IndentWidth) + (SelectionStart.X * CharWidth), CharHeight * i,
+                //        if (SelectionStart.Y == SelectionEnd.Y)
+                //            g.FillRectangle(b, ContentRect.X + (SelectionStart.X * CharWidth), CharHeight * SelectionEnd.Y,
                 //                (SelectionEnd.X - SelectionStart.X) * CharWidth, CharHeight);
                 //        else if (i == SelectionStart.Y)
-                //            g.FillRectangle(b, _rectContent.X + (curIndent * IndentWidth) + SelectionStart.X * CharWidth, CharHeight * i,
+                //            g.FillRectangle(b, ContentRect.X /*+ (curIndent * IndentWidth)*/ + SelectionStart.X * CharWidth, CharHeight * i,
                 //                CharWidth * Lines[i].Length, CharHeight);
-                //        else if (i < SelectionEnd.Y)
-                //            g.FillRectangle(b, _rectContent.X + (curIndent * IndentWidth), CharHeight * i,
+                //        else if (i < SelectionEnd.Y && i > SelectionStart.Y)
+                //            g.FillRectangle(b, ContentRect.X /*+ (curIndent * IndentWidth)*/, CharHeight * i,
                 //                Lines[i].Length * CharWidth, CharHeight);
+                //        else if (i == SelectionEnd.Y)
+                //            g.FillRectangle(b, ContentRect.X, CharHeight * SelectionEnd.Y,
+                //                SelectionEnd.X * CharWidth, CharHeight);
                 //    }
 
-                //// Dont want to indent the command that reduces indent
-                //if (i <= _list.Count && _list[i]._commandInfo?.IndentLevel < 0)
-                //    curIndent--;
-
-                if (!string.IsNullOrEmpty(Lines[i]))
-                    DrawTokenizedLine(Tokenize(Lines[i]), _rectContent.X + curIndent * IndentWidth, CharHeight * i, g);
+                // Text
+                if (!Lines[i].Empty)
+                    Lines[i].Draw(ContentRect.X, CharHeight * i, g);
                 else
-                    g.DrawString(Lines[i], Font, Brushes.Black, _rectContent.X + curIndent * IndentWidth, CharHeight * i);
-
-                //// Indent after indenting command
-                //if (i <= _list.Count && _list[i]._commandInfo?.IndentLevel > 0)
-                //    curIndent++;
+                    g.DrawString(Lines[i].Text, Font, Brushes.Black, ContentRect.X /*+ curIndent * IndentWidth*/, CharHeight * i);
             }
         }
-        private void DrawTokenizedLine(StringToken[] lineTokens, float x, float y, Graphics g)
-        {
-            float posX = x;
-            foreach (StringToken tkn in lineTokens)
-            {
-                using (SolidBrush brush = new SolidBrush(tkn.TokColor))
-                    g.DrawString(tkn.Token, Font, brush, posX, y);
 
-                posX += tkn.Token.Length * CharWidth;
+        public void DoFormat()
+        {
+            int curindent = 0;
+            for (int i = 0; i < Lines.Count; i++)
+            {
+                if (Lines[i].Text.StartsWith("//"))
+                    continue;
+
+                if (Lines[i]._indent < 0)
+                    curindent--;
+                string tmp = Lines[i].Text.TrimStart();
+                for (int x = 0; x < curindent; x++)
+                    tmp = tmp.Insert(0, "    ");
+                Lines[i].Text = tmp;
+                if (Lines[i]._indent > 0)
+                    curindent++;
+            }
+            Invalidate();
+        }
+        public void ApplyChanges()
+        {
+            CommandList.Clear();
+            CommandList lst = new CommandList(CommandList.AnimationCRC);
+            for (int i = 0; i < Lines.Count; i++)
+            {
+                if (Lines[i].Text.StartsWith("//"))
+                    continue;
+                CommandList.Add(Lines[i].Parse());
             }
         }
         #endregion
@@ -312,7 +354,7 @@ namespace Sm4shCommand
 
                     // Measure the string's character ranges.
                     Region[] regions = g.MeasureCharacterRanges(
-                        tkn.Token, font, _rectContent, _fmt);
+                        tkn.Token, font, ContentRect, _fmt);
 
                     width += regions.Select(x => x.GetBounds(g)).ToArray().Sum(x => x.Width);
                 }
@@ -335,14 +377,14 @@ namespace Sm4shCommand
         }
         private void UpdateRectPositions()
         {
-            _rectLineInfo = new Rectangle(ClientRectangle.X, ClientRectangle.Y, (int)MeasureString(Font, Lines.Count.ToString()).Width + 4, ClientRectangle.Height);
-            _rectContent = new Rectangle(_rectLineInfo.Width + 2, ClientRectangle.Y, ClientRectangle.Width - _rectLineInfo.Width, ClientRectangle.Height);
+            LInfoRect = new Rectangle(ClientRectangle.X, ClientRectangle.Y, (int)MeasureString(Font, Lines.Count.ToString()).Width + 4, ClientRectangle.Height);
+            ContentRect = new Rectangle(LInfoRect.Width + 2, ClientRectangle.Y, ClientRectangle.Width - LInfoRect.Width, ClientRectangle.Height);
         }
         #endregion
         #region Caret Methods
         private void SetCaret(int charIndex, int lineIndex)
         {
-            Point p = pointFromPos(charIndex, lineIndex);
+            Point p = pointFromPos(charIndex, SelectionStart.Y);
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
             SetCaretPos(p.X, p.Y);
@@ -367,7 +409,7 @@ namespace Sm4shCommand
         }
         private void CaretMoveRight(int num)
         {
-            if (SelectionStart.X + num > Lines[LineIndex].Length)
+            if (SelectionStart.X + num > Lines[SelectionStart.Y].Length)
             {
                 CaretNextLine();
                 CaretMoveRight(num - 1);
@@ -384,17 +426,17 @@ namespace Sm4shCommand
         }
         private void CaretMoveDown(int num)
         {
-            if (LineIndex + num >= Lines.Count)
+            if (SelectionStart.Y + num >= Lines.Count)
                 return;
-            LineIndex += num;
+            SelectionStart.Y += num;
 
             Point p;
             GetCaretPos(out p);
             p.Offset(0, CharHeight * num);
-            if (SelectionStart.X > Lines[LineIndex].Length)
+            if (SelectionStart.X > Lines[SelectionStart.Y].Length)
             {
-                SelectionStart.X = Lines[LineIndex].Length;
-                p.X = (SelectionStart.X * CharWidth) + _rectContent.X;
+                SelectionStart.X = Lines[SelectionStart.Y].Length;
+                p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
             }
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
@@ -403,17 +445,17 @@ namespace Sm4shCommand
         }
         private void CaretMoveUp(int num)
         {
-            if (LineIndex - num < 0)
+            if (SelectionStart.Y - num < 0)
                 return;
-            LineIndex -= num;
+            SelectionStart.Y -= num;
 
             Point p;
             GetCaretPos(out p);
             p.Offset(0, -(CharHeight * num));
-            if (SelectionStart.X > Lines[LineIndex].Length)
+            if (SelectionStart.X > Lines[SelectionStart.Y].Length)
             {
-                SelectionStart.X = Lines[LineIndex].Length;
-                p.X = (SelectionStart.X * CharWidth) + _rectContent.X;
+                SelectionStart.X = Lines[SelectionStart.Y].Length;
+                p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
             }
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
@@ -423,15 +465,15 @@ namespace Sm4shCommand
 
         private void CaretNextLine()
         {
-            if (LineIndex + 1 >= Lines.Count)
+            if (SelectionStart.Y + 1 >= Lines.Count)
                 return;
-            LineIndex++;
+            SelectionStart.Y++;
 
             Point p;
             GetCaretPos(out p);
             p.Offset(0, CharHeight);
             SelectionStart.X = 0;
-            p.X = (SelectionStart.X * CharWidth) + _rectContent.X;
+            p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
             SetCaretPos(p.X, p.Y);
@@ -439,15 +481,15 @@ namespace Sm4shCommand
         }
         private void CaretPrevLine()
         {
-            if (LineIndex == 0)
+            if (SelectionStart.Y == 0)
                 return;
-            LineIndex--;
+            SelectionStart.Y--;
 
             Point p;
             GetCaretPos(out p);
             p.Offset(0, -(Font.Height + 2));
-            SelectionStart.X = Lines[LineIndex].Length;
-            p.X = (SelectionStart.X * CharWidth) + _rectContent.X;
+            SelectionStart.X = Lines[SelectionStart.Y].Length;
+            p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
             SetCaretPos(p.X, p.Y);
@@ -455,18 +497,18 @@ namespace Sm4shCommand
         }
         private Point CaretPosFromPoint(Point val)
         {
-            int y = val.Y.Clamp(_rectContent.Y + 2, (Lines.Count - 1) * CharHeight);
+            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
             y = y.RoundDown(CharHeight);
-            int x = (iCharFromPoint(val) * CharWidth) + _rectContent.X + 1;
+            int x = (iCharFromPoint(val) * CharWidth) + ContentRect.X + 1;
             return new Point(x, y);
         }
         private int iCharFromPoint(Point val)
         {
-            return ((int)Math.Round((float)(val.X - _rectContent.X) / CharWidth)).Clamp(0, Lines[LineIndex].Length);
+            return ((int)Math.Round((float)(val.X - ContentRect.X) / CharWidth)).Clamp(0, Lines[SelectionStart.Y].Length);
         }
         private int iLineFromPoint(Point val)
         {
-            int y = val.Y.Clamp(_rectContent.Y + 2, (Lines.Count - 1) * CharHeight);
+            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
             y = val.Y.RoundDown(CharHeight);
             return (y / CharHeight).Clamp(0, Lines.Count - 1);
         }
@@ -474,7 +516,7 @@ namespace Sm4shCommand
         {
             return new Point()
             {
-                X = ((charIndex * CharWidth) + _rectContent.X).Clamp(0, Lines[lineIndex].Length),
+                X = ((charIndex * CharWidth) + ContentRect.X).Clamp(0, Lines[lineIndex].Length),
                 Y = charIndex * CharHeight
             };
         }
@@ -497,81 +539,163 @@ namespace Sm4shCommand
         static extern bool GetCaretPos(out Point lpPoint);
         #endregion
     }
-}
-public static class Tokenizer
-{
-    static char[] seps = { '=', ',', '(', ')', '\n' };
-    static char[] integers = { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-    public static StringToken[] Tokenize(string data)
+    public static class Tokenizer
     {
-        List<StringToken> _tokens = new List<StringToken>();
-        int i = 0;
-        while (i < data.Length)
+        static char[] seps = { '=', ',', '(', ')', '\n' };
+        static char[] integers = { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+        public static StringToken[] Tokenize(string data)
         {
-            StringToken str = new StringToken();
-
-            if (seps.Contains(data[i]))
-                _tokens.Add(new StringToken() { Token = data[i++].ToString(), TokType = TokenType.String });
-            else
+            List<StringToken> _tokens = new List<StringToken>();
+            int i = 0;
+            while (i < data.Length)
             {
-                while (i < data.Length && !seps.Contains(data[i]))
-                {
-                    str.Token += data[i];
-                    i++;
-                }
-
-                if (str.Token.TrimStart().StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
-                    str.TokType = TokenType.Integer;
-                else if (integers.Contains(str.Token[0]))
-                    str.TokType = TokenType.FloatingPoint;
-                else if (i < data.Length && data[i] == '=')
-                    str.TokType = TokenType.Keyword;
+                StringToken str = new StringToken();
+                str.Index = i;
+                if (seps.Contains(data[i]))
+                    _tokens.Add(new StringToken() { Index = i, Token = data[i++].ToString(), TokType = TokenType.String });
                 else
-                    str.TokType = TokenType.String;
+                {
 
-                _tokens.Add(str);
+                    while (i < data.Length && !seps.Contains(data[i]))
+                    {
+                        str.Token += data[i];
+                        i++;
+                    }
+
+                    if (str.Token.TrimStart().StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
+                        str.TokType = TokenType.Integer;
+                    else if (integers.Contains(str.Token[0]))
+                        str.TokType = TokenType.FloatingPoint;
+                    else if (i < data.Length && data[i] == '=')
+                        str.TokType = TokenType.Keyword;
+                    else
+                        str.TokType = TokenType.String;
+
+                    _tokens.Add(str);
+                }
+            }
+            return _tokens.ToArray();
+        }
+
+        public struct StringToken
+        {
+            public int Index { get { return _index; } set { _index = value; } }
+            private int _index;
+            public int Length { get { return Token.Length; } }
+            public string Token { get { return _strToken; } set { _strToken = value; } }
+            private string _strToken;
+            public TokenType TokType { get { return _type; } set { _type = value; } }
+            private TokenType _type;
+            public Color TokColor
+            {
+                get
+                {
+                    switch (TokType)
+                    {
+                        case TokenType.String:
+                            return Color.Black;
+                        case TokenType.Integer:
+                            return Color.DarkCyan;
+                        case TokenType.FloatingPoint:
+                            return Color.Red;
+                        case TokenType.Keyword:
+                            return Color.DarkBlue;
+                        case TokenType.Decimal:
+                            return Color.Red;
+                        default:
+                            return Color.Black;
+                    }
+                }
             }
         }
-        return _tokens.ToArray();
+
+        public enum TokenType
+        {
+            String,
+            Keyword,
+            Integer,
+            FloatingPoint,
+            Decimal
+        }
     }
 
-    public struct StringToken
+    public class Line
     {
-        public int Length { get { return Token.Length; } }
-        public string Token { get { return _strToken; } set { _strToken = value; } }
-        private string _strToken;
-        public TokenType TokType { get { return _type; } set { _type = value; } }
-        private TokenType _type;
-        public Color TokColor
+        public Line(string val, ITSCodeBox owner)
+        {
+            CodeBox = owner;
+            Text = val;
+        }
+
+        public string Text
         {
             get
             {
-                switch (TokType)
-                {
-                    case TokenType.String:
-                        return Color.Black;
-                    case TokenType.Integer:
-                        return Color.DarkCyan;
-                    case TokenType.FloatingPoint:
-                        return Color.Red;
-                    case TokenType.Keyword:
-                        return Color.DarkBlue;
-                    case TokenType.Decimal:
-                        return Color.Red;
-                    default:
-                        return Color.Black;
-                }
+                return _text;
+            }
+            set
+            {
+                _text = value;
+                _tokens = Tokenize(_text);
+                Info = GetInfo();
             }
         }
-    }
+        private string _text;
+        private StringToken[] _tokens;
+        public int _indent { get { return Info != null ? Info.IndentLevel : 0; } }
+        public int Length { get { return Text.Length; } }
+        public ITSCodeBox CodeBox { get; set; }
+        public CommandInfo Info { get; set; }
+        public bool Empty { get { return String.IsNullOrEmpty(Text); } }
+        public CommandInfo GetInfo()
+        {
+            if (!Empty)
+                return CodeBox.CommandDictionary?.FirstOrDefault(x =>
+                     x.Name.Equals(_tokens[0].Token, StringComparison.InvariantCultureIgnoreCase));
+            else
+                return null;
+        }
 
-    public enum TokenType
-    {
-        String,
-        Keyword,
-        Integer,
-        FloatingPoint,
-        Decimal
+        public void Draw(int x, int y, Graphics g)
+        {
+            Draw(x, y, CodeBox.Font, g);
+        }
+        public void Draw(int x, int y, Font font, Graphics g)
+        {
+            if (Empty)
+            {
+                g.DrawString(Text, CodeBox.Font, SystemBrushes.MenuText, x, y);
+                return;
+            }
+            float posX = x;
+            foreach (StringToken tkn in _tokens)
+            {
+                using (SolidBrush brush = new SolidBrush(tkn.TokColor))
+                    g.DrawString(tkn.Token, CodeBox.Font, brush, posX, y);
+
+                posX += tkn.Token.Length * CodeBox.CharWidth;
+            }
+        }
+        public Command Parse()
+        {
+            var cmd = new Command(GetInfo());
+            foreach (StringToken tkn in _tokens)
+                switch (tkn.TokType)
+                {
+                    case TokenType.Decimal:
+                        cmd.parameters.Add(decimal.Parse(tkn.Token));
+                        break;
+                    case TokenType.FloatingPoint:
+                        cmd.parameters.Add(float.Parse(tkn.Token));
+                        break;
+                    case TokenType.Integer:
+                        cmd.parameters.Add(int.Parse(tkn.Token.Remove(0, 2), System.Globalization.NumberStyles.HexNumber));
+                        break;
+                }
+
+            return cmd;
+        }
     }
 }

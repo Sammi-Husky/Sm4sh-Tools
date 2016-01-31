@@ -170,6 +170,26 @@ namespace Sm4shCommand
                     Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
                 CaretMoveLeft(1);
             }
+            Invalidate();
+        }
+        private void DoNewline()
+        {
+            if (SelectionStart.X < Lines[SelectionStart.Y].Length)
+            {
+                string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
+                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
+                Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
+                _list.Insert(SelectionStart.Y + 1, null);
+                CaretNextLine();
+                //CaretMoveLeft(str.Length);
+            }
+            else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
+            {
+                Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
+                _list.Insert(SelectionStart.Y + 1, null);
+                CaretNextLine();
+            }
+            Invalidate();
         }
         public StringToken TokenFromPoint(Point val)
         {
@@ -513,7 +533,11 @@ namespace Sm4shCommand
         {
             //base.OnKeyUp(e);
             if (ProcessKey(e.KeyCode) != Action.Nothing)
+            {
+                if (autocomplete.Visible)
+                    autocomplete.Hide();
                 return;
+            }
 
             Point cp;
             GetCaretPos(out cp);
@@ -547,38 +571,13 @@ namespace Sm4shCommand
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
             base.OnKeyPress(e);
-            if (e.KeyChar == '\b')
-            {
-                DoBackspace();
-                e.Handled = true;
-            }
-            else if (e.KeyChar == '\r')
-            {
-                if (SelectionStart.X < Lines[SelectionStart.Y].Length)
-                {
-                    string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
-                    Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
-                    Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
-                    _list.Insert(SelectionStart.Y + 1, null);
-                    CaretNextLine();
-                    //CaretMoveLeft(str.Length);
-                }
-                else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
-                {
-                    Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
-                    _list.Insert(SelectionStart.Y + 1, null);
-                    CaretNextLine();
-                }
-                e.Handled = true;
-            }
-            else
+            if (e.KeyChar != '\r' & e.KeyChar != '\b')
             {
                 Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Insert(SelectionStart.X, e.KeyChar.ToString());
                 CaretMoveRight(1);
                 e.Handled = true;
-            }
-            if (e.Handled)
                 Invalidate();
+            }
         }
         private Action ProcessKey(Keys key)
         {
@@ -592,6 +591,14 @@ namespace Sm4shCommand
                     return Action.CaretDown;
                 case Keys.Up:
                     return Action.CaretUp;
+                case Keys.PageDown:
+                    return Action.PageDown;
+                case Keys.PageUp:
+                    return Action.PageUp;
+                case Keys.Back:
+                    return Action.Backspace;
+                case Keys.Enter:
+                    return Action.Newline;
                 default:
                     return Action.Nothing;
             }
@@ -617,6 +624,12 @@ namespace Sm4shCommand
                     return;
                 case Action.PageUp:
                     CaretMoveUp(5);
+                    return;
+                case Action.Backspace:
+                    DoBackspace();
+                    return;
+                case Action.Newline:
+                    DoNewline();
                     return;
             }
         }
@@ -650,7 +663,8 @@ namespace Sm4shCommand
             Cut,
             Paste,
             SelectAll,
-            Backspace
+            Backspace,
+            Newline
         }
     }
 
@@ -793,17 +807,18 @@ namespace Sm4shCommand
         {
             var cmd = new Command(GetInfo());
             var parameters = _tokens.Where(x => x.TokType != TokenType.Keyword &&
-                                            x.TokType != TokenType.String).ToArray();
+                                            x.TokType != TokenType.String &&
+                                            x.TokType != TokenType.Seperator).ToArray();
 
             for (int i = 0; i < Info.ParamSpecifiers.Count; i++)
             {
                 if (parameters[i].TokType == TokenType.Integer)
-                    cmd.parameters.Add(int.Parse(parameters[0].Token.Remove(0, 2),
+                    cmd.parameters.Add(int.Parse(parameters[i].Token.Remove(0, 2),
                         System.Globalization.NumberStyles.HexNumber));
                 else if (Info.ParamSpecifiers[i] == 2)
-                    cmd.parameters.Add(decimal.Parse(parameters[0].Token));
+                    cmd.parameters.Add(decimal.Parse(parameters[i].Token));
                 else if (parameters[i].TokType == TokenType.FloatingPoint)
-                    cmd.parameters.Add(float.Parse(parameters[0].Token));
+                    cmd.parameters.Add(float.Parse(parameters[i].Token));
             }
             return cmd;
         }
@@ -821,6 +836,17 @@ namespace Sm4shCommand
             this.timer.Interval = 300;
             this.timer.Tick += TtTimer_Tick;
             this.SelectedIndexChanged += AutoCompleteBox_SelectedIndexChanged;
+            this.VisibleChanged += AutoCompleteBox_VisibleChanged;
+        }
+
+        private void AutoCompleteBox_VisibleChanged(object sender, EventArgs e)
+        {
+            if (Visible)
+                return;
+
+            timer.Stop();
+            tooltip.SetToolTip(this, null);
+            tooltip.Hide();
         }
 
         private void AutoCompleteBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -838,7 +864,7 @@ namespace Sm4shCommand
             var itemRect = GetItemRectangle(SelectedIndex);
             tooltip.ToolTipTitle = info.Name;
             tooltip.ToolTipDescription = info.EventDescription;
-            tooltip.Show(info.Name, this, itemRect.X + this.Right, itemRect.Y, 5000);
+            tooltip.Show(info.Name, this, itemRect.Right, itemRect.Y, 5000);
         }
 
         public List<CommandInfo> Dictionary { get; set; }

@@ -14,38 +14,41 @@ namespace Sm4shCommand
 {
     public class ITSCodeBox : UserControl
     {
-        private Timer tooltipTimer;
-        private eToolTip toolTip;
+        private Timer tooltipTimer = new Timer();
+        private eToolTip toolTip = new eToolTip();
         private AutoCompleteBox autocomplete;
 
-        public ITSCodeBox(CommandList list, List<CommandInfo> commandDict)
+        public ITSCodeBox()
         {
             this.SizeChanged += ITSCodeBox_SizeChanged;
-            this.toolTip = new eToolTip();
+            this.Font = new Font(FontFamily.GenericMonospace, 9.75f);
+            this.AutoScroll = true;
             this.Cursor = Cursors.IBeam;
-            this.autocomplete = new AutoCompleteBox(this);
-            this.autocomplete.Parent = this;
-            this.autocomplete.Visible = false;
+            this.HorizontalScroll.Visible = this.VerticalScroll.Visible = true;
+            this.VerticalScroll.Maximum = Math.Max(0, ClientSize.Height);
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            this.SetStyle(ControlStyles.UserPaint, true);
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            this.SetStyle(ControlStyles.ResizeRedraw, true);
+            Lines = new List<Line>();
+            autocomplete = new AutoCompleteBox(this);
+            autocomplete.Parent = this;
+            autocomplete.Visible = false;
             autocomplete.DisplayMember = "Name";
-            Font = new Font(FontFamily.GenericMonospace, 9.75f);
-            HorizontalScroll.Visible = this.VerticalScroll.Visible = true;
-            VerticalScroll.Maximum = Math.Max(0, ClientSize.Height);
-            tooltipTimer = new Timer();
+
             tooltipTimer.Interval = 500;
             tooltipTimer.Tick += tooltipTimer_Tick;
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-            SetStyle(ControlStyles.ResizeRedraw, true);
+
 
             CharWidth = (int)Math.Round(MeasureChar(Font, 'A').Width);
             CharHeight = Font.Height + 2;
-
+        }
+        public ITSCodeBox(CommandList list, List<CommandInfo> dict) : this()
+        {
             // Set source after everything is setup to mitigate shenanigans
-            commandDictionary = commandDict;
-            autocomplete.Dictionary = commandDict;
+            CommandDictionary = dict;
+            autocomplete.Dictionary = dict;
             SetSource(list);
-
         }
         public void SetSource(CommandList list)
         {
@@ -72,7 +75,7 @@ namespace Sm4shCommand
             if (!String.IsNullOrEmpty(str))
             {
                 CommandInfo cmi;
-                if ((cmi = commandDictionary.FirstOrDefault(x => x.Name.StartsWith(str))) != null)
+                if ((cmi = CommandDictionary.FirstOrDefault(x => x.Name.StartsWith(str))) != null)
                 {
                     if (cmi.EventDescription == "NONE")
                         return;
@@ -83,120 +86,9 @@ namespace Sm4shCommand
                 }
             }
         }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-            if (autocomplete.Visible)
-                autocomplete.Hide();
-
-            if (ClientRectangle.Contains(e.Location) && e.Button == MouseButtons.Left)
-            {
-                SelectionEnd = SelectionStart = Point.Empty;
-                IsDrag = true;
-                SelectionStart.Y = iLineFromPoint(e.Location);
-
-                SelectionStart = new Point(iCharFromPoint(e.Location), SelectionStart.Y);
-
-                Point caret = CaretPosFromPoint(e.Location);
-                DestroyCaret();
-                CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-                SetCaretPos(caret.X, caret.Y);
-                ShowCaret(Handle);
-                Invalidate();
-            }
-        }
-        Point lastMouseCoords;
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-            if (lastMouseCoords != e.Location | autocomplete.Visible)
-            {
-                tooltipTimer.Stop();
-                tooltipTimer.Start();
-                toolTip.SetToolTip(this, null);
-                toolTip.Hide(this);
-            }
-            lastMouseCoords = e.Location;
-
-            if (IsDrag)
-            {
-                SelectionEnd = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
-                var caret = CaretPosFromPoint(e.Location);
-                SetCaretPos(caret.X, caret.Y);
-                Invalidate();
-            }
-        }
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            tooltipTimer.Stop();
-            toolTip.SetToolTip(this, null);
-            toolTip.Hide();
-        }
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-            IsDrag = false;
-        }
-
-
         private void ITSCodeBox_SizeChanged(object sender, EventArgs e)
         {
             UpdateRectPositions();
-        }
-
-        private void DoBackspace()
-        {
-            if (SelectionStart.X == 0 && SelectionStart.Y > 0)
-            {
-                if (!Lines[SelectionStart.Y - 1].Empty)
-                {
-                    var str = Lines[SelectionStart.Y].Text;
-                    Lines[SelectionStart.Y - 1].Text += str;
-                    Lines.RemoveAt(SelectionStart.Y);
-                    CaretPrevLine();
-                    CaretMoveLeft(str.Length);
-                }
-                else
-                {
-                    Lines.RemoveAt(SelectionStart.Y - 1);
-                    CaretMoveUp(1);
-                }
-            }
-            else if (SelectionStart.X > 0)
-            {
-                Lines[SelectionStart.Y].Text =
-                    Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
-                CaretMoveLeft(1);
-            }
-            Invalidate();
-        }
-        private void DoNewline()
-        {
-            if (SelectionStart.X < Lines[SelectionStart.Y].Length)
-            {
-                string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
-                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
-                Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
-                _list.Insert(SelectionStart.Y + 1, null);
-                CaretNextLine();
-                //CaretMoveLeft(str.Length);
-            }
-            else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
-            {
-                Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
-                _list.Insert(SelectionStart.Y + 1, null);
-                CaretNextLine();
-            }
-            Invalidate();
-        }
-        public StringToken TokenFromPoint(Point val)
-        {
-            int cIndex = iCharFromPoint(val);
-            int lIndex = iLineFromPoint(val);
-
-            return Tokenize(Lines[lIndex].Text).FirstOrDefault(x => x.Length + x.Index >= cIndex);
         }
         protected override void OnLoad(EventArgs e)
         {
@@ -205,25 +97,6 @@ namespace Sm4shCommand
             IndentWidth = CharWidth * 4;
         }
 
-        public void DoFormat()
-        {
-            int curindent = 0;
-            for (int i = 0; i < Lines.Count; i++)
-            {
-                if (Lines[i].Text.StartsWith("//"))
-                    continue;
-
-                if (Lines[i]._indent < 0)
-                    curindent--;
-                string tmp = Lines[i].Text.TrimStart();
-                for (int x = 0; x < curindent; x++)
-                    tmp = tmp.Insert(0, "    ");
-                Lines[i].Text = tmp;
-                if (Lines[i]._indent > 0)
-                    curindent++;
-            }
-            Invalidate();
-        }
         public void ApplyChanges()
         {
             CommandList.Clear();
@@ -235,43 +108,24 @@ namespace Sm4shCommand
                 CommandList.Add(Lines[i].Parse());
             }
         }
-        public void SetLineText(string text)
-        {
-            SetLineText(text, SelectionStart.Y);
-        }
-        public void SetLineText(string text, int iLine)
-        {
-            Lines[iLine].Text = text;
-            CaretMoveRight(text.Length);
-            Invalidate();
-        }
-        public void InsertText(string text)
-        {
-            InsertText(text, SelectionStart.X, SelectionStart.Y);
-        }
-        public void InsertText(string text, int iChar, int iLine)
-        {
-            if (iChar == 0)
-                Lines[iLine].Text = text;
-            else
-                Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
-            CaretMoveRight(text.Length);
-            Invalidate();
-        }
 
         #region Properties
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public CommandList CommandList { get { return _list; } set { _list = value; } }
         private CommandList _list;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public List<CommandInfo> CommandDictionary { get { return commandDictionary; } set { commandDictionary = value; } }
-        private List<CommandInfo> commandDictionary;
+        [Browsable(false)]
+        public List<Line> Lines { get; set; }
 
-        public Rectangle ContentRect { get { return _contentRect; } private set { _contentRect = value; } }
-        private Rectangle _contentRect;
-        public Rectangle LInfoRect { get { return _lInfoRect; } private set { _lInfoRect = value; } }
-        private Rectangle _lInfoRect;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public List<CommandInfo> CommandDictionary { get; set; }
+        [Browsable(false)]
+        public Rectangle ContentRect { get; private set; }
+        [Browsable(false)]
+        public Rectangle LInfoRect { get; private set; }
         public int CharWidth { get; set; }
         public int CharHeight { get; set; }
         public float IndentWidth { get; set; }
@@ -279,21 +133,14 @@ namespace Sm4shCommand
         public Point SelectionEnd;
         #endregion
         #region Members
-
-        bool IsDrag = false;
-        public List<Line> Lines;
-
-
+        private bool IsDrag = false;
+        private Point lastMouseCoords;
         #endregion
         #region Painting Methods
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             Graphics g = e.Graphics;
-
-            UpdateRectPositions();
-            //Draw Background
-
 
             for (int i = 0; i < Lines.Count; i++)
             {
@@ -531,7 +378,7 @@ namespace Sm4shCommand
         #region Key Methods
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            //base.OnKeyUp(e);
+            base.OnKeyUp(e);
             if (ProcessKey(e.KeyCode) != Action.Nothing)
             {
                 if (autocomplete.Visible)
@@ -573,7 +420,7 @@ namespace Sm4shCommand
             base.OnKeyPress(e);
             if (e.KeyChar != '\r' & e.KeyChar != '\b')
             {
-                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Insert(SelectionStart.X, e.KeyChar.ToString());
+                InsertText(e.KeyChar.ToString(), SelectionStart.X, SelectionStart.Y);
                 CaretMoveRight(1);
                 e.Handled = true;
                 Invalidate();
@@ -634,6 +481,159 @@ namespace Sm4shCommand
             }
         }
         #endregion
+        #region Text Handling
+        public void SetLineText(string text)
+        {
+            SetLineText(text, SelectionStart.Y);
+        }
+        public void SetLineText(string text, int iLine)
+        {
+            Lines[iLine].Text = text;
+            CaretMoveRight(text.Length);
+            Invalidate();
+        }
+        public void InsertText(string text)
+        {
+            InsertText(text, SelectionStart.X, SelectionStart.Y);
+        }
+        public void InsertText(string text, int iChar, int iLine)
+        {
+            if (iChar == 0)
+                Lines[iLine].Text = text;
+            else
+                Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
+            CaretMoveRight(text.Length);
+            Invalidate();
+        }
+        private void DoBackspace()
+        {
+            if (SelectionStart.X == 0 && SelectionStart.Y > 0)
+            {
+                if (!Lines[SelectionStart.Y - 1].Empty)
+                {
+                    var str = Lines[SelectionStart.Y].Text;
+                    Lines[SelectionStart.Y - 1].Text += str;
+                    Lines.RemoveAt(SelectionStart.Y);
+                    CaretPrevLine();
+                    CaretMoveLeft(str.Length);
+                }
+                else
+                {
+                    Lines.RemoveAt(SelectionStart.Y - 1);
+                    CaretMoveUp(1);
+                }
+            }
+            else if (SelectionStart.X > 0)
+            {
+                Lines[SelectionStart.Y].Text =
+                    Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
+                CaretMoveLeft(1);
+            }
+            Invalidate();
+        }
+        private void DoNewline()
+        {
+            if (SelectionStart.X < Lines[SelectionStart.Y].Length)
+            {
+                string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
+                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
+                Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
+                _list.Insert(SelectionStart.Y + 1, null);
+                CaretNextLine();
+                //CaretMoveLeft(str.Length);
+            }
+            else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
+            {
+                Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
+                _list.Insert(SelectionStart.Y + 1, null);
+                CaretNextLine();
+            }
+            Invalidate();
+        }
+        public void DoFormat()
+        {
+            int curindent = 0;
+            for (int i = 0; i < Lines.Count; i++)
+            {
+                if (Lines[i].Text.StartsWith("//"))
+                    continue;
+
+                if (Lines[i]._indent < 0)
+                    curindent--;
+                string tmp = Lines[i].Text.TrimStart();
+                for (int x = 0; x < curindent; x++)
+                    tmp = tmp.Insert(0, "    ");
+                Lines[i].Text = tmp;
+                if (Lines[i]._indent > 0)
+                    curindent++;
+            }
+            Invalidate();
+        }
+        #endregion
+        #region Mouse Methods
+        public StringToken TokenFromPoint(Point val)
+        {
+            int cIndex = iCharFromPoint(val);
+            int lIndex = iLineFromPoint(val);
+
+            return Tokenize(Lines[lIndex].Text).FirstOrDefault(x => x.Length + x.Index >= cIndex);
+        }
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (autocomplete.Visible)
+                autocomplete.Hide();
+
+            if (ClientRectangle.Contains(e.Location) && e.Button == MouseButtons.Left)
+            {
+                SelectionEnd = SelectionStart = Point.Empty;
+                IsDrag = true;
+                SelectionStart.Y = iLineFromPoint(e.Location);
+
+                SelectionStart = new Point(iCharFromPoint(e.Location), SelectionStart.Y);
+
+                Point caret = CaretPosFromPoint(e.Location);
+                DestroyCaret();
+                CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
+                SetCaretPos(caret.X, caret.Y);
+                ShowCaret(Handle);
+                Invalidate();
+            }
+        }
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (lastMouseCoords != e.Location | autocomplete.Visible)
+            {
+                tooltipTimer.Stop();
+                tooltipTimer.Start();
+                toolTip.SetToolTip(this, null);
+                toolTip.Hide(this);
+            }
+            lastMouseCoords = e.Location;
+
+            if (IsDrag)
+            {
+                SelectionEnd = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
+                var caret = CaretPosFromPoint(e.Location);
+                SetCaretPos(caret.X, caret.Y);
+                Invalidate();
+            }
+        }
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            tooltipTimer.Stop();
+            toolTip.SetToolTip(this, null);
+            toolTip.Hide();
+        }
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            IsDrag = false;
+        }
+        #endregion
+
         #region Native Methods
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool CreateCaret(IntPtr hWnd, IntPtr hBitmap, int nWidth, int nHeight);
@@ -665,6 +665,83 @@ namespace Sm4shCommand
             SelectAll,
             Backspace,
             Newline
+        }
+        public class Line
+        {
+            public Line(string val, ITSCodeBox owner)
+            {
+                CodeBox = owner;
+                Text = val;
+            }
+
+            public string Text
+            {
+                get
+                {
+                    return _text;
+                }
+                set
+                {
+                    _text = value;
+                    _tokens = Tokenize(_text);
+                    Info = GetInfo();
+                }
+            }
+            private string _text;
+            private StringToken[] _tokens;
+            public int _indent { get { return Info != null ? Info.IndentLevel : 0; } }
+            public int Length { get { return Text.Length; } }
+            public ITSCodeBox CodeBox { get; set; }
+            public CommandInfo Info { get; set; }
+            public bool Empty { get { return String.IsNullOrEmpty(Text); } }
+            public CommandInfo GetInfo()
+            {
+                if (!Empty)
+                    return CodeBox.CommandDictionary?.FirstOrDefault(x =>
+                         x.Name.Equals(_tokens[0].Token.TrimStart(), StringComparison.InvariantCultureIgnoreCase));
+                else
+                    return null;
+            }
+
+            public void Draw(int x, int y, Graphics g)
+            {
+                Draw(x, y, CodeBox.Font, g);
+            }
+            public void Draw(int x, int y, Font font, Graphics g)
+            {
+                if (Empty)
+                {
+                    g.DrawString(Text, CodeBox.Font, SystemBrushes.MenuText, x, y);
+                    return;
+                }
+                float posX = x;
+                foreach (StringToken tkn in _tokens)
+                {
+                    using (SolidBrush brush = new SolidBrush(tkn.TokColor))
+                        g.DrawString(tkn.Token, CodeBox.Font, brush, posX, y);
+
+                    posX += tkn.Token.Length * CodeBox.CharWidth;
+                }
+            }
+            public Command Parse()
+            {
+                var cmd = new Command(GetInfo());
+                var parameters = _tokens.Where(x => x.TokType != TokenType.Keyword &&
+                                                x.TokType != TokenType.String &&
+                                                x.TokType != TokenType.Seperator).ToArray();
+
+                for (int i = 0; i < Info.ParamSpecifiers.Count; i++)
+                {
+                    if (parameters[i].TokType == TokenType.Integer)
+                        cmd.parameters.Add(int.Parse(parameters[i].Token.Remove(0, 2),
+                            System.Globalization.NumberStyles.HexNumber));
+                    else if (Info.ParamSpecifiers[i] == 2)
+                        cmd.parameters.Add(decimal.Parse(parameters[i].Token));
+                    else if (parameters[i].TokType == TokenType.FloatingPoint)
+                        cmd.parameters.Add(float.Parse(parameters[i].Token));
+                }
+                return cmd;
+            }
         }
     }
 
@@ -746,84 +823,10 @@ namespace Sm4shCommand
             Seperator
         }
     }
-    public class Line
-    {
-        public Line(string val, ITSCodeBox owner)
-        {
-            CodeBox = owner;
-            Text = val;
-        }
 
-        public string Text
-        {
-            get
-            {
-                return _text;
-            }
-            set
-            {
-                _text = value;
-                _tokens = Tokenize(_text);
-                Info = GetInfo();
-            }
-        }
-        private string _text;
-        private StringToken[] _tokens;
-        public int _indent { get { return Info != null ? Info.IndentLevel : 0; } }
-        public int Length { get { return Text.Length; } }
-        public ITSCodeBox CodeBox { get; set; }
-        public CommandInfo Info { get; set; }
-        public bool Empty { get { return String.IsNullOrEmpty(Text); } }
-        public CommandInfo GetInfo()
-        {
-            if (!Empty)
-                return CodeBox.CommandDictionary?.FirstOrDefault(x =>
-                     x.Name.Equals(_tokens[0].Token.TrimStart(), StringComparison.InvariantCultureIgnoreCase));
-            else
-                return null;
-        }
-
-        public void Draw(int x, int y, Graphics g)
-        {
-            Draw(x, y, CodeBox.Font, g);
-        }
-        public void Draw(int x, int y, Font font, Graphics g)
-        {
-            if (Empty)
-            {
-                g.DrawString(Text, CodeBox.Font, SystemBrushes.MenuText, x, y);
-                return;
-            }
-            float posX = x;
-            foreach (StringToken tkn in _tokens)
-            {
-                using (SolidBrush brush = new SolidBrush(tkn.TokColor))
-                    g.DrawString(tkn.Token, CodeBox.Font, brush, posX, y);
-
-                posX += tkn.Token.Length * CodeBox.CharWidth;
-            }
-        }
-        public Command Parse()
-        {
-            var cmd = new Command(GetInfo());
-            var parameters = _tokens.Where(x => x.TokType != TokenType.Keyword &&
-                                            x.TokType != TokenType.String &&
-                                            x.TokType != TokenType.Seperator).ToArray();
-
-            for (int i = 0; i < Info.ParamSpecifiers.Count; i++)
-            {
-                if (parameters[i].TokType == TokenType.Integer)
-                    cmd.parameters.Add(int.Parse(parameters[i].Token.Remove(0, 2),
-                        System.Globalization.NumberStyles.HexNumber));
-                else if (Info.ParamSpecifiers[i] == 2)
-                    cmd.parameters.Add(decimal.Parse(parameters[i].Token));
-                else if (parameters[i].TokType == TokenType.FloatingPoint)
-                    cmd.parameters.Add(float.Parse(parameters[i].Token));
-            }
-            return cmd;
-        }
-    }
-
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [DesignTimeVisible(false)]
+    [Browsable(false)]
     public class AutoCompleteBox : ListBox
     {
         private Timer timer;

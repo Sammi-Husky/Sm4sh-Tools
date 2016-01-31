@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AcmdMain));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,16 +51,14 @@
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eventLibraryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.parseAnimationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nodeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.btnHexView = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.FileTree = new System.Windows.Forms.TreeView();
             this.pnlRight = new System.Windows.Forms.Panel();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.itsCodeBox1 = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
-            this.nodeContextMenu.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.pnlRight.SuspendLayout();
             this.SuspendLayout();
@@ -237,18 +234,6 @@
             this.parseAnimationsToolStripMenuItem.Text = "Parse Animations";
             this.parseAnimationsToolStripMenuItem.Click += new System.EventHandler(this.parseAnimationsToolStripMenuItem_Click);
             // 
-            // nodeContextMenu
-            // 
-            this.nodeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnHexView});
-            this.nodeContextMenu.Name = "nodeContextMenu";
-            this.nodeContextMenu.Size = new System.Drawing.Size(68, 26);
-            // 
-            // btnHexView
-            // 
-            this.btnHexView.Name = "btnHexView";
-            this.btnHexView.Size = new System.Drawing.Size(67, 22);
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.FileTree);
@@ -316,6 +301,19 @@
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseClick);
             // 
+            // itsCodeBox1
+            // 
+            this.itsCodeBox1.AutoScroll = true;
+            this.itsCodeBox1.CharHeight = 17;
+            this.itsCodeBox1.CharWidth = 8;
+            this.itsCodeBox1.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.itsCodeBox1.Font = new System.Drawing.Font("Courier New", 9.75F);
+            this.itsCodeBox1.IndentWidth = 32F;
+            this.itsCodeBox1.Location = new System.Drawing.Point(0, 0);
+            this.itsCodeBox1.Name = "itsCodeBox1";
+            this.itsCodeBox1.Size = new System.Drawing.Size(150, 150);
+            this.itsCodeBox1.TabIndex = 0;
+            // 
             // AcmdMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -336,7 +334,6 @@
             this.Load += new System.EventHandler(this.ACMDMain_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.nodeContextMenu.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.pnlRight.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -356,8 +353,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eventLibraryToolStripMenuItem;
-        private System.Windows.Forms.ContextMenuStrip nodeContextMenu;
-        private System.Windows.Forms.ToolStripMenuItem btnHexView;
         private System.Windows.Forms.ToolStripMenuItem dumpAsTextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -380,6 +375,7 @@
         private System.Windows.Forms.Splitter splitter1;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.TabControl tabControl1;
+        private ITSCodeBox itsCodeBox1;
     }
 }
 

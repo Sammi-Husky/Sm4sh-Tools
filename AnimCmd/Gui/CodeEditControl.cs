@@ -39,6 +39,11 @@ namespace Sm4shCommand
             tabControl1.TabPages.Add(p);
         }
 
+        public ITSCodeBox this[ACMDType type]
+        {
+            get { return (ITSCodeBox)tabControl1.TabPages[(int)type].Controls[0]; }
+        }
+
         private uint unkParam0;
         private uint UnkParam1;
         private uint IASAFrame;

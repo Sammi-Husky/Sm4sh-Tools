@@ -292,6 +292,7 @@
             // 
             // richTextBox1
             // 
+            this.richTextBox1.BackColor = System.Drawing.Color.White;
             this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.richTextBox1.Enabled = false;
             this.richTextBox1.ForeColor = System.Drawing.Color.Lime;

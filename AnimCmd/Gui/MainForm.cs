@@ -109,16 +109,26 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (TabPage p in tabControl1.TabPages)
+            for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
+                TabPage p = tabControl1.TabPages[i];
+                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                for (int x = 0; x < tmp.TabCount; x++)
+                {
+                    ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
 
-                //if (!isRoot)
-                //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                //else
-                //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                    if (box.CommandList.Empty)
+                        continue;
 
+                    box.ApplyChanges();
+
+                    if (!isRoot)
+                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                    else
+                        _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                }
             }
+
 
             if (isRoot)
             {
@@ -335,7 +345,6 @@ namespace Sm4shCommand
                     parseAnimations(dlg.FileName);
             }
         }
-
     }
 
     public enum Endianness

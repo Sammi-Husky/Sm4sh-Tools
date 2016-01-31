@@ -55,6 +55,8 @@ namespace Sm4shCommand.Classes
 
                     Util.SetWord(ref tmp, Int32.Parse(HexVal, System.Globalization.NumberStyles.HexNumber), (i + 1) * 4, Runtime.WorkingEndian);
                 }
+                else if (_commandInfo.ParamSpecifiers[i] == 2)
+                    Util.SetWord(ref tmp, (long)Convert.ToDecimal(parameters[i]), (i + 1) * 4, Runtime.WorkingEndian);
             }
             return tmp;
         }

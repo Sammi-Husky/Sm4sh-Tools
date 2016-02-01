@@ -89,7 +89,7 @@ namespace Sm4shCommand
                     else
                         writer.WriteLine("NONE");
 
-                    writer.WriteLine(def.IndentLevel+"\n");
+                    writer.WriteLine(def.IndentLevel + "\n");
                 }
             }
         }

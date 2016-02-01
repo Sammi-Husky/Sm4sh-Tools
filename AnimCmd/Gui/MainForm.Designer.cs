@@ -57,7 +57,6 @@
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.itsCodeBox1 = new Sm4shCommand.ITSCodeBox();
             this.menuStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.pnlRight.SuspendLayout();
@@ -301,19 +300,6 @@
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseClick);
             // 
-            // itsCodeBox1
-            // 
-            this.itsCodeBox1.AutoScroll = true;
-            this.itsCodeBox1.CharHeight = 17;
-            this.itsCodeBox1.CharWidth = 8;
-            this.itsCodeBox1.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.itsCodeBox1.Font = new System.Drawing.Font("Courier New", 9.75F);
-            this.itsCodeBox1.IndentWidth = 32F;
-            this.itsCodeBox1.Location = new System.Drawing.Point(0, 0);
-            this.itsCodeBox1.Name = "itsCodeBox1";
-            this.itsCodeBox1.Size = new System.Drawing.Size(150, 150);
-            this.itsCodeBox1.TabIndex = 0;
-            // 
             // AcmdMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -375,7 +361,7 @@
         private System.Windows.Forms.Splitter splitter1;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.TabControl tabControl1;
-        private ITSCodeBox itsCodeBox1;
+
     }
 }
 

@@ -20,12 +20,18 @@ namespace Sm4shCommand
 
         public ITSCodeBox()
         {
+            base.AutoScroll = true;
             this.SizeChanged += ITSCodeBox_SizeChanged;
             this.Font = new Font(FontFamily.GenericMonospace, 9.75f);
-            this.AutoScroll = true;
+            this.CharWidth = (int)Math.Round(MeasureChar(Font, 'A').Width);
+            this.CharHeight = Font.Height + 2;
             this.Cursor = Cursors.IBeam;
-            this.HorizontalScroll.Visible = this.VerticalScroll.Visible = true;
-            this.VerticalScroll.Maximum = Math.Max(0, ClientSize.Height);
+            this.VerticalScroll.Maximum = ClientSize.Height;
+            this.VerticalScroll.SmallChange = CharHeight;
+            this.VerticalScroll.Minimum = 0;
+            this.HorizontalScroll.Maximum = ClientSize.Width;
+            this.HorizontalScroll.SmallChange = CharWidth;
+            this.HorizontalScroll.Minimum = 0;
             this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             this.SetStyle(ControlStyles.UserPaint, true);
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -35,13 +41,8 @@ namespace Sm4shCommand
             autocomplete.Parent = this;
             autocomplete.Visible = false;
             autocomplete.DisplayMember = "Name";
-
             tooltipTimer.Interval = 500;
             tooltipTimer.Tick += tooltipTimer_Tick;
-
-
-            CharWidth = (int)Math.Round(MeasureChar(Font, 'A').Width);
-            CharHeight = Font.Height + 2;
         }
         public ITSCodeBox(CommandList list, List<CommandInfo> dict) : this()
         {
@@ -96,7 +97,11 @@ namespace Sm4shCommand
             UpdateRectPositions();
             IndentWidth = CharWidth * 4;
         }
-
+        protected override void OnScroll(ScrollEventArgs se)
+        {
+            base.OnScroll(se);
+            Invalidate();
+        }
         public void ApplyChanges()
         {
             CommandList.Clear();
@@ -142,6 +147,12 @@ namespace Sm4shCommand
             base.OnPaint(e);
             Graphics g = e.Graphics;
 
+            g.Clear(Color.White);
+            // Draw lineInfo background
+            g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
+            g.FillRectangle(Brushes.LightGray, LInfoRect);
+            g.DrawRectangle(Pens.Black, LInfoRect);
+
             for (int i = 0; i < Lines.Count; i++)
             {
                 // Line Number
@@ -172,19 +183,9 @@ namespace Sm4shCommand
                     g.DrawString(Lines[i].Text, Font, Brushes.Black, ContentRect.X /*+ curIndent * IndentWidth*/, CharHeight * i);
             }
         }
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            Graphics g = e.Graphics;
-            // Control background
-            g.FillRectangle(Brushes.White, ClientRectangle);
-            g.DrawRectangle(Pens.Black, ClientRectangle);
-            // Draw lineInfo background
-            g.FillRectangle(Brushes.LightGray, LInfoRect);
-            g.DrawRectangle(Pens.Black, LInfoRect);
-        }
         public new void Invalidate()
         {
-
+            UpdateRectPositions();
             if (InvokeRequired)
                 BeginInvoke(new MethodInvoker(Invalidate));
             else
@@ -231,8 +232,36 @@ namespace Sm4shCommand
         }
         private void UpdateRectPositions()
         {
-            LInfoRect = new Rectangle(ClientRectangle.X, ClientRectangle.Y, (int)MeasureString(Font, Lines.Count.ToString()).Width + 4, ClientRectangle.Height);
-            ContentRect = new Rectangle(LInfoRect.Width + 2, ClientRectangle.Y, ClientRectangle.Width - LInfoRect.Width, ClientRectangle.Height);
+            LInfoRect = new Rectangle(ClientRectangle.X, ClientRectangle.Y,
+                (int)MeasureString(Font, Lines.Count.ToString()).Width + 4, CharHeight * Lines.Count);
+
+            ContentRect = new Rectangle(LInfoRect.Width + 2, ClientRectangle.Y,
+                ClientRectangle.Width - LInfoRect.Width, LInfoRect.Height);
+
+            int x = (Lines.OrderByDescending(s => s.Length).First().Length * CharWidth) + ContentRect.X + 2;
+            AutoScrollMinSize = new Size(x, CharHeight * Lines.Count);
+        }
+        private int iCharFromPoint(Point val)
+        {
+            int x = (int)Math.Round((float)(val.X - ContentRect.X) / CharWidth);
+            int scroll = HorizontalScroll.Value / CharWidth;
+            x = x.Clamp(0, Lines[iLineFromPoint(val)].Length - scroll) + scroll;
+
+            return x;
+        }
+        private int iLineFromPoint(Point val)
+        {
+            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
+            y = val.Y.RoundDown(CharHeight);
+            return (y / CharHeight).Clamp(0, Lines.Count - 1) + (VerticalScroll.Value / CharHeight);
+        }
+        private Point pointFromPos(int charIndex, int lineIndex)
+        {
+            return new Point()
+            {
+                X = ((charIndex * CharWidth) + ContentRect.X).Clamp(0, Lines[lineIndex].Length),
+                Y = charIndex * CharHeight
+            };
         }
         #endregion
         #region Caret Methods
@@ -316,7 +345,6 @@ namespace Sm4shCommand
             SetCaretPos(p.X, p.Y);
             ShowCaret(Handle);
         }
-
         private void CaretNextLine()
         {
             if (SelectionStart.Y + 1 >= Lines.Count)
@@ -354,25 +382,8 @@ namespace Sm4shCommand
             int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
             y = y.RoundDown(CharHeight);
             int x = (iCharFromPoint(val) * CharWidth) + ContentRect.X + 1;
+            x -= HorizontalScroll.Value;
             return new Point(x, y);
-        }
-        private int iCharFromPoint(Point val)
-        {
-            return ((int)Math.Round((float)(val.X - ContentRect.X) / CharWidth)).Clamp(0, Lines[SelectionStart.Y].Length);
-        }
-        private int iLineFromPoint(Point val)
-        {
-            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
-            y = val.Y.RoundDown(CharHeight);
-            return (y / CharHeight).Clamp(0, Lines.Count - 1);
-        }
-        private Point pointFromPos(int charIndex, int lineIndex)
-        {
-            return new Point()
-            {
-                X = ((charIndex * CharWidth) + ContentRect.X).Clamp(0, Lines[lineIndex].Length),
-                Y = charIndex * CharHeight
-            };
         }
         #endregion
         #region Key Methods
@@ -421,7 +432,6 @@ namespace Sm4shCommand
             if (e.KeyChar != '\r' & e.KeyChar != '\b')
             {
                 InsertText(e.KeyChar.ToString(), SelectionStart.X, SelectionStart.Y);
-                CaretMoveRight(1);
                 e.Handled = true;
                 Invalidate();
             }
@@ -588,9 +598,8 @@ namespace Sm4shCommand
             {
                 SelectionEnd = SelectionStart = Point.Empty;
                 IsDrag = true;
-                SelectionStart.Y = iLineFromPoint(e.Location);
 
-                SelectionStart = new Point(iCharFromPoint(e.Location), SelectionStart.Y);
+                SelectionStart = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
 
                 Point caret = CaretPosFromPoint(e.Location);
                 DestroyCaret();

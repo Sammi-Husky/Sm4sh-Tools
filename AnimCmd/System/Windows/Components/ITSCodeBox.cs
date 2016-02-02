@@ -425,7 +425,6 @@ namespace Sm4shCommand
 
             if (!char.IsControl(e.KeyChar))
             {
-
                 InsertText(e.KeyChar.ToString(), SelectionStart.X, SelectionStart.Y);
                 if (e.KeyChar == '(')
                 {
@@ -498,10 +497,8 @@ namespace Sm4shCommand
         }
         public void InsertText(string text, int iChar, int iLine)
         {
-            if (iChar == 0)
-                Lines[iLine].Text = text;
-            else
-                Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
+
+            Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
             CaretMoveRight(text.Length);
             Invalidate();
         }
@@ -916,19 +913,19 @@ namespace Sm4shCommand
 
         private bool ProcessKeystroke(Keys key)
         {
-            switch (key)
-            {
-                case Keys.Up:
-                    SelectPrev(1);
-                    return true;
-                case Keys.Down:
-                    SelectNext(1);
-                    return true;
-                case Keys.Enter:
-                case Keys.Space:
-                    DoAutocomplete();
-                    return true;
-            }
+                switch (key)
+                {
+                    case Keys.Up:
+                        SelectPrev(1);
+                        return true;
+                    case Keys.Down:
+                        SelectNext(1);
+                        return true;
+                    case Keys.Enter:
+                    case Keys.Space:
+                        DoAutocomplete();
+                        return true;
+                }
             return false;
         }
         private void SelectNext(int shift)

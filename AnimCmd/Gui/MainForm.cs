@@ -211,12 +211,13 @@ namespace Sm4shCommand
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
-            if (e.Index != tabControl1.SelectedIndex)
-            {
-                Rectangle r = tabControl1.GetTabRect(e.Index);
-                e.Graphics.FillRectangle(SystemBrushes.InactiveCaption, r);
-                e.Graphics.DrawString(tabControl1.SelectedTab.Text, Font, SystemBrushes.MenuText, r.Left + 2, r.Right + 2);
-            }
+            if (e.Index > tabControl1.TabPages.Count - 1)
+                return;
+
+            if (e.Index == tabControl1.SelectedIndex)
+                e.Graphics.FillRectangle(Brushes.ForestGreen, e.Bounds);
+            else
+                e.Graphics.FillRectangle(SystemBrushes.ActiveBorder, e.Bounds);
 
             e.Graphics.FillEllipse(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
             e.Graphics.DrawEllipse(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);

@@ -20,6 +20,10 @@ namespace Sm4shCommand
 
         public ITSCodeBox()
         {
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            this.SetStyle(ControlStyles.UserPaint, true);
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            this.SetStyle(ControlStyles.ResizeRedraw, true);
             base.AutoScroll = true;
             this.SizeChanged += ITSCodeBox_SizeChanged;
             this.Font = new Font(FontFamily.GenericMonospace, 9.75f);
@@ -32,10 +36,6 @@ namespace Sm4shCommand
             this.HorizontalScroll.Maximum = ClientSize.Width;
             this.HorizontalScroll.SmallChange = CharWidth;
             this.HorizontalScroll.Minimum = 0;
-            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            this.SetStyle(ControlStyles.UserPaint, true);
-            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-            this.SetStyle(ControlStyles.ResizeRedraw, true);
             Lines = new List<Line>();
             autocomplete = new AutoCompleteBox(this);
             autocomplete.Parent = this;
@@ -45,16 +45,6 @@ namespace Sm4shCommand
             tooltipTimer.Tick += tooltipTimer_Tick;
             this.KeyDown += ITSCodeBox_KeyDown;
         }
-
-        private void ITSCodeBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Handled)
-                return;
-
-            if (ProcessAction(ProcessKey(e.KeyCode)))
-                e.Handled = true;
-        }
-
         public ITSCodeBox(CommandList list, List<CommandInfo> dict) : this()
         {
             // Set source after everything is setup to mitigate shenanigans
@@ -62,6 +52,7 @@ namespace Sm4shCommand
             autocomplete.Dictionary = dict;
             SetSource(list);
         }
+
         public void SetSource(CommandList list)
         {
             _list = list;
@@ -409,66 +400,68 @@ namespace Sm4shCommand
         }
         #endregion
         #region Key Methods
+        private void ITSCodeBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Handled)
+                return;
+
+            if (ProcessKeystroke(e.KeyData))
+                e.Handled = true;
+
+            if (e.KeyData == (Keys.Control | Keys.Space))
+            {
+                autocomplete.DataSource = CommandDictionary;
+                Point cp = GetCaretPos();
+                autocomplete.SetBounds(cp.X + CharWidth, cp.Y + CharHeight, 280, 100);
+                autocomplete.Show();
+                e.Handled = true;
+            }
+        }
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
             base.OnKeyPress(e);
-            if (e.KeyChar != '\r' & e.KeyChar != '\b')
+            if (e.Handled)
+                return;
+
+            if (!char.IsControl(e.KeyChar))
             {
+
                 InsertText(e.KeyChar.ToString(), SelectionStart.X, SelectionStart.Y);
+                if (e.KeyChar == '(')
+                {
+                    InsertText(")", SelectionStart.X, SelectionStart.Y);
+                    CaretMoveLeft(1);
+                }
                 e.Handled = true;
                 Invalidate();
             }
         }
-        private KeyActions ProcessKey(Keys key)
+        private bool ProcessKeystroke(Keys key)
         {
             switch (key)
             {
                 case Keys.Left:
-                    return KeyActions.CaretLeft;
-                case Keys.Right:
-                    return KeyActions.CaretRight;
-                case Keys.Down:
-                    return KeyActions.CaretDown;
-                case Keys.Up:
-                    return KeyActions.CaretUp;
-                case Keys.PageDown:
-                    return KeyActions.PageDown;
-                case Keys.PageUp:
-                    return KeyActions.PageUp;
-                case Keys.Back:
-                    return KeyActions.Backspace;
-                case Keys.Enter:
-                    return KeyActions.Newline;
-                default:
-                    return KeyActions.Nothing;
-            }
-        }
-        private bool ProcessAction(KeyActions act)
-        {
-            switch (act)
-            {
-                case KeyActions.CaretLeft:
                     CaretMoveLeft(1);
                     return true;
-                case KeyActions.CaretRight:
+                case Keys.Right:
                     CaretMoveRight(1);
                     return true;
-                case KeyActions.CaretUp:
+                case Keys.Up:
                     CaretMoveUp(1);
                     return true;
-                case KeyActions.CaretDown:
+                case Keys.Down:
                     CaretMoveDown(1);
                     return true;
-                case KeyActions.PageDown:
+                case Keys.PageDown:
                     CaretMoveDown(5);
                     return true;
-                case KeyActions.PageUp:
+                case Keys.PageUp:
                     CaretMoveUp(5);
                     return true;
-                case KeyActions.Backspace:
+                case Keys.Back:
                     DoBackspace();
                     return true;
-                case KeyActions.Newline:
+                case Keys.Return:
                     DoNewline();
                     return true;
             }
@@ -494,8 +487,9 @@ namespace Sm4shCommand
         }
         public void SetLineText(string text, int iLine)
         {
+            var oldlen = Lines[iLine].Length;
             Lines[iLine].Text = text;
-            CaretMoveRight(text.Length);
+            CaretMoveRight(text.Length - oldlen);
             Invalidate();
         }
         public void InsertText(string text)
@@ -838,7 +832,6 @@ namespace Sm4shCommand
         private eToolTip tooltip;
         public AutoCompleteBox(ITSCodeBox box)
         {
-            SetStyle(ControlStyles.Selectable, false);
             this.Parent = Owner = box;
             this.tooltip = new eToolTip();
             this.timer = new Timer();
@@ -847,12 +840,27 @@ namespace Sm4shCommand
             this.SelectedIndexChanged += AutoCompleteBox_SelectedIndexChanged;
             this.VisibleChanged += AutoCompleteBox_VisibleChanged;
             box.KeyDown += Box_KeyDown;
+            this.KeyDown += AutoCompleteBox_KeyDown;
+            this.DoubleClick += AutoCompleteBox_DoubleClick;
+            SetStyle(ControlStyles.Selectable, false);
         }
 
+        private void AutoCompleteBox_DoubleClick(object sender, EventArgs e)
+        {
+            DoAutocomplete();
+        }
+        private void AutoCompleteBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!Visible)
+                return;
+
+            if (e.KeyCode == Keys.Enter | e.KeyCode == Keys.Space)
+                DoAutocomplete();
+        }
         private void Box_KeyDown(object sender, KeyEventArgs e)
         {
             if (Visible)
-                if (ProcessAction(ProcessKey(e.KeyCode)))
+                if (ProcessKeystroke(e.KeyData))
                 {
                     e.Handled = true;
                     return;
@@ -868,7 +876,7 @@ namespace Sm4shCommand
             }
 
             var filtered = Owner.CommandDictionary.Cast<CommandInfo>().Where(x =>
-                x.Name.StartsWith(tkn.Token, StringComparison.InvariantCultureIgnoreCase) &
+                x.Name.StartsWith(tkn.Token.TrimStart(), StringComparison.InvariantCultureIgnoreCase) &
                     !tkn.Token.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
             if (filtered.Length > 0)
@@ -880,7 +888,6 @@ namespace Sm4shCommand
             else
                 Hide();
         }
-
         private void AutoCompleteBox_VisibleChanged(object sender, EventArgs e)
         {
             if (Visible)
@@ -890,7 +897,6 @@ namespace Sm4shCommand
             tooltip.SetToolTip(this, null);
             tooltip.Hide();
         }
-
         private void AutoCompleteBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             tooltip.SetToolTip(this, null);
@@ -898,41 +904,28 @@ namespace Sm4shCommand
             timer.Stop();
             timer.Start();
         }
-        private KeyActions ProcessKey(Keys key)
+        private void TtTimer_Tick(object sender, EventArgs e)
+        {
+            timer.Stop();
+            CommandInfo info = SelectedItem as CommandInfo;
+            var itemRect = GetItemRectangle(SelectedIndex);
+            tooltip.ToolTipTitle = info.Name;
+            tooltip.ToolTipDescription = info.EventDescription;
+            tooltip.Show(info.Name, this, this.Right, itemRect.Y, 5000);
+        }
+
+        private bool ProcessKeystroke(Keys key)
         {
             switch (key)
             {
-                case Keys.Left:
-                    return KeyActions.CaretLeft;
-                case Keys.Right:
-                    return KeyActions.CaretRight;
-                case Keys.Down:
-                    return KeyActions.CaretDown;
                 case Keys.Up:
-                    return KeyActions.CaretUp;
-                case Keys.PageDown:
-                    return KeyActions.PageDown;
-                case Keys.PageUp:
-                    return KeyActions.PageUp;
-                case Keys.Back:
-                    return KeyActions.Backspace;
-                case Keys.Enter:
-                    return KeyActions.Newline;
-                default:
-                    return KeyActions.Nothing;
-            }
-        }
-        private bool ProcessAction(KeyActions act)
-        {
-            switch (act)
-            {
-                case KeyActions.CaretUp:
                     SelectPrev(1);
                     return true;
-                case KeyActions.CaretDown:
+                case Keys.Down:
                     SelectNext(1);
                     return true;
-                case KeyActions.Newline:
+                case Keys.Enter:
+                case Keys.Space:
                     DoAutocomplete();
                     return true;
             }
@@ -964,16 +957,9 @@ namespace Sm4shCommand
             var text = $"{((CommandInfo)SelectedItem).Name}";
             Owner.SetLineText(text);
             Hide();
+            Owner.Focus();
         }
-        private void TtTimer_Tick(object sender, EventArgs e)
-        {
-            timer.Stop();
-            CommandInfo info = SelectedItem as CommandInfo;
-            var itemRect = GetItemRectangle(SelectedIndex);
-            tooltip.ToolTipTitle = info.Name;
-            tooltip.ToolTipDescription = info.EventDescription;
-            tooltip.Show(info.Name, this, itemRect.Right, itemRect.Y, 5000);
-        }
+
 
         public List<CommandInfo> Dictionary { get; set; }
         private ITSCodeBox Owner { get; set; }

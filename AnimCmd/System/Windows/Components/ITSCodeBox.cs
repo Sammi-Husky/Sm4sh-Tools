@@ -697,7 +697,8 @@ namespace Sm4shCommand
         {
             if (!Empty)
                 return CodeBox.CommandDictionary?.FirstOrDefault(x =>
-                     x.Name.Equals(_tokens[0].Token.TrimStart(), StringComparison.InvariantCultureIgnoreCase));
+                     x.Name.Equals(_tokens.FirstOrDefault(y => y.TokType != TokenType.Seperator).Token,
+                        StringComparison.InvariantCultureIgnoreCase));
             else
                 return null;
         }
@@ -772,8 +773,8 @@ namespace Sm4shCommand
                         str.TokType = TokenType.FloatingPoint;
                     else if (i < data.Length && data[i] == '=')
                         str.TokType = TokenType.Syntax;
-                    else if (data[i] == '{' || data[i] == '}')
-                        str.TokType = TokenType.Bracket;
+                    //else if (data[i] == '{' || data[i] == '}')
+                    //    str.TokType = TokenType.Bracket;
                     else
                         str.TokType = TokenType.String;
 

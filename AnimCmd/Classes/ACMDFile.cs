@@ -216,6 +216,29 @@ namespace Sm4shCommand.Classes
                 tmp[i] = *(byte*)(src.Address + i);
             return tmp;
         }
+        public string Serialize()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (uint u in EventLists.Keys)
+            {
+                string label = "";
+                AnimationHashPairs.TryGetValue(u, out label);
+                if (string.IsNullOrEmpty(label))
+                    label = $"{u:X8}";
+
+                sb.Append(String.Format($"\n\n{EventLists.Keys.IndexOf(u):X}: [{label}]"));
+
+                sb.Append("\n\tScript:{");
+                if (EventLists[u] != null)
+                    foreach (Command cmd in EventLists[u])
+                        sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
+                else
+                    sb.Append("\n\t\tEmpty");
+                sb.Append("\n\t}");
+            }
+            return sb.ToString();
+        }
     }
 
     public enum ACMDType

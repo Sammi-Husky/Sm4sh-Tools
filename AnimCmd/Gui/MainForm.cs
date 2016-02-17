@@ -200,14 +200,16 @@ namespace Sm4shCommand
         }
         private void dumpAsTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!isRoot)
-                return;
-
             SaveFileDialog dlg = new SaveFileDialog { Filter = "Plain Text (.txt) | *.txt" };
             DialogResult result = dlg.ShowDialog();
             if (result != DialogResult.OK) return;
             using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
-                writer.Write(_curFighter.Serialize());
+            {
+                if (isRoot)
+                    writer.Write(_curFighter.Serialize());
+                else
+                    writer.Write(_curFile.Serialize());
+            }
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
@@ -258,6 +260,10 @@ namespace Sm4shCommand
         {
             TreeView tree = FileTree;
             AnimHashPairs = Manager.getAnimNames(path);
+            if (isRoot)
+                _curFighter.AnimationHashPairs = AnimHashPairs;
+            else
+                _curFile.AnimationHashPairs = AnimHashPairs;
 
             tree.BeginUpdate();
             for (int i = 0; i < tree.Nodes.Count; i++)

@@ -106,6 +106,7 @@ namespace Sm4shCommand
         }
         public void ApplyChanges()
         {
+            Lines.RemoveAll(x => x.Empty);
             CommandList.Clear();
             CommandList lst = new CommandList(CommandList.AnimationCRC);
             for (int i = 0; i < Lines.Count; i++)
@@ -724,7 +725,7 @@ namespace Sm4shCommand
         public Command Parse()
         {
             var cmd = new Command(GetInfo());
-            var parameters = _tokens.Where(x => x.TokType != TokenType.Keyword &&
+            var parameters = _tokens.Where(x => x.TokType != TokenType.Syntax &&
                                             x.TokType != TokenType.String &&
                                             x.TokType != TokenType.Seperator).ToArray();
 
@@ -743,8 +744,9 @@ namespace Sm4shCommand
     }
     public static class Tokenizer
     {
-        static char[] seps = { '=', ',', '(', ')', '\n' };
+        static char[] seps = { '=', ',', '(', ')', ' ', '\n' };
         static char[] integers = { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        static string[] Keywords = { "if", "Goto", "else" };
 
         public static StringToken[] Tokenize(string data)
         {
@@ -758,7 +760,6 @@ namespace Sm4shCommand
                     _tokens.Add(new StringToken() { Index = i, Token = data[i++].ToString(), TokType = TokenType.Seperator });
                 else
                 {
-
                     while (i < data.Length && !seps.Contains(data[i]))
                     {
                         str.Token += data[i];
@@ -770,7 +771,9 @@ namespace Sm4shCommand
                     else if (integers.Contains(str.Token[0]))
                         str.TokType = TokenType.FloatingPoint;
                     else if (i < data.Length && data[i] == '=')
-                        str.TokType = TokenType.Keyword;
+                        str.TokType = TokenType.Syntax;
+                    else if (data[i] == '{' || data[i] == '}')
+                        str.TokType = TokenType.Bracket;
                     else
                         str.TokType = TokenType.String;
 
@@ -801,7 +804,7 @@ namespace Sm4shCommand
                             return Color.DarkCyan;
                         case TokenType.FloatingPoint:
                             return Color.Red;
-                        case TokenType.Keyword:
+                        case TokenType.Syntax:
                             return Color.DarkBlue;
                         default:
                             return Color.Black;
@@ -813,11 +816,16 @@ namespace Sm4shCommand
         public enum TokenType
         {
             String,
-            Keyword,
+            Syntax,
             Integer,
             FloatingPoint,
-            Seperator
+            Seperator,
+            Bracket
         }
+    }
+    public static class CommandManager
+    {
+
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -851,7 +859,7 @@ namespace Sm4shCommand
             if (!Visible)
                 return;
 
-            if (e.KeyCode == Keys.Enter | e.KeyCode == Keys.Space)
+            if (e.KeyCode == Keys.Enter)
                 DoAutocomplete();
         }
         private void Box_KeyDown(object sender, KeyEventArgs e)
@@ -913,19 +921,18 @@ namespace Sm4shCommand
 
         private bool ProcessKeystroke(Keys key)
         {
-                switch (key)
-                {
-                    case Keys.Up:
-                        SelectPrev(1);
-                        return true;
-                    case Keys.Down:
-                        SelectNext(1);
-                        return true;
-                    case Keys.Enter:
-                    case Keys.Space:
-                        DoAutocomplete();
-                        return true;
-                }
+            switch (key)
+            {
+                case Keys.Up:
+                    SelectPrev(1);
+                    return true;
+                case Keys.Down:
+                    SelectNext(1);
+                    return true;
+                case Keys.Enter:
+                    DoAutocomplete();
+                    return true;
+            }
             return false;
         }
         private void SelectNext(int shift)

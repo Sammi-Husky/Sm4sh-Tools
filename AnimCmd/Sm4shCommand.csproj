@@ -109,39 +109,9 @@
       <DependentUpon>FolderSelectDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="System\Windows\Components\ITSCodeBox.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="System\Windows\Components\ITSToolTip.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\BuiltInContextMenu.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="System\Windows\Forms\HexBox\ByteCollection.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\BytePositionInfo.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\DataBlock.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\DataMap.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\DynamicByteProvider.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\DynamicFileByteProvider.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\FileByteProvider.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\FileDataBlock.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\Forms\GotoDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="System\Windows\Forms\HexBox\Forms\GotoDialog.designer.cs">
-      <DependentUpon>GotoDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="System\Windows\Forms\HexBox\HexBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="System\Windows\Forms\HexBox\HexCasing.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\IByteProvider.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\MemoryDataBlock.cs" />
-    <Compile Include="System\Windows\Forms\HexBox\NativeMethods.cs" />
-    <Compile Include="Gui\HexView.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Gui\HexView.designer.cs">
-      <DependentUpon>HexView.cs</DependentUpon>
-    </Compile>
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
     <Compile Include="Type Extensions\ByteExtension.cs" />
     <Compile Include="Type Extensions\DoubleExtension.cs" />
@@ -164,6 +134,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Rename.resx">
       <DependentUpon>Rename.cs</DependentUpon>
@@ -183,13 +154,6 @@
     </Compile>
     <EmbeddedResource Include="System\Windows\Components\ITSCodeBox.resx">
       <DependentUpon>ITSCodeBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="System\Windows\Forms\HexBox\Forms\GotoDialog.resx">
-      <DependentUpon>GotoDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="System\Windows\Forms\HexBox\HexBox.resx" />
-    <EmbeddedResource Include="Gui\HexView.resx">
-      <DependentUpon>HexView.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Events.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

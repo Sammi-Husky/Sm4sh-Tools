@@ -89,10 +89,10 @@ namespace Sm4shCommand
             foreach (TabPage p in tabControl1.TabPages)
             {
                 ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                if (!isRoot)
-                    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                else
-                    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //if (!isRoot)
+                //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                //else
+                //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
             }
 
             if (isRoot)
@@ -109,16 +109,26 @@ namespace Sm4shCommand
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (TabPage p in tabControl1.TabPages)
+            for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
+                TabPage p = tabControl1.TabPages[i];
+                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                for (int x = 0; x < tmp.TabCount; x++)
+                {
+                    ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
 
-                if (!isRoot)
-                    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                else
-                    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                    if (box.CommandList.Empty)
+                        continue;
 
+                    box.ApplyChanges();
+
+                    if (!isRoot)
+                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                    else
+                        _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                }
             }
+
 
             if (isRoot)
             {
@@ -168,6 +178,7 @@ namespace Sm4shCommand
                 {
                     FileName = rootPath = string.Empty;
                     tabControl1.TabPages.Clear();
+                    FileTree.Nodes.Clear();
                     isRoot = false;
 
                     if ((_curFile = Manager.OpenFile(dlg.FileName)) == null) return;
@@ -189,23 +200,26 @@ namespace Sm4shCommand
         }
         private void dumpAsTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!isRoot)
-                return;
-
             SaveFileDialog dlg = new SaveFileDialog { Filter = "Plain Text (.txt) | *.txt" };
             DialogResult result = dlg.ShowDialog();
             if (result != DialogResult.OK) return;
             using (StreamWriter writer = new StreamWriter(dlg.FileName, false, Encoding.UTF8))
-                writer.Write(_curFighter.Serialize());
+            {
+                if (isRoot)
+                    writer.Write(_curFighter.Serialize());
+                else
+                    writer.Write(_curFile.Serialize());
+            }
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
-            if (e.Index != tabControl1.SelectedIndex)
-            {
-                Rectangle r = tabControl1.GetTabRect(e.Index);
-                e.Graphics.FillRectangle(SystemBrushes.InactiveCaption, r);
-                e.Graphics.DrawString(tabControl1.SelectedTab.Text, Font, SystemBrushes.MenuText, r.Left + 2, r.Right + 2);
-            }
+            if (e.Index > tabControl1.TabPages.Count - 1)
+                return;
+
+            if (e.Index == tabControl1.SelectedIndex)
+                e.Graphics.FillRectangle(Brushes.ForestGreen, e.Bounds);
+            else
+                e.Graphics.FillRectangle(SystemBrushes.ActiveBorder, e.Bounds);
 
             e.Graphics.FillEllipse(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
             e.Graphics.DrawEllipse(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);
@@ -228,10 +242,13 @@ namespace Sm4shCommand
                     for (int x = 0; x < tmp.TabCount; x++)
                     {
                         ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
+                        if (box.CommandList.Empty)
+                            continue;
+                        box.ApplyChanges();
                         if (!isRoot)
-                            _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                            _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
                         else
-                            _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                            _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
 
                     }
                     tabControl1.TabPages.Remove(p);
@@ -243,6 +260,10 @@ namespace Sm4shCommand
         {
             TreeView tree = FileTree;
             AnimHashPairs = Manager.getAnimNames(path);
+            if (isRoot)
+                _curFighter.AnimationHashPairs = AnimHashPairs;
+            else
+                _curFile.AnimationHashPairs = AnimHashPairs;
 
             tree.BeginUpdate();
             for (int i = 0; i < tree.Nodes.Count; i++)
@@ -251,7 +272,7 @@ namespace Sm4shCommand
                     var node = ((BaseNode)tree.Nodes[i]);
                     string str = "";
                     AnimHashPairs.TryGetValue(node.CRC, out str);
-                    if(string.IsNullOrEmpty(str))
+                    if (string.IsNullOrEmpty(str))
                         str = node.Name;
                     tree.Nodes[i].Text = str;
                 }
@@ -325,7 +346,7 @@ namespace Sm4shCommand
 
         private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using(OpenFileDialog dlg = new OpenFileDialog())
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                     parseAnimations(dlg.FileName);

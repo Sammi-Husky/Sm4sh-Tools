@@ -26,7 +26,7 @@ namespace Sm4shCommand.Nodes
                     lists.Add(fighter[(ACMDType)i].EventLists[CRC]);
                 else
                 {
-                    CommandList cml = new CommandList(CRC, fighter[(ACMDType)i]);
+                    CommandList cml = new CommandList(CRC);
                     cml.Initialize();
                     lists.Add(cml);
                 }

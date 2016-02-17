@@ -36,6 +36,7 @@ namespace DTLS
             Header = new RfHeaderObject
             {
                 Tag = rfheader._rf,
+                RegionEtc = rfheader._regionEtc,
                 HeaderLen1 = rfheader._headerLen1,
                 Pad = rfheader._pad0,
                 EntriesChunkOffset = rfheader._headerLen2,
@@ -168,8 +169,10 @@ namespace DTLS
 
     public class RfHeaderObject
     {
-        public uint Tag { get { return tag; } set { tag = value; } }
-        private uint tag;
+        public short Tag { get { return tag; } set { tag = value; } }
+        private short tag;
+        public short RegionEtc { get { return _regionEtc; } set { _regionEtc = value; } }
+        private short _regionEtc;
         public uint HeaderLen1 { get { return headerLen1; } set { headerLen1 = value; } }
         private uint headerLen1;
         public uint Pad { get { return pad; } set { pad = value; } }
@@ -207,14 +210,15 @@ namespace DTLS
             Util.SetWord(ref b, entryCount, 0x28);
 
             for (int i = 0; i < 0x15; i++)
-                Util.SetWord(ref b, 0xAAAAAAAA, 0x2C + i*4);
+                Util.SetWord(ref b, 0xAAAAAAAA, 0x2C + i * 4);
 
             return b;
         }
     }
     public unsafe struct RFHeader
     {
-        public uint _rf;
+        public short _rf;
+        public short _regionEtc;
         public uint _headerLen1;
         public uint _pad0;
         public uint _headerLen2;

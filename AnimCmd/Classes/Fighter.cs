@@ -52,7 +52,12 @@ namespace Sm4shCommand.Classes
 
             foreach (uint u in MotionTable)
             {
-                sb.Append(String.Format("\n\n{0:X}: [{1:X8}]", MotionTable.IndexOf(u), u));
+                string label = "";
+                AnimationHashPairs.TryGetValue(u, out label);
+                if (string.IsNullOrEmpty(label))
+                    label = $"{u:X8}";
+
+                sb.Append(String.Format($"\n\n{MotionTable.IndexOf(u):X}: [{label}]"));
                 CommandList c1 = null, c2 = null,
                             c3 = null, c4 = null;
 

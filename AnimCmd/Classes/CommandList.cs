@@ -7,15 +7,13 @@ using System.IO;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class CommandList : IEnumerable
+    public unsafe class CommandList : IEnumerable<Command>
     {
         private byte[] _data;
-        public ACMDFile _parent;
 
-        public CommandList(uint CRC, ACMDFile Parent)
+        public CommandList(uint CRC)
         {
             AnimationCRC = CRC;
-            _parent = Parent;
         }
         /// <summary>
         /// Returns size in bytes.
@@ -57,13 +55,6 @@ namespace Sm4shCommand.Classes
         /// </summary>
         public uint AnimationCRC;
 
-        public override string ToString()
-        {
-            if (_parent.AnimationHashPairs.ContainsKey(AnimationCRC))
-                return _parent.AnimationHashPairs[AnimationCRC];
-            else
-                return $"[{AnimationCRC:X8}]";
-        }
         public void Initialize()
         {
             _data = ToArray();
@@ -124,6 +115,8 @@ namespace Sm4shCommand.Classes
 
         #region IEnumerable Implemntation
         public int Count { get { return _commands.Count; } }
+
+        public bool IsReadOnly { get { return false; } }
         public void Clear()
         {
             _commands.Clear();
@@ -140,68 +133,29 @@ namespace Sm4shCommand.Classes
         {
             _commands.Add(var);
         }
-        public void Remove(Command var)
+        public bool Remove(Command var)
         {
-            _commands.Remove(var);
+            return _commands.Remove(var);
         }
+        public void RemoveAt(int index) { }
         public void Remove(int index)
         {
             _commands.RemoveAt(index);
         }
+        public bool Contains(Command var) { return _commands.Contains(var); }
         public int IndexOf(Command var)
         {
             return _commands.IndexOf(var);
         }
+        public void CopyTo(Command[] var, int index) { _commands.CopyTo(var, index); }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return (IEnumerator)GetEnumerator();
+            return GetEnumerator();
         }
-        public CommandListEnumerator GetEnumerator()
+        public IEnumerator<Command> GetEnumerator()
         {
-            return new CommandListEnumerator(_commands.ToArray());
-        }
-        public class CommandListEnumerator : IEnumerator
-        {
-            public Command[] _data;
-            int position = -1;
-            public CommandListEnumerator(Command[] data)
-            {
-                _data = data;
-            }
-
-            public bool MoveNext()
-            {
-                position++;
-                return (position < _data.Length);
-            }
-
-            public void Reset()
-            {
-                position = -1;
-            }
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    return Current;
-                }
-            }
-
-            public Command Current
-            {
-                get
-                {
-                    try
-                    {
-                        return _data[position];
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        throw new InvalidOperationException();
-                    }
-                }
-            }
+            for (int i = 0; i < _commands.Count; i++)
+                yield return _commands[i];
         }
         #endregion
     }

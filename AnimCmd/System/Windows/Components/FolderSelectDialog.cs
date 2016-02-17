@@ -7,6 +7,9 @@ namespace System.Windows.Forms
     /// Wraps System.Windows.Forms.OpenFileDialog to make it present
     /// a vista-style dialog.
     /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Browsable(false)]
+    [DesignTimeVisible(false)]
     public partial class FolderSelectDialog : Component
     {
         // Wrapped dialog

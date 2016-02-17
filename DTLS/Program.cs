@@ -14,7 +14,13 @@ namespace DTLS.Types
         public static string[] DtPaths;
         public static LSFile lsFile;
 
-        public static StreamWriter Logstream;
+        private static string[] eu = { "eu_en", "eu_fr", "eu_sp", "eu_gr", "eu_it", "eu_ne", "eu_po", "eu_ru" };
+        private static string[] us = { "us_en", "us_fr", "us_sp" };
+        private static string[] jp = { "jp_jp" };
+        public static string[][] regions = { eu, us, jp };
+
+        private static StreamWriter Logstream;
+        private static int regionCode = 0;
 
         private static void Main(string[] args)
         {
@@ -40,9 +46,8 @@ namespace DTLS.Types
                         lsFile = new LSFile(lspath);
                         Logstream = new StreamWriter("log.txt");
                         PatchArchive("resource", patchFolder);
-                        PatchArchive("resource(us_en)",patchFolder);
-                        PatchArchive("resource(us_fr)", patchFolder);
-                        PatchArchive("resource(us_sp)", patchFolder);
+                        foreach (string reg in regions[regionCode])
+                            PatchArchive($"resource({reg})", patchFolder);
                         lsFile.WorkingSource.Close();
                     }
                     else
@@ -52,7 +57,7 @@ namespace DTLS.Types
 
                         lsFile = new LSFile(lspath);
                         Logstream = new StreamWriter("log.txt");
-                        Unpack_Resource("resource");
+                        Unpack_All();
                         lsFile.WorkingSource.Close();
                     }
 
@@ -67,7 +72,7 @@ namespace DTLS.Types
             }
             if (args.Length == 1)
                 Unpack_update(args[0]);
-            else
+            else if (args.Length == 0)
                 PrintUsage();
 
             Logstream.Close();
@@ -79,7 +84,6 @@ namespace DTLS.Types
             Console.WriteLine("\tUnpack Update: <resource file>");
             Console.WriteLine("\tPatch Archive: -r <dt file(s)> <ls file> <patch folder>");
         }
-
         /// <summary>
         /// Unpacks data from the game archive using the default resource file.
         /// </summary>
@@ -91,13 +95,13 @@ namespace DTLS.Types
                 region = resourceStr.Substring(resourceStr.IndexOf("(", StringComparison.Ordinal), 7);
 
             LSEntryObject _resource = lsFile.Entries[calc_crc(resourceStr)];
-
             File.WriteAllBytes(resourceStr,
                 GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength, _resource.Size,
                     _resource.DTIndex));
 
             Console.WriteLine($"Parsing {resourceStr} file..");
             RFFile rfFile = new RFFile(resourceStr);
+            regionCode = rfFile.Header.RegionEtc & 3;
 
             var pathParts = new string[20];
             var offsetParts = new LSEntryObject[20];
@@ -105,17 +109,16 @@ namespace DTLS.Types
             {
                 if (rsobj == null)
                     continue;
-                if (region != "" && rsobj.inPatch)
-                    continue;
 
                 pathParts[rsobj.FolderDepth - 1] = rsobj.EntryString;
                 Array.Clear(pathParts, rsobj.FolderDepth, pathParts.Length - (rsobj.FolderDepth));
-                var path = string.Join("", pathParts);
+                var path = $"data{region}/{string.Join("", pathParts)}";
 
                 LSEntryObject fileEntry;
                 if (rsobj.HasPack)
                 {
-                    var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Compressed ? "/packed" : "")}";
+                    var crcPath = "";
+                    crcPath = $"{path}{(rsobj.Compressed ? "packed" : "")}";
                     Console.WriteLine(crcPath);
                     Logstream.WriteLine(crcPath);
                     var crc = calc_crc(crcPath);
@@ -147,36 +150,25 @@ namespace DTLS.Types
                         continue;
                     }
 
-                    var folder = Path.GetDirectoryName($"data{region}/{path}");
+                    var folder = Path.GetDirectoryName(path);
                     if (!Directory.Exists(folder))
                         Directory.CreateDirectory(folder);
-                    File.WriteAllBytes($"data{region}/{path}", fileData);
+                    File.WriteAllBytes(path, fileData);
                 }
             }
 
-            //totalsize += _resource.Size;
             // clean up
             rfFile._workingSource.Close();
             if (File.Exists($"resource{region}.dec"))
                 File.Delete($"resource{region}.dec");
             if (File.Exists($"resource{region}"))
                 File.Delete($"resource{region}");
-            for (int i = 0; i < lsFile.Entries.Count; i++)
-            {
-                Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Missing hashes:\n");
-                Console.WriteLine(lsFile.Entries.Keys[i].ToString("X8"));
-            }
-            Console.ReadLine();
-            Logstream.Close();
         }
         private static void Unpack_All()
         {
             Unpack_Resource("resource");
-            Unpack_Resource("resource(us_en)");
-            Unpack_Resource("resource(us_fr)");
-            Unpack_Resource("resource(us_sp)");
+            foreach (string reg in regions[regionCode])
+                Unpack_Resource($"resource({reg})");
         }
 
         private static void Unpack_update(string resFile)
@@ -256,16 +248,17 @@ namespace DTLS.Types
             if (File.Exists($"resource{region}.dec"))
                 File.Delete($"resource{region}.dec");
         }
-        private static unsafe void PatchArchive(string resourceString, string patchFolder)
+        private static unsafe void PatchArchive(string resourceStr, string patchFolder)
         {
-            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceString)];
+            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceStr)];
             byte[] resource = GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength,
                 _resource.Size,
                 _resource.DTIndex);
-            File.WriteAllBytes(resourceString, resource);
+            File.WriteAllBytes(resourceStr, resource);
 
-            Console.WriteLine($"Patching {resourceString}");
-            RFFile rfFile = new RFFile(resourceString);
+            Console.WriteLine($"Patching {resourceStr}");
+            RFFile rfFile = new RFFile(resourceStr);
+            regionCode = rfFile.Header.RegionEtc & 3;
 
             var pathParts = new string[20];
             var offsetParts = new LSEntryObject[20];
@@ -301,26 +294,31 @@ namespace DTLS.Types
                         LSEntryObject lsentry = offsetParts.Last(x => x != null);
                         byte[] raw = File.ReadAllBytes($"{patchFolder}/{path}");
                         byte[] compressed = Util.Compress(raw);
-                        if (compressed.Length > rsobj.CmpSize + 1)
+
+                        uint difference = 0;
+                        DataSource src = GetFileChunk(lsentry.DTOffset, lsentry.Size, lsentry.DTIndex, out difference);
+
+                        VoidPtr addr = src.Address + difference;
+                        addr += rsobj.OffInPack;
+                        // write over old data.
+                        for (int i = 0; i < rsobj.CmpSize; i++)
+                            *(byte*)(addr + i) = 0xCC;
+
+                        // Get usable space
+                        int dataLen = 0;
+                        while (*(byte*)(addr + dataLen) == 0xCC)
+                            dataLen++;
+
+                        if (compressed.Length > dataLen)
                         {
                             Console.WriteLine("Patching files larger than original not yet supported, skipping");
                             continue;
                         }
                         rsobj.CmpSize = compressed.Length;
                         rsobj.DecSize = raw.Length;
-                        uint difference = 0;
-                        DataSource src = GetFileChunk(lsentry.DTOffset, lsentry.Size, lsentry.DTIndex, out difference);
 
-                        VoidPtr addr = src.Address + difference;
-                        addr += rsobj.OffInPack;
                         for (int i = 0; i < compressed.Length; i++)
                             *(byte*)(addr + i) = compressed[i];
-
-                        // write 0xCC over unused bytes.
-                        addr += compressed.Length;
-                        int truncateBytes = (int)rsobj.CmpSize - compressed.Length;
-                        for (int i = 0; i < truncateBytes; i++)
-                            *(byte*)(addr + i) = 0xCC;
 
                         src.Close();
                     }
@@ -335,7 +333,7 @@ namespace DTLS.Types
             rfFile.Header.DecompressedLen = (uint)dec.Length;
             byte[] header = rfFile.Header.ToArray();
             byte[] full = header.Concat(cmp).ToArray();
-            lsFile.Entries[calc_crc(resourceString)].Size = full.Length;
+            lsFile.Entries[calc_crc(resourceStr)].Size = full.Length;
             lsFile.UpdateEntries();
 
             // Patch the resource data back into the DT file.
@@ -349,10 +347,10 @@ namespace DTLS.Types
             rSource.Close();
             rfFile._workingSource.Close();
 
-            if (File.Exists(resourceString))
-                File.Delete(resourceString);
-            if (File.Exists(resourceString + ".dec"))
-                File.Delete(resourceString + ".dec");
+            if (File.Exists(resourceStr))
+                File.Delete(resourceStr);
+            if (File.Exists(resourceStr + ".dec"))
+                File.Delete(resourceStr + ".dec");
         }
 
         // Rebuilding attempts. Almost works, but needs to handle embedded LS entries.

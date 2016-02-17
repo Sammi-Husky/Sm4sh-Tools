@@ -38,9 +38,9 @@ namespace Sm4shCommand
                     if (h.Identifier == 0x5766F889 || h.Identifier == 0x89F86657)
                         _endingCommand = h;
 
-                    if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
-                        while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
-                            h.ParamSyntax.Add("unknown");
+                    //if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
+                    //    while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
+                    //        h.ParamSyntax.Add("unknown");
                     h.IndentLevel = int.Parse(raw[i + 5]);
                     commandDictionary.Add(h);
                 }
@@ -89,7 +89,7 @@ namespace Sm4shCommand
                     else
                         writer.WriteLine("NONE");
 
-                    writer.WriteLine(def.IndentLevel+"\n");
+                    writer.WriteLine(def.IndentLevel + "\n");
                 }
             }
         }

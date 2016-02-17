@@ -609,6 +609,7 @@ namespace Sm4shCommand
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [DesignTimeVisible(false)]
     public class eToolTip : ToolTip
     {
         #region Hidden methods & props

@@ -52,17 +52,125 @@ namespace Sm4shCommand
             autocomplete.Dictionary = dict;
             SetSource(list);
         }
-
         public void SetSource(CommandList list)
         {
             _list = list;
             Lines = new List<Line>();
             for (int i = 0; i < list.Count; i++)
-                Lines.Add(new Line(list[i].ToString(), this));
+            {
+                int amt = 0;
+                if ((amt = SerializeCommand(i, list[i]._commandInfo.Identifier)) > 0)
+                {
+                    i += amt;
+                    continue;
+                }
+                else
+                    Lines.Add(new Line(list[i].ToString(), this));
+            }
             if (list.Empty)
                 Lines.Add(new Line("// Empty List", this));
             DoFormat();
         }
+        #region Command Handling
+        private int SerializeCommand(int index, uint ident)
+        {
+            switch (ident)
+            {
+                case 0xA5BD4F32:
+                case 0x895B9275:
+                case 0x870CF021:
+                    return SerializeConditional(index);
+                case 0x0EB375E3:
+                    return SerializeLoop(index);
+            }
+            return 0;
+        }
+        private int SerializeConditional(int startIndex)
+        {
+            int i = startIndex;
+
+            string str = _list[startIndex].ToString();
+            int len = (int)_list[startIndex].parameters[0] - 2;
+            str += '{';
+            Lines.Add(new Line(str, this));
+            while (len != 0)
+            {
+                len -= _list[++i].CalcSize() / 4;
+                i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
+                Lines.Add(new Line(_list[i].ToString(), this));
+            }
+            Lines.Add(new Line("}", this));
+            return i - startIndex;
+        }
+        private int SerializeLoop(int startIndex)
+        {
+            int i = startIndex;
+
+            string str = _list[startIndex].ToString();
+            int len = 0;
+            str += '{';
+            Lines.Add(new Line(str, this));
+            while (_list[++i]._commandInfo.Identifier != 0x38A3EC78)
+            {
+                len += _list[i].CalcSize() / 4;
+                i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
+                Lines.Add(new Line(_list[i].ToString(), this));
+            }
+            Lines.Add(new Line(_list[i].ToString(), this));
+            Lines.Add(new Line("}", this));
+            return i - startIndex;
+        }
+        private int ParseCommands(int index, uint ident)
+        {
+            switch (ident)
+            {
+                case 0xA5BD4F32:
+                case 0x895B9275:
+                case 0x870CF021:
+                    return ParseConditional(index);
+                case 0x0EB375E3:
+                    return ParseLoop(index);
+            }
+            return 0;
+        }
+        private int ParseConditional(int index)
+        {
+            Command cmd = Lines[index].Parse();
+            int startIndex = index;
+            int i = index;
+            int len = 2;
+            while (Lines[++i].Text != "}")
+            {
+                Command tmp = Lines[i].Parse();
+                len += tmp.CalcSize() / 4;
+                i += ParseCommands(i, tmp._commandInfo.Identifier);
+                CommandList.Add(tmp);
+            }
+            cmd.parameters[0] = len;
+            CommandList.Insert(startIndex, cmd);
+            // Next line should be closing bracket, ignore and skip it
+            return ++i - index;
+        }
+        private int ParseLoop(int index)
+        {
+            int i = index;
+            CommandList.Add(Lines[i].Parse());
+            decimal len = 0;
+            while (Lines[++i].Parse()._commandInfo.Identifier != 0x38A3EC78)
+            {
+                Command tmp = Lines[i].Parse();
+                len += (tmp.CalcSize() / 4);
+                i += ParseCommands(i, tmp._commandInfo.Identifier);
+                CommandList.Add(tmp);
+            }
+            Command endLoop = Lines[i].Parse();
+            endLoop.parameters[0] = len / -1;
+            CommandList.Add(endLoop);
+            // Next line should be closing bracket, ignore and skip it
+            return ++i - index;
+        }
+        #endregion
+
         private void tooltipTimer_Tick(object sender, EventArgs e)
         {
             tooltipTimer.Stop();
@@ -108,12 +216,23 @@ namespace Sm4shCommand
         {
             Lines.RemoveAll(x => x.Empty);
             CommandList.Clear();
-            CommandList lst = new CommandList(CommandList.AnimationCRC);
             for (int i = 0; i < Lines.Count; i++)
             {
-                if (Lines[i].Text.StartsWith("//"))
+                Command cmd = Lines[i].Parse();
+                uint ident = cmd._commandInfo.Identifier;
+                string lineText = Lines[i].Text.Trim();
+
+                if (lineText.StartsWith("//"))
                     continue;
-                CommandList.Add(Lines[i].Parse());
+
+                int amt = 0;
+                if ((amt = ParseCommands(i, ident)) > 0)
+                {
+                    i += amt;
+                    continue;
+                }
+                else
+                    CommandList.Add(cmd);
             }
         }
         public StringToken TokenFromCaret()
@@ -432,6 +551,10 @@ namespace Sm4shCommand
                     InsertText(")", SelectionStart.X, SelectionStart.Y);
                     CaretMoveLeft(1);
                 }
+                else if (e.KeyChar == '}')
+                {
+                    DoFormat();
+                }
                 e.Handled = true;
                 Invalidate();
             }
@@ -538,7 +661,6 @@ namespace Sm4shCommand
                 Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
                 _list.Insert(SelectionStart.Y + 1, null);
                 CaretNextLine();
-                //CaretMoveLeft(str.Length);
             }
             else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
             {
@@ -556,13 +678,13 @@ namespace Sm4shCommand
                 if (Lines[i].Text.StartsWith("//"))
                     continue;
 
-                if (Lines[i]._indent < 0)
+                if (Lines[i].Text.EndsWith("}"))
                     curindent--;
                 string tmp = Lines[i].Text.TrimStart();
                 for (int x = 0; x < curindent; x++)
                     tmp = tmp.Insert(0, "    ");
                 Lines[i].Text = tmp;
-                if (Lines[i]._indent > 0)
+                if (Lines[i].Text.EndsWith("{"))
                     curindent++;
             }
             Invalidate();
@@ -649,22 +771,6 @@ namespace Sm4shCommand
         #endregion
 
     }
-    public enum KeyActions
-    {
-        Nothing,
-        CaretLeft,
-        CaretRight,
-        CaretUp,
-        CaretDown,
-        PageDown,
-        PageUp,
-        Copy,
-        Cut,
-        Paste,
-        SelectAll,
-        Backspace,
-        Newline
-    }
     public class Line
     {
         public Line(string val, ITSCodeBox owner)
@@ -688,7 +794,6 @@ namespace Sm4shCommand
         }
         private string _text;
         private StringToken[] _tokens;
-        public int _indent { get { return Info != null ? Info.IndentLevel : 0; } }
         public int Length { get { return Text.Length; } }
         public ITSCodeBox CodeBox { get; set; }
         public CommandInfo Info { get; set; }
@@ -823,10 +928,6 @@ namespace Sm4shCommand
             Seperator,
             Bracket
         }
-    }
-    public static class CommandManager
-    {
-
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]

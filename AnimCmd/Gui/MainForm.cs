@@ -86,13 +86,24 @@ namespace Sm4shCommand
             else if (_curFile == null)
                 return;
 
-            foreach (TabPage p in tabControl1.TabPages)
+            for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                ITSCodeBox box = (ITSCodeBox)p.Controls[0];
-                //if (!isRoot)
-                //    _curFile.EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
-                //else
-                //    _curFighter[box.CommandList._parent.Type].EventLists[box.CommandList.AnimationCRC] = box.ApplyChanges();
+                TabPage p = tabControl1.TabPages[i];
+                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                for (int x = 0; x < tmp.TabCount; x++)
+                {
+                    ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
+
+                    if (box.CommandList.Empty)
+                        continue;
+
+                    box.ApplyChanges();
+
+                    if (!isRoot)
+                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                    else
+                        _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                }
             }
 
             if (isRoot)
@@ -181,12 +192,21 @@ namespace Sm4shCommand
                     FileTree.Nodes.Clear();
                     isRoot = false;
 
-                    if ((_curFile = Manager.OpenFile(dlg.FileName)) == null) return;
+                    if ((_curFile = Manager.OpenFile(dlg.FileName)) == null)
+                        return;
 
                     FileTree.BeginUpdate();
-                    foreach (CommandList cml in _curFile.EventLists.Values)
-                        FileTree.Nodes.Add(new CommandListNode($"[{cml.AnimationCRC:X8}]", cml));
+                    TreeNode root = new TreeNode("AnimCmd");
+                    for (int i = 0; i < _curFile.EventLists.Count; i++)
+                    {
+                        CommandList cml = _curFile.EventLists.Values[i];
+                        root.Nodes.Add(new CommandListNode($"{i:X}-[{cml.AnimationCRC:X8}]", cml));
+                    }
+                    FileTree.Nodes.Add(root);
                     FileTree.EndUpdate();
+
+                    cboMode.Enabled = true;
+                    cboMode.SelectedIndex = (int)Runtime.WorkingEndian;
 
                     FileName = dlg.FileName;
                     Text = $"Main Form - {FileName}";
@@ -244,7 +264,9 @@ namespace Sm4shCommand
                         ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
                         if (box.CommandList.Empty)
                             continue;
+
                         box.ApplyChanges();
+
                         if (!isRoot)
                             _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
                         else
@@ -266,16 +288,18 @@ namespace Sm4shCommand
                 _curFile.AnimationHashPairs = AnimHashPairs;
 
             tree.BeginUpdate();
-            for (int i = 0; i < tree.Nodes.Count; i++)
-                if (tree.Nodes[i] is CommandListNode | tree.Nodes[i] is CommandListGroup)
-                {
-                    var node = ((BaseNode)tree.Nodes[i]);
-                    string str = "";
-                    AnimHashPairs.TryGetValue(node.CRC, out str);
-                    if (string.IsNullOrEmpty(str))
-                        str = node.Name;
-                    tree.Nodes[i].Text = str;
-                }
+            foreach (TreeNode n in tree.Nodes)
+                if (n.Text == "AnimCmd")
+                    for (int i = 0; i < n.Nodes.Count; i++)
+                        if (n.Nodes[i] is CommandListNode | n.Nodes[i] is CommandListGroup)
+                        {
+                            var node = ((BaseNode)n.Nodes[i]);
+                            string str = "";
+                            AnimHashPairs.TryGetValue(node.CRC, out str);
+                            if (string.IsNullOrEmpty(str))
+                                str = node.Name;
+                            n.Nodes[i].Text = str;
+                        }
             tree.EndUpdate();
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -300,26 +324,31 @@ namespace Sm4shCommand
 
         private void fighterToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FileName = rootPath = String.Empty;
-            _curFile = null;
-            FileTree.Nodes.Clear();
-            tabControl1.TabPages.Clear();
-            isRoot = true;
-
             FolderSelectDialog dlg = new FolderSelectDialog();
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
+                FileName = rootPath = String.Empty;
+                _curFile = null;
+                FileTree.Nodes.Clear();
+                tabControl1.TabPages.Clear();
+                isRoot = true;
+
                 FileTree.BeginUpdate();
                 _curFighter = _manager.OpenFighter(dlg.SelectedPath);
                 TreeNode nScript = new TreeNode("AnimCmd");
-                foreach (uint u in from uint u in _curFighter.MotionTable where u != 0 select u)
-                    nScript.Nodes.Add(new CommandListGroup(_curFighter, u) { ToolTipText = $"[{u:X8}]" });
+                for (int i = 0; i < _curFighter.MotionTable.Count; i++)
+                {
+                    uint CRC = _curFighter.MotionTable[i];
+                    nScript.Nodes.Add(new CommandListGroup(_curFighter, CRC) { Text = $"{i:X}-[{CRC:X8}]" });
+                }
                 TreeNode nParams = new TreeNode("Params");
                 TreeNode nMscsb = new TreeNode("MSCSB");
                 FileTree.Nodes.AddRange(new TreeNode[] { nScript, nParams, nMscsb });
                 FileTree.EndUpdate();
 
+                cboMode.SelectedIndex = (int)Runtime.WorkingEndian;
+                cboMode.Enabled = true;
                 Runtime.isRoot = true;
                 Runtime.rootPath = dlg.SelectedPath;
                 Runtime.Instance.Text = String.Format("Main Form - {0}", dlg.SelectedPath);
@@ -352,11 +381,16 @@ namespace Sm4shCommand
                     parseAnimations(dlg.FileName);
             }
         }
+
+        private void cboMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Runtime.WorkingEndian = (Endianness)cboMode.SelectedIndex;
+        }
     }
 
     public enum Endianness
     {
-        Little = 0,
-        Big = 1
+        Big = 0,
+        Little = 1
     }
 }

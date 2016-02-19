@@ -9,17 +9,16 @@ namespace Sm4shCommand.Classes
     public unsafe class ACMDFile
     {
         public ACMDFile() { _hashPairs = new Dictionary<uint, string>(); }
-        public ACMDFile(DataSource source, Endianness endian)
+        public ACMDFile(DataSource source, Endianness Endian)
         {
             _eventLists = new SortedList<uint, CommandList>();
             _hashPairs = new Dictionary<uint, string>();
             Type = ACMDType.NONE;
 
             _workingSource = source;
-            Endian = endian;
 
-            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, endian);
-            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, endian);
+            _actionCount = Util.GetWordUnsafe(source.Address + 0x08, Runtime.WorkingEndian);
+            _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, Runtime.WorkingEndian);
 
             Initialize();
         }
@@ -32,7 +31,6 @@ namespace Sm4shCommand.Classes
         public int ActionCount { get { return _actionCount; } set { _actionCount = value; } }
         private int _actionCount;
 
-        public Endianness Endian;
         public ACMDType Type;
 
         /// <summary>
@@ -57,8 +55,8 @@ namespace Sm4shCommand.Classes
         {
             for (int i = 0; i < _actionCount; i++)
             {
-                uint _crc = (uint)Util.GetWordUnsafe(_workingSource.Address + 0x10 + (i * 8), Endian);
-                int _offset = Util.GetWordUnsafe((_workingSource.Address + 0x10 + (i * 8)) + 0x04, Endian);
+                uint _crc = (uint)Util.GetWordUnsafe(_workingSource.Address + 0x10 + (i * 8), Runtime.WorkingEndian);
+                int _offset = Util.GetWordUnsafe((_workingSource.Address + 0x10 + (i * 8)) + 0x04, Runtime.WorkingEndian);
 
                 EventLists.Add(_crc, ParseEventList(_crc, _offset));
             }
@@ -93,20 +91,20 @@ namespace Sm4shCommand.Classes
             //                      Rebuilding Header and offsets                       //
             //==========================================================================//
 
-            Util.SetWordUnsafe(address + 0x04, 2, Endian); // Version (2)
-            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);
+            Util.SetWordUnsafe(address + 0x04, 2, Runtime.WorkingEndian); // Version (2)
+            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Runtime.WorkingEndian);
 
             int count = EventLists.Values.Sum(e => e.Count);
 
-            Util.SetWordUnsafe(address + 0x0C, count, Endian);
+            Util.SetWordUnsafe(address + 0x0C, count, Runtime.WorkingEndian);
             addr += 0x10;
 
             //===============Write Event List offsets and CRC's=================//              
             for (int i = 0, prev = 0; i < EventLists.Count; i++)
             {
                 int dataOffset = 0x10 + (EventLists.Count * 8) + prev;
-                Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Endian);
-                Util.SetWordUnsafe(addr + 4, dataOffset, Endian);
+                Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Runtime.WorkingEndian);
+                Util.SetWordUnsafe(addr + 4, dataOffset, Runtime.WorkingEndian);
                 prev += EventLists.Values[i].Size;
                 addr += 8;
             }
@@ -127,10 +125,10 @@ namespace Sm4shCommand.Classes
             VoidPtr addr = (_workingSource.Address + Offset);
 
             // Loop through Event List.
-            while (Util.GetWordUnsafe(addr, Endian) != Runtime._endingCommand.Identifier)
+            while (Util.GetWordUnsafe(addr, Runtime.WorkingEndian) != Runtime._endingCommand.Identifier)
             {
                 // Try to get command definition
-                uint ident = (uint)Util.GetWordUnsafe(addr, Endian);
+                uint ident = (uint)Util.GetWordUnsafe(addr, Runtime.WorkingEndian);
                 CommandInfo info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == ident);
 
                 // If a command definition exists, use that info to deserialize.
@@ -143,13 +141,13 @@ namespace Sm4shCommand.Classes
                         switch (info.ParamSpecifiers[i])
                         {
                             case 0:
-                                c.parameters.Add(Util.GetWordUnsafe(0x04 + (addr + (i * 4)), Endian));
+                                c.parameters.Add(Util.GetWordUnsafe(0x04 + (addr + (i * 4)), Runtime.WorkingEndian));
                                 break;
                             case 1:
-                                c.parameters.Add(Util.GetFloatUnsafe(0x04 + (addr + (i * 4)), Endian));
+                                c.parameters.Add(Util.GetFloatUnsafe(0x04 + (addr + (i * 4)), Runtime.WorkingEndian));
                                 break;
                             case 2:
-                                c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), Endian));
+                                c.parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), Runtime.WorkingEndian));
                                 break;
                             default:
                                 goto case 0;
@@ -165,13 +163,13 @@ namespace Sm4shCommand.Classes
                 // until we hit a known command
                 else
                 {
-                    _list.Add(new UnknownCommand() { ident = (uint)Util.GetWordUnsafe(addr, Endian) });
+                    _list.Add(new UnknownCommand() { ident = (uint)Util.GetWordUnsafe(addr, Runtime.WorkingEndian) });
                     addr += 0x04;
                 }
             }
 
             // If we hit a script_end command, add it to the the Event List and terminate looping.
-            if (Util.GetWordUnsafe(addr, Endian) == Runtime._endingCommand.Identifier)
+            if (Util.GetWordUnsafe(addr, Runtime.WorkingEndian) == Runtime._endingCommand.Identifier)
             {
                 CommandInfo info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == Runtime._endingCommand.Identifier);
 

@@ -122,7 +122,8 @@ namespace Sm4shCommand
                     uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
                     string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
                     string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
-
+                    if (string.IsNullOrEmpty(AnimName))
+                        continue;
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
                     hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");

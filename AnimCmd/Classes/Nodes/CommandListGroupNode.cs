@@ -18,7 +18,6 @@ namespace Sm4shCommand.Nodes
             ContextMenuStrip = _menu;
             base.Fighter = fighter;
             base.CRC = CRC;
-            Text = $"[{CRC:X8}]";
 
             for (int i = 0; i < 4; i++)
             {

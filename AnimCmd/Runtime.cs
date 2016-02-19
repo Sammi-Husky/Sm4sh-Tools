@@ -19,7 +19,7 @@ namespace Sm4shCommand
                 List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
                 raw.RemoveAll(x => String.IsNullOrEmpty(x) || String.IsNullOrWhiteSpace(x) || x.Contains("//"));
 
-                for (int i = 0; i < raw.Count; i += 6)
+                for (int i = 0; i < raw.Count; i += 5)
                 {
 
                     CommandInfo h = new CommandInfo
@@ -38,10 +38,6 @@ namespace Sm4shCommand
                     if (h.Identifier == 0x5766F889 || h.Identifier == 0x89F86657)
                         _endingCommand = h;
 
-                    //if (h.ParamSyntax.Count == 0 && h.ParamSpecifiers.Count != 0)
-                    //    while (h.ParamSyntax.Count < h.ParamSpecifiers.Count)
-                    //        h.ParamSyntax.Add("unknown");
-                    h.IndentLevel = int.Parse(raw[i + 5]);
                     commandDictionary.Add(h);
                 }
             }
@@ -88,8 +84,6 @@ namespace Sm4shCommand
                         writer.WriteLine(def.EventDescription);
                     else
                         writer.WriteLine("NONE");
-
-                    writer.WriteLine(def.IndentLevel + "\n");
                 }
             }
         }

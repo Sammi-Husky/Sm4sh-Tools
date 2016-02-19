@@ -19,6 +19,7 @@ namespace Sm4shCommand.Classes
             get { return _baseList[i]; }
             set { _baseList[i] = value; }
         }
+        public int Count { get { return _baseList.Count; } }
         public MTable(List<uint> CRCTable, Endianness endian)
         {
             _endian = endian;

@@ -75,7 +75,7 @@ namespace DTLS.Types
             else if (args.Length == 0)
                 PrintUsage();
 
-            Logstream.Close();
+            if(Logstream != null) Logstream.Close();
         }
         private static void PrintUsage()
         {

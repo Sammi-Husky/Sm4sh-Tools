@@ -91,14 +91,19 @@ namespace Sm4shCommand
 
             string str = _list[startIndex].ToString();
             int len = (int)_list[startIndex].parameters[0] - 2;
-            str += '{';
-            Lines.Add(new Line(str, this));
-            while (len != 0)
+            Lines.Add(new Line($"{str}{{", this));
+            while ((len -= _list[++i].CalcSize() / 4) != 0)
             {
-                len -= _list[++i].CalcSize() / 4;
-                i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
-                Lines.Add(new Line(_list[i].ToString(), this));
+                if (IsCmdHandled(_list[i]._commandInfo.Identifier))
+                    i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
+                else
+                    Lines.Add(new Line(_list[i].ToString(), this));
             }
+            if (IsCmdHandled(_list[i]._commandInfo.Identifier))
+                SerializeCommand(i, _list[i]._commandInfo.Identifier);
+            else
+                Lines.Add(new Line(_list[i].ToString(), this));
+
             Lines.Add(new Line("}", this));
             return i - startIndex;
         }
@@ -133,23 +138,24 @@ namespace Sm4shCommand
             }
             return 0;
         }
-        private int ParseConditional(int index)
+        private int ParseConditional(int startIndex)
         {
-            Command cmd = Lines[index].Parse();
-            int startIndex = index;
-            int i = index;
+            Command cmd = Lines[startIndex].Parse();
+            int i = startIndex;
             int len = 2;
-            while (Lines[++i].Text != "}")
+            CommandList.Add(cmd);
+            while (Lines[++i].TrimText != "}")
             {
                 Command tmp = Lines[i].Parse();
                 len += tmp.CalcSize() / 4;
-                i += ParseCommands(i, tmp._commandInfo.Identifier);
-                CommandList.Add(tmp);
+                if (IsCmdHandled(tmp._commandInfo.Identifier))
+                    i += ParseCommands(i, tmp._commandInfo.Identifier);
+                else
+                    CommandList.Add(tmp);
             }
-            cmd.parameters[0] = len;
-            CommandList.Insert(startIndex, cmd);
+            CommandList[CommandList.IndexOf(cmd)].parameters[0] = len;
             // Next line should be closing bracket, ignore and skip it
-            return ++i - index;
+            return i - startIndex;
         }
         private int ParseLoop(int index)
         {
@@ -168,6 +174,20 @@ namespace Sm4shCommand
             CommandList.Add(endLoop);
             // Next line should be closing bracket, ignore and skip it
             return ++i - index;
+        }
+
+        private bool IsCmdHandled(uint ident)
+        {
+            switch (ident)
+            {
+                case 0xA5BD4F32:
+                case 0x895B9275:
+                case 0x870CF021:
+                    return true;
+                case 0x0EB375E3:
+                    return true;
+            }
+            return false;
         }
         #endregion
 
@@ -241,6 +261,7 @@ namespace Sm4shCommand
             GetCaretPos(out cp);
             return TokenFromPoint(cp);
         }
+
         #region Properties
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
@@ -790,6 +811,13 @@ namespace Sm4shCommand
                 _text = value;
                 _tokens = Tokenize(_text);
                 Info = GetInfo();
+            }
+        }
+        public string TrimText
+        {
+            get
+            {
+                return Text.TrimStart();
             }
         }
         private string _text;

@@ -298,7 +298,7 @@ namespace Sm4shCommand
                             AnimHashPairs.TryGetValue(node.CRC, out str);
                             if (string.IsNullOrEmpty(str))
                                 str = node.Name;
-                            n.Nodes[i].Text = str;
+                            n.Nodes[i].Text = $"{i:X}-{str}";
                         }
             tree.EndUpdate();
         }

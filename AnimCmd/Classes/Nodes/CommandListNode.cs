@@ -19,7 +19,7 @@ namespace Sm4shCommand.Nodes
                 return $"[{CRC:X8}]";
             }
         }
-
+        public bool Dirty { get { return _list.Dirty; } }
         public CommandList CommandList { get { return _list; } set { _list = value; } }
         private CommandList _list;
     }

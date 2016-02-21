@@ -60,15 +60,14 @@ namespace Sm4shCommand
             {
                 int amt = 0;
                 if ((amt = SerializeCommand(i, list[i]._commandInfo.Identifier)) > 0)
-                {
                     i += amt;
-                    continue;
-                }
-                else
+
+                if (i < list.Count)
                     Lines.Add(new Line(list[i].ToString(), this));
             }
             if (list.Empty)
                 Lines.Add(new Line("// Empty List", this));
+
             DoFormat();
         }
         #region Command Handling
@@ -92,20 +91,25 @@ namespace Sm4shCommand
             string str = _list[startIndex].ToString();
             int len = (int)_list[startIndex].parameters[0] - 2;
             Lines.Add(new Line($"{str}{{", this));
-            while ((len -= _list[++i].CalcSize() / 4) != 0)
+            int count = 1;
+            i++;
+
+            while (len > 0)
             {
+                len -= _list[i].CalcSize() / 4;
+
                 if (IsCmdHandled(_list[i]._commandInfo.Identifier))
-                    i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
-                else
+                    break;
+                else {
                     Lines.Add(new Line(_list[i].ToString(), this));
+                    i++;
+                    count++;
+                }
             }
             if (IsCmdHandled(_list[i]._commandInfo.Identifier))
-                SerializeCommand(i, _list[i]._commandInfo.Identifier);
-            else
-                Lines.Add(new Line(_list[i].ToString(), this));
-
+                i += (count += SerializeCommand(i, _list[i]._commandInfo.Identifier));
             Lines.Add(new Line("}", this));
-            return i - startIndex;
+            return count;
         }
         private int SerializeLoop(int startIndex)
         {
@@ -686,7 +690,10 @@ namespace Sm4shCommand
             else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
             {
                 Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
-                _list.Insert(SelectionStart.Y + 1, null);
+                if (SelectionStart.Y + 1 > _list.Count)
+                    _list.Add(null);
+                else
+                    _list.Insert(SelectionStart.Y + 1, null);
                 CaretNextLine();
             }
             Invalidate();
@@ -834,6 +841,10 @@ namespace Sm4shCommand
                         StringComparison.InvariantCultureIgnoreCase));
             else
                 return null;
+        }
+        public override string ToString()
+        {
+            return Text;
         }
 
         public void Draw(int x, int y, Graphics g)

@@ -165,6 +165,11 @@ namespace Sm4shCommand
         public ACMDFile OpenFile(string Filepath, ACMDType type)
         {
             DataSource source = new DataSource(FileMap.FromFile(Filepath));
+            if (new String((sbyte*)source.Address) != "ACMD")
+            {
+                MessageBox.Show("Not an ACMD file:\n" + Filepath);
+                return null;
+            }
 
             if (*(byte*)(source.Address + 0x04) == 0x02)
                 Runtime.WorkingEndian = Endianness.Little;

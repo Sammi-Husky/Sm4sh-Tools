@@ -42,6 +42,16 @@ namespace Sm4shCommand.Classes
         public MTable MotionTable { get { return _mtable; } set { _mtable = value; } }
         private MTable _mtable;
 
+        public bool Dirty
+        {
+            get
+            {
+                for (int i = 0; i < 4; i++)
+                    if (this[(ACMDType)i].Dirty)
+                        return true;
+                return false;
+            }
+        }
         /// <summary>
         /// Dumps a fighters script in it's entirety as text for use in version diffing.
         /// </summary>

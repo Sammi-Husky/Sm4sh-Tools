@@ -83,7 +83,7 @@ namespace Sm4shCommand
         {
             if (isRoot && _curFighter == null)
                 return;
-            else if (_curFile == null)
+            else if (!isRoot && _curFile == null)
                 return;
 
             for (int i = 0; i < tabControl1.TabCount; i++)

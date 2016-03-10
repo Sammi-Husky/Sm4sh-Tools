@@ -37,5 +37,6 @@ namespace Sm4shCommand.Nodes
                     _fighter?.AnimationHashPairs.Add(_crc, value);
             }
         }
+        protected static T GetInstance<T>() where T : BaseNode { return Runtime.Instance.FileTree.SelectedNode as T; }
     }
 }

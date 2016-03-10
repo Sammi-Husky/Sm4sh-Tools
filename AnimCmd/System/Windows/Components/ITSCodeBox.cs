@@ -17,6 +17,8 @@ namespace Sm4shCommand
         private Timer tooltipTimer = new Timer();
         private eToolTip toolTip = new eToolTip();
         private AutoCompleteBox autocomplete;
+        private Stack<ITSSnapshot> _undoStack = new Stack<ITSSnapshot>();
+        private Stack<ITSSnapshot> _redoStack = new Stack<ITSSnapshot>();
 
         public ITSCodeBox()
         {
@@ -45,15 +47,16 @@ namespace Sm4shCommand
             tooltipTimer.Tick += tooltipTimer_Tick;
             this.KeyDown += ITSCodeBox_KeyDown;
         }
-        public ITSCodeBox(CommandList list, List<CommandInfo> dict) : this()
+        public ITSCodeBox(ACMDScript list, List<ACMD_CMD_INFO> dict) : this()
         {
             // Set source after everything is setup to mitigate shenanigans
             CommandDictionary = dict;
             autocomplete.Dictionary = dict;
             SetSource(list);
         }
-        public void SetSource(CommandList list)
+        public void SetSource(ACMDScript list)
         {
+            _undoStack.Clear();
             _list = list;
             Lines = new List<Line>();
             for (int i = 0; i < list.Count; i++)
@@ -68,7 +71,23 @@ namespace Sm4shCommand
             if (list.Empty)
                 Lines.Add(new Line("// Empty List", this));
 
+            List<Line> clone = new List<Line>(Lines);
+            _undoStack.Push(TakeSnapshot());
             DoFormat();
+        }
+        public Line[] FromRTF(string text)
+        {
+            List<Line> _lines = new List<Line>();
+            return text.Split('\n').Where(t =>
+                !string.IsNullOrEmpty(t)).Select(x =>
+                    new Line(x.Trim(), this)).ToArray();
+        }
+        public string ToRTF(List<Line> lines)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (Line l in lines)
+                sb.Append(l.Text + Environment.NewLine);
+            return sb.ToString();
         }
         #region Command Handling
         private int SerializeCommand(int index, uint ident)
@@ -144,13 +163,13 @@ namespace Sm4shCommand
         }
         private int ParseConditional(int startIndex)
         {
-            Command cmd = Lines[startIndex].Parse();
+            ACMDCommand cmd = Lines[startIndex].Parse();
             int i = startIndex;
             int len = 2;
             CommandList.Add(cmd);
             while (Lines[++i].TrimText != "}")
             {
-                Command tmp = Lines[i].Parse();
+                ACMDCommand tmp = Lines[i].Parse();
                 len += tmp.CalcSize() / 4;
                 if (IsCmdHandled(tmp._commandInfo.Identifier))
                     i += ParseCommands(i, tmp._commandInfo.Identifier);
@@ -168,12 +187,12 @@ namespace Sm4shCommand
             decimal len = 0;
             while (Lines[++i].Parse()._commandInfo.Identifier != 0x38A3EC78)
             {
-                Command tmp = Lines[i].Parse();
+                ACMDCommand tmp = Lines[i].Parse();
                 len += (tmp.CalcSize() / 4);
                 i += ParseCommands(i, tmp._commandInfo.Identifier);
                 CommandList.Add(tmp);
             }
-            Command endLoop = Lines[i].Parse();
+            ACMDCommand endLoop = Lines[i].Parse();
             endLoop.parameters[0] = len / -1;
             CommandList.Add(endLoop);
             // Next line should be closing bracket, ignore and skip it
@@ -206,10 +225,10 @@ namespace Sm4shCommand
             if (iCharFromPoint(lastMouseCoords) >= Lines[yIndex].Length)
                 return;
 
-            string str = TokenFromPoint(lastMouseCoords).Token.TrimStart();
+            string str = TokenFromPoint(lastMouseCoords).Text.TrimStart();
             if (!String.IsNullOrEmpty(str))
             {
-                CommandInfo cmi;
+                ACMD_CMD_INFO cmi;
                 if ((cmi = CommandDictionary.FirstOrDefault(x => x.Name.StartsWith(str))) != null)
                 {
                     if (cmi.EventDescription == "NONE")
@@ -236,18 +255,31 @@ namespace Sm4shCommand
             base.OnScroll(se);
             Invalidate();
         }
+        protected virtual new void TextChanged(EventArgs e)
+        {
+            EventHandler handler = OnTextChanged;
+            List<Line> clone = new List<Line>(Lines);
+            _redoStack.Clear();
+            _undoStack.Push(TakeSnapshot());
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
         public void ApplyChanges()
         {
             Lines.RemoveAll(x => x.Empty);
             CommandList.Clear();
             for (int i = 0; i < Lines.Count; i++)
             {
-                Command cmd = Lines[i].Parse();
-                uint ident = cmd._commandInfo.Identifier;
                 string lineText = Lines[i].Text.Trim();
-
                 if (lineText.StartsWith("//"))
                     continue;
+
+                ACMDCommand cmd = Lines[i].Parse();
+                uint ident = cmd._commandInfo.Identifier;
+
 
                 int amt = 0;
                 if ((amt = ParseCommands(i, ident)) > 0)
@@ -265,12 +297,29 @@ namespace Sm4shCommand
             GetCaretPos(out cp);
             return TokenFromPoint(cp);
         }
+        public ITSSnapshot TakeSnapshot()
+        {
+            return new ITSSnapshot()
+            {
+                SelectionStart = SelectionStart,
+                RTFText = ToRTF(Lines)
+            };
+        }
+        public void ApplySnapshot(ITSSnapshot shot)
+        {
+            Lines = FromRTF(shot.RTFText).ToList();
+            SelectionStart = shot.SelectionStart;
+            UpdateSelection();
+            Invalidate();
+        }
 
         #region Properties
+        public event EventHandler OnTextChanged;
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public CommandList CommandList { get { return _list; } set { _list = value; } }
-        private CommandList _list;
+        public ACMDScript CommandList { get { return _list; } set { _list = value; } }
+        private ACMDScript _list;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
@@ -278,11 +327,12 @@ namespace Sm4shCommand
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public List<CommandInfo> CommandDictionary { get; set; }
+        public List<ACMD_CMD_INFO> CommandDictionary { get; set; }
         [Browsable(false)]
         public Rectangle ContentRect { get; private set; }
         [Browsable(false)]
         public Rectangle LInfoRect { get; private set; }
+
         public int CharWidth { get; set; }
         public int CharHeight { get; set; }
         public float IndentWidth { get; set; }
@@ -310,24 +360,6 @@ namespace Sm4shCommand
                 // Line Number
                 g.DrawString(i.ToString(), Font, SystemBrushes.MenuText, LInfoRect.X, CharHeight * i);
 
-                // Selection
-                //if (SelectionEnd != Point.Empty)
-                //    using (var b = new SolidBrush(Color.LightSteelBlue))
-                //    {
-                //        if (SelectionStart.Y == SelectionEnd.Y)
-                //            g.FillRectangle(b, ContentRect.X + (SelectionStart.X * CharWidth), CharHeight * SelectionEnd.Y,
-                //                (SelectionEnd.X - SelectionStart.X) * CharWidth, CharHeight);
-                //        else if (i == SelectionStart.Y)
-                //            g.FillRectangle(b, ContentRect.X /*+ (curIndent * IndentWidth)*/ + SelectionStart.X * CharWidth, CharHeight * i,
-                //                CharWidth * Lines[i].Length, CharHeight);
-                //        else if (i < SelectionEnd.Y && i > SelectionStart.Y)
-                //            g.FillRectangle(b, ContentRect.X /*+ (curIndent * IndentWidth)*/, CharHeight * i,
-                //                Lines[i].Length * CharWidth, CharHeight);
-                //        else if (i == SelectionEnd.Y)
-                //            g.FillRectangle(b, ContentRect.X, CharHeight * SelectionEnd.Y,
-                //                SelectionEnd.X * CharWidth, CharHeight);
-                //    }
-
                 // Text
                 if (!Lines[i].Empty)
                     Lines[i].Draw(ContentRect.X, CharHeight * i, g);
@@ -345,6 +377,16 @@ namespace Sm4shCommand
         }
         #endregion
         #region Positioning Methods
+        public void UpdateSelection()
+        {
+            int iLine = Lines.Count - 1;
+            if (SelectionStart.Y < Lines.Count)
+                iLine = SelectionStart.Y;
+
+            SetCaret(Lines[iLine].Length, iLine);
+            SelectionStart.X = Lines[iLine].Length;
+
+        }
         private float MeasureString(string str, Font font, StringFormat _fmt)
         {
             var tokens = Tokenize(str);
@@ -355,13 +397,13 @@ namespace Sm4shCommand
                 {
                     // Make a CharacterRange for the string's characters.
                     List<CharacterRange> range_list = new List<CharacterRange>();
-                    for (int i = 0; i < tkn.Token.Length; i++)
+                    for (int i = 0; i < tkn.Text.Length; i++)
                         range_list.Add(new CharacterRange(i, 1));
                     _fmt.SetMeasurableCharacterRanges(range_list.ToArray());
 
                     // Measure the string's character ranges.
                     Region[] regions = g.MeasureCharacterRanges(
-                        tkn.Token, font, ContentRect, _fmt);
+                        tkn.Text, font, ContentRect, _fmt);
 
                     width += regions.Select(x => x.GetBounds(g)).ToArray().Sum(x => x.Width);
                 }
@@ -411,15 +453,15 @@ namespace Sm4shCommand
         {
             return new Point()
             {
-                X = ((charIndex * CharWidth) + ContentRect.X).Clamp(0, Lines[lineIndex].Length),
-                Y = charIndex * CharHeight
+                X = ((charIndex.Clamp(0, Lines[lineIndex].Length) * CharWidth) + ContentRect.X),
+                Y = lineIndex * CharHeight
             };
         }
         #endregion
         #region Caret Methods
         public void SetCaret(int charIndex, int lineIndex)
         {
-            Point p = pointFromPos(charIndex, SelectionStart.Y);
+            Point p = pointFromPos(charIndex, lineIndex);
             DestroyCaret();
             CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
             SetCaretPos(p.X, p.Y);
@@ -612,6 +654,13 @@ namespace Sm4shCommand
                 case Keys.Return:
                     DoNewline();
                     return true;
+                case Keys.Control | Keys.Z:
+                    DoUndo();
+                    return true;
+                case Keys.Control | Keys.Y:
+                    DoRedo();
+                    return true;
+
             }
             return false;
         }
@@ -623,9 +672,16 @@ namespace Sm4shCommand
                 case Keys.Left:
                 case Keys.Up:
                 case Keys.Down:
+                case Keys.Tab:
                     return true;
+                case Keys.Control:
+                    return false;
             }
             return base.IsInputKey(keyData);
+        }
+        protected override bool ProcessTabKey(bool forward)
+        {
+            return true;
         }
         #endregion
         #region Text Handling
@@ -638,6 +694,7 @@ namespace Sm4shCommand
             var oldlen = Lines[iLine].Length;
             Lines[iLine].Text = text;
             CaretMoveRight(text.Length - oldlen);
+            TextChanged(new EventArgs());
             Invalidate();
         }
         public void InsertText(string text)
@@ -646,9 +703,9 @@ namespace Sm4shCommand
         }
         public void InsertText(string text, int iChar, int iLine)
         {
-
             Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
             CaretMoveRight(text.Length);
+            TextChanged(new EventArgs());
             Invalidate();
         }
         private void DoBackspace()
@@ -675,6 +732,7 @@ namespace Sm4shCommand
                     Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
                 CaretMoveLeft(1);
             }
+            TextChanged(new EventArgs());
             Invalidate();
         }
         private void DoNewline()
@@ -696,8 +754,10 @@ namespace Sm4shCommand
                     _list.Insert(SelectionStart.Y + 1, null);
                 CaretNextLine();
             }
+            TextChanged(new EventArgs());
             Invalidate();
         }
+
         public void DoFormat()
         {
             int curindent = 0;
@@ -717,6 +777,22 @@ namespace Sm4shCommand
             }
             Invalidate();
         }
+        private void DoUndo()
+        {
+            if (_undoStack.Count == 1)
+                return;
+
+            _redoStack.Push(_undoStack.Pop());
+            ApplySnapshot(_undoStack.Peek());
+        }
+        private void DoRedo()
+        {
+            if (_redoStack.Count == 1)
+                return;
+
+            _undoStack.Push(_redoStack.Pop());
+            ApplySnapshot(_redoStack.Peek());
+        }
         public StringToken TokenFromPoint(Point val)
         {
             int cIndex = iCharFromPoint(val);
@@ -734,7 +810,6 @@ namespace Sm4shCommand
 
             if (ClientRectangle.Contains(e.Location) && e.Button == MouseButtons.Left)
             {
-                SelectionEnd = SelectionStart = Point.Empty;
                 IsDrag = true;
 
                 SelectionStart = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
@@ -761,7 +836,8 @@ namespace Sm4shCommand
 
             if (IsDrag)
             {
-                SelectionEnd = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
+                int iChar = iCharFromPoint(e.Location);
+                int iLine = iLineFromPoint(e.Location);
                 var caret = CaretPosFromPoint(e.Location);
                 SetCaretPos(caret.X, caret.Y);
                 Invalidate();
@@ -799,6 +875,22 @@ namespace Sm4shCommand
         #endregion
 
     }
+    public class ITSSnapshot
+    {
+        public string RTFText { get; set; }
+        public Point SelectionStart;
+    }
+    public class ITSRange
+    {
+        public ITSRange(int start, string text)
+        {
+            Index = start;
+            Text = text;
+        }
+        public int Index { get; set; }
+        public int Length { get { return Text.Length; } }
+        public string Text { get; set; }
+    }
     public class Line
     {
         public Line(string val, ITSCodeBox owner)
@@ -806,6 +898,7 @@ namespace Sm4shCommand
             CodeBox = owner;
             Text = val;
         }
+        public ITSRange Selection { get; set; }
 
         public string Text
         {
@@ -831,13 +924,13 @@ namespace Sm4shCommand
         private StringToken[] _tokens;
         public int Length { get { return Text.Length; } }
         public ITSCodeBox CodeBox { get; set; }
-        public CommandInfo Info { get; set; }
+        public ACMD_CMD_INFO Info { get; set; }
         public bool Empty { get { return String.IsNullOrEmpty(Text); } }
-        public CommandInfo GetInfo()
+        public ACMD_CMD_INFO GetInfo()
         {
             if (!Empty)
                 return CodeBox.CommandDictionary?.FirstOrDefault(x =>
-                     x.Name.Equals(_tokens.FirstOrDefault(y => y.TokType != TokenType.Seperator).Token,
+                     x.Name.Equals(_tokens.FirstOrDefault(y => y.TokType != TokenType.Seperator).Text,
                         StringComparison.InvariantCultureIgnoreCase));
             else
                 return null;
@@ -859,17 +952,27 @@ namespace Sm4shCommand
                 return;
             }
             float posX = x;
+
+            if (Selection != null)
+            {
+                int start = Text.IndexOf(Selection.Text);
+                start *= CodeBox.CharWidth;
+                using (SolidBrush brush = new SolidBrush(Color.LightSteelBlue))
+                    g.FillRectangle(brush, x + Selection.Index * CodeBox.CharWidth, y, Selection.Length * CodeBox.CharWidth, CodeBox.CharHeight);
+            }
+
             foreach (StringToken tkn in _tokens)
             {
                 using (SolidBrush brush = new SolidBrush(tkn.TokColor))
-                    g.DrawString(tkn.Token, CodeBox.Font, brush, posX, y);
+                    g.DrawString(tkn.Text, CodeBox.Font, brush, posX, y);
 
-                posX += tkn.Token.Length * CodeBox.CharWidth;
+                posX += tkn.Text.Length * CodeBox.CharWidth;
             }
+
         }
-        public Command Parse()
+        public ACMDCommand Parse()
         {
-            var cmd = new Command(GetInfo());
+            var cmd = new ACMDCommand(GetInfo());
             var parameters = _tokens.Where(x => x.TokType != TokenType.Syntax &&
                                             x.TokType != TokenType.String &&
                                             x.TokType != TokenType.Seperator).ToArray();
@@ -877,16 +980,17 @@ namespace Sm4shCommand
             for (int i = 0; i < Info.ParamSpecifiers.Count; i++)
             {
                 if (parameters[i].TokType == TokenType.Integer)
-                    cmd.parameters.Add(int.Parse(parameters[i].Token.Remove(0, 2),
+                    cmd.parameters.Add(int.Parse(parameters[i].Text.Remove(0, 2),
                         System.Globalization.NumberStyles.HexNumber));
                 else if (Info.ParamSpecifiers[i] == 2)
-                    cmd.parameters.Add(decimal.Parse(parameters[i].Token));
+                    cmd.parameters.Add(decimal.Parse(parameters[i].Text));
                 else if (parameters[i].TokType == TokenType.FloatingPoint)
-                    cmd.parameters.Add(float.Parse(parameters[i].Token));
+                    cmd.parameters.Add(float.Parse(parameters[i].Text));
             }
             return cmd;
         }
     }
+
     public static class Tokenizer
     {
         static char[] seps = { '=', ',', '(', ')', ' ', '\n' };
@@ -902,18 +1006,18 @@ namespace Sm4shCommand
                 StringToken str = new StringToken();
                 str.Index = i;
                 if (seps.Contains(data[i]))
-                    _tokens.Add(new StringToken() { Index = i, Token = data[i++].ToString(), TokType = TokenType.Seperator });
+                    _tokens.Add(new StringToken() { Index = i, Text = data[i++].ToString(), TokType = TokenType.Seperator });
                 else
                 {
                     while (i < data.Length && !seps.Contains(data[i]))
                     {
-                        str.Token += data[i];
+                        str.Text += data[i];
                         i++;
                     }
 
-                    if (str.Token.TrimStart().StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
+                    if (str.Text.TrimStart().StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
                         str.TokType = TokenType.Integer;
-                    else if (integers.Contains(str.Token[0]))
+                    else if (integers.Contains(str.Text[0]))
                         str.TokType = TokenType.FloatingPoint;
                     else if (i < data.Length && data[i] == '=')
                         str.TokType = TokenType.Syntax;
@@ -930,13 +1034,10 @@ namespace Sm4shCommand
 
         public struct StringToken
         {
-            public int Index { get { return _index; } set { _index = value; } }
-            private int _index;
-            public int Length { get { return Token.Length; } }
-            public string Token { get { return _strToken; } set { _strToken = value; } }
-            private string _strToken;
-            public TokenType TokType { get { return _type; } set { _type = value; } }
-            private TokenType _type;
+            public int Index { get; set; }
+            public int Length { get { return Text.Length; } }
+            public string Text { get; set; }
+            public TokenType TokType { get; set; }
             public Color TokColor
             {
                 get
@@ -1014,16 +1115,16 @@ namespace Sm4shCommand
 
             StringToken tkn = Owner.TokenFromCaret();
             Point cp = Owner.GetCaretPos();
-            if (string.IsNullOrEmpty(tkn.Token) | tkn.TokType == TokenType.Seperator)
+            if (string.IsNullOrEmpty(tkn.Text) | tkn.TokType == TokenType.Seperator)
             {
                 if (Visible)
                     Hide();
                 return;
             }
 
-            var filtered = Owner.CommandDictionary.Cast<CommandInfo>().Where(x =>
-                x.Name.StartsWith(tkn.Token.TrimStart(), StringComparison.InvariantCultureIgnoreCase) &
-                    !tkn.Token.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+            var filtered = Owner.CommandDictionary.Cast<ACMD_CMD_INFO>().Where(x =>
+                x.Name.StartsWith(tkn.Text.TrimStart(), StringComparison.InvariantCultureIgnoreCase) &
+                    !tkn.Text.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
             if (filtered.Length > 0)
             {
@@ -1053,7 +1154,7 @@ namespace Sm4shCommand
         private void TtTimer_Tick(object sender, EventArgs e)
         {
             timer.Stop();
-            CommandInfo info = SelectedItem as CommandInfo;
+            ACMD_CMD_INFO info = SelectedItem as ACMD_CMD_INFO;
             var itemRect = GetItemRectangle(SelectedIndex);
             tooltip.ToolTipTitle = info.Name;
             tooltip.ToolTipDescription = info.EventDescription;
@@ -1064,6 +1165,7 @@ namespace Sm4shCommand
         {
             switch (key)
             {
+
                 case Keys.Up:
                     SelectPrev(1);
                     return true;
@@ -1071,6 +1173,8 @@ namespace Sm4shCommand
                     SelectNext(1);
                     return true;
                 case Keys.Enter:
+                case Keys.Tab:
+                case Keys.Space:
                     DoAutocomplete();
                     return true;
             }
@@ -1099,14 +1203,14 @@ namespace Sm4shCommand
             tooltip.SetToolTip(this, null);
             tooltip.Hide();
 
-            var text = $"{((CommandInfo)SelectedItem).Name}";
+            var text = $"{((ACMD_CMD_INFO)SelectedItem).Name}";
             Owner.SetLineText(text);
             Hide();
             Owner.Focus();
         }
 
 
-        public List<CommandInfo> Dictionary { get; set; }
+        public List<ACMD_CMD_INFO> Dictionary { get; set; }
         private ITSCodeBox Owner { get; set; }
     }
 }

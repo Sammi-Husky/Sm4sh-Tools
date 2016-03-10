@@ -54,16 +54,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\ACMDFile.cs" />
-    <Compile Include="Classes\Command.cs" />
-    <Compile Include="Classes\CommandInfo.cs" />
-    <Compile Include="Classes\CommandList.cs" />
+    <Compile Include="Classes\ACMD\ACMDFile.cs" />
+    <Compile Include="Classes\ACMD\ACMDCommand.cs" />
+    <Compile Include="Classes\ACMD\ACMD_CMD_INFO.cs" />
+    <Compile Include="Classes\ACMD\ACMDScript.cs" />
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
-    <Compile Include="Classes\Nodes\ACMDNode.cs" />
-    <Compile Include="Classes\Nodes\BaseNode.cs" />
-    <Compile Include="Classes\Nodes\CommandListGroupNode.cs" />
-    <Compile Include="Classes\Nodes\CommandListNode.cs" />
+    <Compile Include="Gui\Nodes\ACMDNode.cs" />
+    <Compile Include="Gui\Nodes\BaseNode.cs" />
+    <Compile Include="Gui\Nodes\CommandListGroupNode.cs" />
+    <Compile Include="Gui\Nodes\CommandListNode.cs" />
+    <Compile Include="Gui\Nodes\DataNode.cs" />
+    <Compile Include="Gui\Nodes\PARAMNode.cs" />
     <Compile Include="Gui\CodeEditControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -175,7 +177,6 @@
   <ItemGroup>
     <Content Include="s4.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

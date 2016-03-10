@@ -18,6 +18,9 @@ namespace Sm4shCommand
         public string WorkspaceRoot { get { return _workspaceRoot; } set { _workspaceRoot = value; } }
         private string _workspaceRoot;
 
+        public Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
+
+
         public void ReadWRKSPC(string path)
         {
             _projects = new List<Project>();
@@ -107,57 +110,73 @@ namespace Sm4shCommand
             return p;
         }
 
-        public Dictionary<uint, string> getAnimNames(string path)
+        public void GetAnimHashPairs(string path)
         {
             Dictionary<uint, string> hashpairs = new Dictionary<uint, string>();
-
-            if (path.EndsWith(".pac"))
+            foreach (string s in Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories))
             {
-                byte[] filebytes = File.ReadAllBytes(path);
-                int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
-
-                for (int i = 0; i < count; i++)
+                if (s.EndsWith(".pac"))
                 {
+                    byte[] filebytes = File.ReadAllBytes(s);
+                    int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
 
-                    uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
-                    string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
-                    string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
-                    if (string.IsNullOrEmpty(AnimName))
-                        continue;
-                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
-                    hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
-
-                    if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
-                       AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
-                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.Substring(0, AnimName.Length - 1).ToLower())), AnimName.Substring(0, AnimName.Length - 1));
-                }
-            }
-            else if (path.EndsWith(".bch"))
-            {
-                DataSource src = new DataSource(FileMap.FromFile(path));
-                int off = *(int*)(src.Address + 0x0C);
-                VoidPtr addr = src.Address + off;
-                while (*(byte*)addr != 0)
-                {
-                    string s = new string((sbyte*)addr);
-                    string AnimName = Regex.Match(s, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
-                    if (AnimName != "")
+                    for (int i = 0; i < count; i++)
                     {
-                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.ToLower())), AnimName);
-                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C2").ToLower())), AnimName + "_C2");
-                        hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes((AnimName + "_C3").ToLower())), AnimName + "_C3");
+                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
+                        string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
+                        string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
+                        if (string.IsNullOrEmpty(AnimName))
+                            continue;
+
+                        AddAnimHash(AnimName);
+                        AddAnimHash(AnimName + "_C2");
+                        AddAnimHash(AnimName + "_C3");
+                        AddAnimHash(AnimName + "L");
+                        AddAnimHash(AnimName + "R");
+
 
                         if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
                            AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
-                            hashpairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(AnimName.Substring(0, AnimName.Length - 1).ToLower())), AnimName.Substring(0, AnimName.Length - 1));
+                            AddAnimHash(AnimName.Substring(0, AnimName.Length - 1));
                     }
-                    addr += s.Length + 1;
+                }
+                else if (s.EndsWith(".bch"))
+                {
+                    DataSource src = new DataSource(FileMap.FromFile(s));
+                    int off = *(int*)(src.Address + 0x0C);
+                    VoidPtr addr = src.Address + off;
+                    while (*(byte*)addr != 0)
+                    {
+                        string AnimName = Regex.Match(s, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
+                        if (string.IsNullOrEmpty(AnimName))
+                        {
+                            addr += s.Length + 1;
+                            continue;
+                        }
+
+                        AddAnimHash(AnimName);
+                        AddAnimHash(AnimName + "_C2");
+                        AddAnimHash(AnimName + "_C3");
+                        AddAnimHash(AnimName + "L");
+                        AddAnimHash(AnimName + "R");
+
+
+                        if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
+                           AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
+                            AddAnimHash(AnimName.Substring(0, AnimName.Length - 1));
+
+                        addr += s.Length + 1;
+                    }
                 }
             }
-            return hashpairs;
         }
+        private void AddAnimHash(string name)
+        {
+            if (AnimHashPairs.ContainsValue(name))
+                return;
 
+            AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(name.ToLower())), name);
+        }
         public ACMDFile OpenFile(string Filepath)
         {
             return OpenFile(Filepath, ACMDType.NONE);
@@ -165,7 +184,7 @@ namespace Sm4shCommand
         public ACMDFile OpenFile(string Filepath, ACMDType type)
         {
             DataSource source = new DataSource(FileMap.FromFile(Filepath));
-            if (new String((sbyte*)source.Address) != "ACMD")
+            if (*(buint*)source.Address != 0x41434D44) // ACMD
             {
                 MessageBox.Show("Not an ACMD file:\n" + Filepath);
                 return null;
@@ -179,7 +198,7 @@ namespace Sm4shCommand
                 return null;
 
 
-            return new ACMDFile(source, Runtime.WorkingEndian) { Type = type };
+            return new ACMDFile(source) { Type = type };
         }
 
         public Fighter OpenFighter(string dirPath)

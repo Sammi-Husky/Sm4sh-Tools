@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace Sm4shCommand.Classes
 {
-    public class Command
+    public class ACMDCommand
     {
-        public Command(CommandInfo info)
+        public ACMDCommand(ACMD_CMD_INFO info)
         {
             _commandInfo = info;
         }
-        public Command() { }
+        public ACMDCommand() { }
 
-        public CommandInfo _commandInfo;
+        public ACMD_CMD_INFO _commandInfo;
 
 
         public List<object> parameters = new List<object>();
@@ -62,7 +62,7 @@ namespace Sm4shCommand.Classes
         }
     }
 
-    public class UnknownCommand : Command
+    public class UnknownCommand : ACMDCommand
     {
         public uint ident;
 

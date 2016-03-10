@@ -8,9 +8,8 @@ namespace Sm4shCommand.Classes
     /// <summary>
     /// Contains command information
     /// </summary>
-    public unsafe class CommandInfo
+    public unsafe class ACMD_CMD_INFO
     {
-
         public uint Identifier = 0;
         public string Name { get { return _name; } set { _name = value; } }
         private string _name;

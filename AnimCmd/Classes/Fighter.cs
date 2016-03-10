@@ -68,7 +68,7 @@ namespace Sm4shCommand.Classes
                     label = $"{u:X8}";
 
                 sb.Append(String.Format($"\n\n{MotionTable.IndexOf(u):X}: [{label}]"));
-                CommandList c1 = null, c2 = null,
+                ACMDScript c1 = null, c2 = null,
                             c3 = null, c4 = null;
 
                 if (Main.EventLists.ContainsKey(u))
@@ -82,7 +82,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tGame:{");
                 if (c1 != null)
-                    foreach (Command cmd in c1)
+                    foreach (ACMDCommand cmd in c1)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -90,7 +90,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tGFX:{");
                 if (c2 != null)
-                    foreach (Command cmd in c2)
+                    foreach (ACMDCommand cmd in c2)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -98,7 +98,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tSFX:{");
                 if (c3 != null)
-                    foreach (Command cmd in c3)
+                    foreach (ACMDCommand cmd in c3)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
@@ -106,13 +106,21 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tExpression:{");
                 if (c4 != null)
-                    foreach (Command cmd in c4)
+                    foreach (ACMDCommand cmd in c4)
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");
                 sb.Append("\n\t}");
             }
             return sb.ToString();
+        }
+        public void Export(string dirpath)
+        {
+            Main.Export($"{dirpath}/game.bin");
+            SFX.Export($"{dirpath}/sound.bin");
+            GFX.Export($"{dirpath}/effect.bin");
+            Expression.Export($"{dirpath}/expression.bin");
+            MotionTable.Export($"{dirpath}/motion.mtable");
         }
         public ACMDFile this[ACMDType type]
         {

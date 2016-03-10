@@ -30,7 +30,7 @@ namespace Sm4shCommand
             foreach (Project p in Manager.Projects)
             {
                 _curFighter = Manager.OpenFighter(p.ACMDPath);
-                _curFighter.AnimationHashPairs = Manager.getAnimNames(p.AnimationFile);
+                //_curFighter.AnimationHashPairs = Manager.GetAnimHashPairs(p.AnimationFile);
 
                 string name = $"{p.ProjectName} - [{(p.ProjectType == ProjType.Fighter ? "Fighter" : "Weapon")}]";
 
@@ -49,8 +49,8 @@ namespace Sm4shCommand
 
                     CommandListGroup g = new CommandListGroup(_curFighter, u) { ToolTipText = $"[{u:X8}]" };
 
-                    if (AnimHashPairs.ContainsKey(u))
-                        g.Text = AnimHashPairs[u];
+                    if (Manager.AnimHashPairs.ContainsKey(u))
+                        g.Text = Manager.AnimHashPairs[u];
 
                     ACMD.Nodes.Add(g);
                 }
@@ -143,25 +143,15 @@ namespace Sm4shCommand
 
             if (isRoot)
             {
-                FolderSelectDialog dlg = new FolderSelectDialog();
-                DialogResult result = dlg.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    _curFighter.Main.Export(dlg.SelectedPath + "/game.bin");
-                    _curFighter.GFX.Export(dlg.SelectedPath + "/effect.bin");
-                    _curFighter.SFX.Export(dlg.SelectedPath + "/sound.bin");
-                    _curFighter.Expression.Export(dlg.SelectedPath + "/expression.bin");
-                    _curFighter.MotionTable.Export(dlg.SelectedPath + "/Motion.mtable");
-                }
-                dlg.Dispose();
+                using (FolderSelectDialog dlg = new FolderSelectDialog())
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                        _curFighter.Export(dlg.SelectedPath);
             }
             else
             {
-                SaveFileDialog dlg = new SaveFileDialog { Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*" };
-                DialogResult result = dlg.ShowDialog();
-                if (result == DialogResult.OK)
-                    _curFile.Export(dlg.FileName);
-                dlg.Dispose();
+                using (SaveFileDialog dlg = new SaveFileDialog { Filter = "ACMD Binary (*.bin)|*.bin|All Files (*.*)|*.*" })
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                        _curFile.Export(dlg.FileName);
             }
         }
 
@@ -196,10 +186,10 @@ namespace Sm4shCommand
                         return;
 
                     FileTree.BeginUpdate();
-                    TreeNode root = new TreeNode("AnimCmd");
+                    TreeNode root = new ACMDNode() { Text = "ACMD" };
                     for (int i = 0; i < _curFile.EventLists.Count; i++)
                     {
-                        CommandList cml = _curFile.EventLists.Values[i];
+                        ACMDScript cml = _curFile.EventLists.Values[i];
                         root.Nodes.Add(new CommandListNode($"{i:X}-[{cml.AnimationCRC:X8}]", cml));
                     }
                     FileTree.Nodes.Add(root);
@@ -281,21 +271,21 @@ namespace Sm4shCommand
         private void parseAnimations(string path)
         {
             TreeView tree = FileTree;
-            AnimHashPairs = Manager.getAnimNames(path);
+            Manager.GetAnimHashPairs(path);
             if (isRoot)
-                _curFighter.AnimationHashPairs = AnimHashPairs;
+                _curFighter.AnimationHashPairs = Manager.AnimHashPairs;
             else
-                _curFile.AnimationHashPairs = AnimHashPairs;
+                _curFile.AnimationHashPairs = Manager.AnimHashPairs;
 
             tree.BeginUpdate();
             foreach (TreeNode n in tree.Nodes)
-                if (n.Text == "AnimCmd")
+                if (n.Text == "ACMD")
                     for (int i = 0; i < n.Nodes.Count; i++)
                         if (n.Nodes[i] is CommandListNode | n.Nodes[i] is CommandListGroup)
                         {
                             var node = ((BaseNode)n.Nodes[i]);
                             string str = "";
-                            AnimHashPairs.TryGetValue(node.CRC, out str);
+                            Manager.AnimHashPairs.TryGetValue(node.CRC, out str);
                             if (string.IsNullOrEmpty(str))
                                 str = node.Name;
                             n.Nodes[i].Text = $"{i:X}-{str}";
@@ -336,7 +326,8 @@ namespace Sm4shCommand
 
                 FileTree.BeginUpdate();
                 _curFighter = _manager.OpenFighter(dlg.SelectedPath);
-                TreeNode nScript = new TreeNode("AnimCmd");
+                TreeNode nScript = new ACMDNode() { Text = "ACMD" };
+
                 for (int i = 0; i < _curFighter.MotionTable.Count; i++)
                 {
                     uint CRC = _curFighter.MotionTable[i];
@@ -375,10 +366,10 @@ namespace Sm4shCommand
 
         private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (OpenFileDialog dlg = new OpenFileDialog())
+            using (FolderSelectDialog dlg = new FolderSelectDialog())
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
-                    parseAnimations(dlg.FileName);
+                    parseAnimations(dlg.SelectedPath);
             }
         }
 

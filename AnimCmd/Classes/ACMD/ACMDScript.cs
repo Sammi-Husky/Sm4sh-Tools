@@ -7,11 +7,11 @@ using System.IO;
 
 namespace Sm4shCommand.Classes
 {
-    public unsafe class CommandList : IEnumerable<Command>
+    public unsafe class ACMDScript : IEnumerable<ACMDCommand>
     {
         private byte[] _data;
 
-        public CommandList(uint CRC)
+        public ACMDScript(uint CRC)
         {
             AnimationCRC = CRC;
         }
@@ -23,7 +23,7 @@ namespace Sm4shCommand.Classes
             get
             {
                 int size = 0;
-                foreach (Command e in _commands)
+                foreach (ACMDCommand e in _commands)
                     size += e.CalcSize();
                 return size;
             }
@@ -96,7 +96,7 @@ namespace Sm4shCommand.Classes
             byte[] file = new byte[Size];
 
             int i = 0;
-            foreach (Command c in _commands)
+            foreach (ACMDCommand c in _commands)
             {
                 byte[] command = c.GetArray();
                 for (int x = 0; x < command.Length; x++, i++)
@@ -105,12 +105,12 @@ namespace Sm4shCommand.Classes
             return file;
         }
 
-        public Command this[int i]
+        public ACMDCommand this[int i]
         {
             get { return _commands[i]; }
             set { _commands[i] = value; }
         }
-        private List<Command> _commands = new List<Command>();
+        private List<ACMDCommand> _commands = new List<ACMDCommand>();
 
 
         #region IEnumerable Implemntation
@@ -121,19 +121,19 @@ namespace Sm4shCommand.Classes
         {
             _commands.Clear();
         }
-        public void Insert(int index, Command var)
+        public void Insert(int index, ACMDCommand var)
         {
             _commands.Insert(index, var);
         }
-        public void InsertAfter(int index, Command var)
+        public void InsertAfter(int index, ACMDCommand var)
         {
             _commands.Insert(index + 1, var);
         }
-        public void Add(Command var)
+        public void Add(ACMDCommand var)
         {
             _commands.Add(var);
         }
-        public bool Remove(Command var)
+        public bool Remove(ACMDCommand var)
         {
             return _commands.Remove(var);
         }
@@ -142,17 +142,17 @@ namespace Sm4shCommand.Classes
         {
             _commands.RemoveAt(index);
         }
-        public bool Contains(Command var) { return _commands.Contains(var); }
-        public int IndexOf(Command var)
+        public bool Contains(ACMDCommand var) { return _commands.Contains(var); }
+        public int IndexOf(ACMDCommand var)
         {
             return _commands.IndexOf(var);
         }
-        public void CopyTo(Command[] var, int index) { _commands.CopyTo(var, index); }
+        public void CopyTo(ACMDCommand[] var, int index) { _commands.CopyTo(var, index); }
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-        public IEnumerator<Command> GetEnumerator()
+        public IEnumerator<ACMDCommand> GetEnumerator()
         {
             for (int i = 0; i < _commands.Count; i++)
                 yield return _commands[i];

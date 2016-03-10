@@ -9,8 +9,8 @@ namespace Sm4shCommand.Nodes
 {
     public class CommandListNode : BaseNode
     {
-        public CommandListNode(string name, CommandList list) { Text = name; _list = list; CRC = list.AnimationCRC; }
-        public CommandListNode(CommandList list) { _list = list; CRC = list.AnimationCRC; }
+        public CommandListNode(string name, ACMDScript list) { Text = name; _list = list; CRC = list.AnimationCRC; }
+        public CommandListNode(ACMDScript list) { _list = list; CRC = list.AnimationCRC; }
 
         public new string Name
         {
@@ -20,7 +20,7 @@ namespace Sm4shCommand.Nodes
             }
         }
         public bool Dirty { get { return _list.Dirty; } }
-        public CommandList CommandList { get { return _list; } set { _list = value; } }
-        private CommandList _list;
+        public ACMDScript CommandList { get { return _list; } set { _list = value; } }
+        private ACMDScript _list;
     }
 }

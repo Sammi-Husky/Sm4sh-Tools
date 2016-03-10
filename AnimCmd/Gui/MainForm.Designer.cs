@@ -217,6 +217,7 @@
             "3DS"});
             this.cboMode.Name = "cboMode";
             this.cboMode.Size = new System.Drawing.Size(121, 23);
+            this.cboMode.SelectedIndexChanged += new System.EventHandler(this.cboMode_SelectedIndexChanged);
             // 
             // viewToolStripMenuItem
             // 
@@ -357,7 +358,7 @@
         private System.Windows.Forms.ToolStripMenuItem parseAnimationsToolStripMenuItem;
         #endregion
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TreeView FileTree;
+        public System.Windows.Forms.TreeView FileTree;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem fighterToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;

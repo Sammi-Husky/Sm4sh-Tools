@@ -25,12 +25,12 @@ namespace Sm4shCommand.Nodes
                     lists.Add(fighter[(ACMDType)i].EventLists[CRC]);
                 else
                 {
-                    CommandList cml = new CommandList(CRC);
+                    ACMDScript cml = new ACMDScript(CRC);
                     cml.Initialize();
                     lists.Add(cml);
                 }
             }
         }
-        public List<CommandList> lists = new List<CommandList>(4);
+        public List<ACMDScript> lists = new List<ACMDScript>(4);
     }
 }

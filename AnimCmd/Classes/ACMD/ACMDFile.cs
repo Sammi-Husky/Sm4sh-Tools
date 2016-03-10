@@ -8,20 +8,29 @@ namespace Sm4shCommand.Classes
 {
     public unsafe class ACMDFile
     {
-        public ACMDFile() { _hashPairs = new Dictionary<uint, string>(); }
-        public ACMDFile(DataSource source, Endianness Endian)
+        public ACMDFile()
         {
-            _eventLists = new SortedList<uint, CommandList>();
+            _eventLists = new SortedList<uint, ACMDScript>();
             _hashPairs = new Dictionary<uint, string>();
             Type = ACMDType.NONE;
-
+        }
+        public ACMDFile(DataSource source) : this()
+        {
             _workingSource = source;
 
             _actionCount = Util.GetWordUnsafe(source.Address + 0x08, Runtime.WorkingEndian);
             _commandCount = Util.GetWordUnsafe(source.Address + 0x0C, Runtime.WorkingEndian);
 
-            Initialize();
+            for (int i = 0; i < _actionCount; i++)
+            {
+                uint _crc = (uint)Util.GetWordUnsafe(_workingSource.Address + 0x10 + (i * 8), Runtime.WorkingEndian);
+                int _offset = Util.GetWordUnsafe((_workingSource.Address + 0x10 + (i * 8)) + 0x04, Runtime.WorkingEndian);
+
+                EventLists.Add(_crc, ParseEventList(_crc, _offset));
+            }
         }
+        public ACMDFile(string filepath) : this(new DataSource(FileMap.FromFile(filepath))) { }
+
         private VoidPtr WorkingSource => _replSource != DataSource.Empty ? _replSource.Address : _workingSource.Address;
         private DataSource _workingSource, _replSource;
 
@@ -31,13 +40,13 @@ namespace Sm4shCommand.Classes
         public int ActionCount { get { return _actionCount; } set { _actionCount = value; } }
         private int _actionCount;
 
-        public ACMDType Type;
+        public ACMDType Type { get; set; }
 
         /// <summary>
         /// List of all CommandLists in this file.
         /// </summary>
-        public SortedList<uint, CommandList> EventLists { get { return _eventLists; } set { _eventLists = value; } }
-        private SortedList<uint, CommandList> _eventLists;
+        public SortedList<uint, ACMDScript> EventLists { get { return _eventLists; } set { _eventLists = value; } }
+        private SortedList<uint, ACMDScript> _eventLists;
         /// <summary>
         /// Linked list containing all animation names and their CRC32 hash.
         /// </summary>
@@ -51,16 +60,6 @@ namespace Sm4shCommand.Classes
         /// True if the file has changes.
         /// </summary>
         public bool Dirty => EventLists.Values.Any(cl => cl.Dirty);
-        private void Initialize()
-        {
-            for (int i = 0; i < _actionCount; i++)
-            {
-                uint _crc = (uint)Util.GetWordUnsafe(_workingSource.Address + 0x10 + (i * 8), Runtime.WorkingEndian);
-                int _offset = Util.GetWordUnsafe((_workingSource.Address + 0x10 + (i * 8)) + 0x04, Runtime.WorkingEndian);
-
-                EventLists.Add(_crc, ParseEventList(_crc, _offset));
-            }
-        }
         /// <summary>
         /// Applies changes.
         /// </summary>
@@ -110,17 +109,17 @@ namespace Sm4shCommand.Classes
             }
 
             // Write event lists at final address.
-            foreach (CommandList e in EventLists.Values)
+            foreach (ACMDScript e in EventLists.Values)
             {
                 e.Rebuild(addr, e.Size);
                 addr += e.Size;
             }
         }
-        private CommandList ParseEventList(uint CRC, int Offset)
+        private ACMDScript ParseEventList(uint CRC, int Offset)
         {
-            CommandList _list = new CommandList(CRC);
+            ACMDScript _list = new ACMDScript(CRC);
 
-            Command c;
+            ACMDCommand c;
 
             VoidPtr addr = (_workingSource.Address + Offset);
 
@@ -129,13 +128,13 @@ namespace Sm4shCommand.Classes
             {
                 // Try to get command definition
                 uint ident = (uint)Util.GetWordUnsafe(addr, Runtime.WorkingEndian);
-                CommandInfo info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == ident);
+                ACMD_CMD_INFO info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == ident);
 
                 // If a command definition exists, use that info to deserialize.
                 if (info != null)
                 {
                     // Get command parameters and add the command to the event list.
-                    c = new Command(info);
+                    c = new ACMDCommand(info);
                     for (int i = 0; i < info.ParamSpecifiers.Count; i++)
                     {
                         switch (info.ParamSpecifiers[i])
@@ -171,9 +170,9 @@ namespace Sm4shCommand.Classes
             // If we hit a script_end command, add it to the the Event List and terminate looping.
             if (Util.GetWordUnsafe(addr, Runtime.WorkingEndian) == Runtime._endingCommand.Identifier)
             {
-                CommandInfo info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == Runtime._endingCommand.Identifier);
+                ACMD_CMD_INFO info = Runtime.commandDictionary.FirstOrDefault(e => e.Identifier == Runtime._endingCommand.Identifier);
 
-                c = new Command(info);
+                c = new ACMDCommand(info);
                 _list.Add(c);
             }
 
@@ -229,7 +228,7 @@ namespace Sm4shCommand.Classes
 
                 sb.Append("\n\tScript:{");
                 if (EventLists[u] != null)
-                    foreach (Command cmd in EventLists[u])
+                    foreach (ACMDCommand cmd in EventLists[u])
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");

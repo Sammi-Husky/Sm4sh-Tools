@@ -22,7 +22,7 @@ namespace Sm4shCommand
                 for (int i = 0; i < raw.Count; i += 5)
                 {
 
-                    CommandInfo h = new CommandInfo
+                    ACMD_CMD_INFO h = new ACMD_CMD_INFO
                     {
                         Identifier = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber),
                         Name = raw[i + 1]
@@ -47,7 +47,7 @@ namespace Sm4shCommand
             using (StreamWriter writer = new StreamWriter(path))
             {
                 WriteConfigHelp(writer);
-                foreach (CommandInfo def in commandDictionary)
+                foreach (ACMD_CMD_INFO def in commandDictionary)
                 {
                     //Write Ident
                     writer.WriteLine(def.Identifier.ToString("X"));
@@ -84,6 +84,8 @@ namespace Sm4shCommand
                         writer.WriteLine(def.EventDescription);
                     else
                         writer.WriteLine("NONE");
+                    writer.Write('\n');
+
                 }
             }
         }
@@ -110,8 +112,8 @@ namespace Sm4shCommand
 
 
         }
-        public static List<CommandInfo> commandDictionary = new List<CommandInfo>();
-        public static CommandInfo _endingCommand;
+        public static List<ACMD_CMD_INFO> commandDictionary = new List<ACMD_CMD_INFO>();
+        public static ACMD_CMD_INFO _endingCommand;
 
         public static Endianness WorkingEndian { get { return _workingEndian; } set { _workingEndian = value; } }
         private static Endianness _workingEndian;
@@ -122,6 +124,6 @@ namespace Sm4shCommand
 
         public static ACMDFile _curFile;
         public static Fighter _curFighter;
-        public static Dictionary<uint, string> AnimHashPairs = new Dictionary<uint, string>();
+
     }
 }

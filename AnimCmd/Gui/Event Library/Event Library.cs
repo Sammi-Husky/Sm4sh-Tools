@@ -21,14 +21,14 @@ namespace Sm4shCommand
             listBox1.DataSource = _list;
             listBox1.DisplayMember = "Name";
         }
-        public CommandInfo curDef
+        public ACMD_CMD_INFO curDef
         {
             get
             {
-                return (CommandInfo)listBox1.SelectedItem;
+                return (ACMD_CMD_INFO)listBox1.SelectedItem;
             }
         }
-        List<CommandInfo> _list;
+        List<ACMD_CMD_INFO> _list;
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -109,7 +109,7 @@ namespace Sm4shCommand
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            _list.Add(new CommandInfo() { Name = "New Command" });
+            _list.Add(new ACMD_CMD_INFO() { Name = "New Command" });
         }
 
         private void textBox2_TextChanged(object sender, EventArgs e)

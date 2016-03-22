@@ -24,7 +24,7 @@ namespace DTLS
         public int EntryCount { get { return _entryCount; } set { _entryCount = value; } }
         private int _entryCount;
 
-        public SortedList<uint, LSEntryObject> Entries;
+        public SortedList<uint, LSEntry> Entries;
 
         public void Parse(string path)
         {
@@ -35,21 +35,21 @@ namespace DTLS
                 return;
             _version = *(short*)(_workingSource.Address + 0x02);
             _entryCount = *(int*)(_workingSource.Address + 0x04);
-            Entries = new SortedList<uint, LSEntryObject>(_entryCount);
+            Entries = new SortedList<uint, LSEntry>(_entryCount);
 
             for (int i = 0; i < _entryCount; i++)
             {
-                LSEntryObject lsobj = new LSEntryObject();
+                LSEntry lsobj = new LSEntry();
                 if (Version == 1)
                 {
-                    LSEntry_v1 entry = *(LSEntry_v1*)(_workingSource.Address + 0x08 + (i * 0x0C));
+                    _s_LSEntry_v1 entry = *(_s_LSEntry_v1*)(_workingSource.Address + 0x08 + (i * 0x0C));
                     lsobj.FileNameCRC = entry._crc;
                     lsobj.DTOffset = entry._start;
                     lsobj.Size = entry._size;
                 }
                 else if (Version == 2)
                 {
-                    LSEntry_v2 entry = *(LSEntry_v2*)(_workingSource.Address + 0x08 + (i * 0x10));
+                    _s_LSEntry_v2 entry = *(_s_LSEntry_v2*)(_workingSource.Address + 0x08 + (i * 0x10));
                     lsobj.FileNameCRC = entry._crc;
                     lsobj.DTOffset = entry._start;
                     lsobj.Size = entry._size;
@@ -67,22 +67,22 @@ namespace DTLS
 
             for (int i = 0; i < _entryCount; i++)
             {
-                LSEntryObject lsobj = Entries.Values[i];
+                LSEntry lsobj = Entries.Values[i];
                 if (Version == 1)
                 {
-                    LSEntry_v1* entry = (LSEntry_v1*)(addr + (i * 0x0C));
-                    *entry = new LSEntry_v1()
+                    _s_LSEntry_v1* entry = (_s_LSEntry_v1*)(addr + (i * 0x0C));
+                    *entry = new _s_LSEntry_v1()
                     {
                         _crc = lsobj.FileNameCRC,
                         _start = lsobj.DTOffset,
                         _size = lsobj.Size
                     };
-                    LSEntry_v1* entry2 = (LSEntry_v1*)(addr + (i * 0x0C));
+                    _s_LSEntry_v1* entry2 = (_s_LSEntry_v1*)(addr + (i * 0x0C));
                 }
                 else if (Version == 2)
                 {
-                    LSEntry_v2* entry = (LSEntry_v2*)(addr + (i * 0x10));
-                    *entry = new LSEntry_v2()
+                    _s_LSEntry_v2* entry = (_s_LSEntry_v2*)(addr + (i * 0x10));
+                    *entry = new _s_LSEntry_v2()
                     {
                         _crc = lsobj.FileNameCRC,
                         _start = lsobj.DTOffset,
@@ -106,9 +106,9 @@ namespace DTLS
             addr += 0x08;
             for (int i = 0; i < Entries.Count; i++)
             {
-                LSEntryObject lsobj = Entries.Values[i];
-                LSEntry_v2* entry = (LSEntry_v2*)(addr + (i * 0x10));
-                *entry = new LSEntry_v2()
+                LSEntry lsobj = Entries.Values[i];
+                _s_LSEntry_v2* entry = (_s_LSEntry_v2*)(addr + (i * 0x10));
+                *entry = new _s_LSEntry_v2()
                 {
                     _crc = lsobj.FileNameCRC,
                     _start = lsobj.DTOffset,
@@ -121,7 +121,7 @@ namespace DTLS
         }
     }
     // Proxy class for LSEntries to deal with multiple versions
-    public class LSEntryObject
+    public class LSEntry
     {
         public uint FileNameCRC { get { return _crc; } set { _crc = value; } }
         private uint _crc;
@@ -134,13 +134,13 @@ namespace DTLS
         public short PaddingLength { get { return _padLen; } set { _padLen = value; } }
         private short _padLen;
     }
-    public struct LSEntry_v1
+    public struct _s_LSEntry_v1
     {
         public uint _crc;
         public uint _start;
         public int _size;
     }
-    public struct LSEntry_v2
+    public struct _s_LSEntry_v2
     {
         public uint _crc;
         public uint _start;

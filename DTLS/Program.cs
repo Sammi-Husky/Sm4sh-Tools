@@ -71,7 +71,10 @@ namespace DTLS.Types
                 }
             }
             if (args.Length == 1)
+            {
+                Logstream = new StreamWriter("log.txt");
                 Unpack_update(args[0]);
+            }
             else if (args.Length == 0)
                 PrintUsage();
 
@@ -94,18 +97,17 @@ namespace DTLS.Types
             if (resourceStr.Contains("("))
                 region = resourceStr.Substring(resourceStr.IndexOf("(", StringComparison.Ordinal), 7);
 
-            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceStr)];
-            File.WriteAllBytes(resourceStr,
-                GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength, _resource.Size,
-                    _resource.DTIndex));
+            LSEntry _resource = lsFile.Entries[calc_crc(resourceStr)];
+            var resourceBytes = GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength, _resource.Size,
+                    _resource.DTIndex);
 
             Console.WriteLine($"Parsing {resourceStr} file..");
-            RFFile rfFile = new RFFile(resourceStr);
+            RFFile rfFile = new RFFile(resourceBytes);
             regionCode = rfFile.Header.RegionEtc & 3;
 
             var pathParts = new string[20];
-            var offsetParts = new LSEntryObject[20];
-            foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries)
+            var offsetParts = new LSEntry[20];
+            foreach (ResourceEntry rsobj in rfFile.ResourceEntries)
             {
                 if (rsobj == null)
                     continue;
@@ -114,11 +116,11 @@ namespace DTLS.Types
                 Array.Clear(pathParts, rsobj.FolderDepth, pathParts.Length - (rsobj.FolderDepth));
                 var path = $"data{region}/{string.Join("", pathParts)}";
 
-                LSEntryObject fileEntry;
-                if (rsobj.HasPack)
+                LSEntry fileEntry;
+                if (rsobj.Packed)
                 {
                     var crcPath = "";
-                    crcPath = $"{path}{(rsobj.Compressed ? "packed" : "")}";
+                    crcPath = $"{path}{(rsobj.Packed ? "packed" : "")}";
                     Console.WriteLine(crcPath);
                     Logstream.WriteLine(crcPath);
                     var crc = calc_crc(crcPath);
@@ -133,7 +135,7 @@ namespace DTLS.Types
 
                 if (!path.EndsWith("/"))
                 {
-                    LSEntryObject lsentry = offsetParts.LastOrDefault(x => x != null);
+                    LSEntry lsentry = offsetParts.LastOrDefault(x => x != null);
                     if (lsentry == null)
                         continue;
 
@@ -158,7 +160,7 @@ namespace DTLS.Types
             }
 
             // clean up
-            rfFile._workingSource.Close();
+            rfFile.WorkingSource.Close();
             if (File.Exists($"resource{region}.dec"))
                 File.Delete($"resource{region}.dec");
             if (File.Exists($"resource{region}"))
@@ -174,7 +176,7 @@ namespace DTLS.Types
         private static void Unpack_update(string resFile)
         {
             Console.WriteLine("Parsing resource file..");
-            RFFile rfFile = new RFFile(resFile);
+            RFFile rfFile = new RFFile(File.ReadAllBytes(resFile));
             var pathParts = new string[20];
             DataSource _curPacked = new DataSource();
             string mainfolder = "";
@@ -183,7 +185,7 @@ namespace DTLS.Types
             if (resFile.Contains("("))
                 region = resFile.Substring(resFile.IndexOf("(", StringComparison.Ordinal), 7);
 
-            foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries)
+            foreach (ResourceEntry rsobj in rfFile.ResourceEntries)
             {
                 if (rsobj == null)
                     continue;
@@ -193,9 +195,9 @@ namespace DTLS.Types
                 var path = $"data{region}/{string.Join("", pathParts)}";
 
 
-                if (rsobj.HasPack)
+                if (rsobj.Packed)
                 {
-                    path += (rsobj.Compressed ? "packed" : "");
+                    path += (rsobj.Packed ? "packed" : "");
                     if (File.Exists(path))
                     {
                         _curPacked = new DataSource(FileMap.FromFile(path));
@@ -204,7 +206,7 @@ namespace DTLS.Types
                     continue;
                 }
 
-                if (!(rsobj.inPatch && path.Contains(mainfolder) && !string.IsNullOrEmpty(mainfolder)))
+                if (!(path.Contains(mainfolder) && !string.IsNullOrEmpty(mainfolder)))
                     continue;
 
                 if (path.EndsWith("/"))
@@ -242,7 +244,7 @@ namespace DTLS.Types
                 }
             }
             Logstream.Close();
-            rfFile._workingSource.Close();
+            rfFile.WorkingSource.Close();
             Console.WriteLine("Extraction finished.");
 
             if (File.Exists($"resource{region}.dec"))
@@ -250,20 +252,19 @@ namespace DTLS.Types
         }
         private static unsafe void PatchArchive(string resourceStr, string patchFolder)
         {
-            LSEntryObject _resource = lsFile.Entries[calc_crc(resourceStr)];
+            LSEntry _resource = lsFile.Entries[calc_crc(resourceStr)];
             byte[] resource = GetFileDataDecompressed(_resource.DTOffset + (uint)_resource.PaddingLength,
                 _resource.Size,
                 _resource.DTIndex);
-            File.WriteAllBytes(resourceStr, resource);
 
             Console.WriteLine($"Patching {resourceStr}");
-            RFFile rfFile = new RFFile(resourceStr);
+            RFFile rfFile = new RFFile(resource);
             regionCode = rfFile.Header.RegionEtc & 3;
 
             var pathParts = new string[20];
-            var offsetParts = new LSEntryObject[20];
+            var offsetParts = new LSEntry[20];
 
-            foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries)
+            foreach (ResourceEntry rsobj in rfFile.ResourceEntries)
             {
                 if (rsobj == null)
                     continue;
@@ -272,10 +273,10 @@ namespace DTLS.Types
                 Array.Clear(pathParts, rsobj.FolderDepth, pathParts.Length - (rsobj.FolderDepth + 1));
                 var path = string.Join("", pathParts);
 
-                LSEntryObject fileEntry;
-                if (rsobj.HasPack)
+                LSEntry fileEntry;
+                if (rsobj.Packed)
                 {
-                    var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Compressed ? "/packed" : "")}";
+                    var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Packed ? "/packed" : "")}";
                     var crc = calc_crc(crcPath);
                     lsFile.Entries.TryGetValue(crc, out fileEntry);
                 }
@@ -291,7 +292,7 @@ namespace DTLS.Types
                         Console.WriteLine($"Patch found: {patchFolder}/{path}");
                         Logstream.WriteLine($"Patch found: {patchFolder}/{path}");
 
-                        LSEntryObject lsentry = offsetParts.Last(x => x != null);
+                        LSEntry lsentry = offsetParts.Last(x => x != null);
                         byte[] raw = File.ReadAllBytes($"{patchFolder}/{path}");
                         byte[] compressed = Util.Compress(raw);
 
@@ -326,8 +327,8 @@ namespace DTLS.Types
 
             // Update resource and LS files.
             rfFile.UpdateEntries();
-            byte[] dec = rfFile._workingSource.Slice((int)rfFile.Header.HeaderLen1,
-                (int)(rfFile._workingSource.Length - rfFile.Header.HeaderLen1));
+            byte[] dec = rfFile.WorkingSource.Slice((int)rfFile.Header.HeaderLen1,
+                (int)(rfFile.WorkingSource.Length - rfFile.Header.HeaderLen1));
             byte[] cmp = Util.Compress(dec);
             rfFile.Header.CompressedLen = (uint)cmp.Length;
             rfFile.Header.DecompressedLen = (uint)dec.Length;
@@ -345,7 +346,7 @@ namespace DTLS.Types
                 *(byte*)(curAddr + i) = full[i];
             }
             rSource.Close();
-            rfFile._workingSource.Close();
+            rfFile.WorkingSource.Close();
 
             if (File.Exists(resourceStr))
                 File.Delete(resourceStr);
@@ -356,34 +357,33 @@ namespace DTLS.Types
         // Rebuilding attempts. Almost works, but needs to handle embedded LS entries.
         private static unsafe void RebuildArchive(string patchFolder)
         {
-            LSEntryObject _resMain = lsFile.Entries[calc_crc("resource")];
+            LSEntry _resMain = lsFile.Entries[calc_crc("resource")];
 
             byte[] resource = GetFileDataDecompressed(_resMain.DTOffset + (uint)_resMain.PaddingLength,
                 _resMain.Size,
                 _resMain.DTIndex);
-            File.WriteAllBytes("resource", resource);
 
             Console.WriteLine($"Rebuilding archive...");
-            RFFile rfFile = new RFFile("resource");
+            RFFile rfFile = new RFFile(resource);
 
             var pathParts = new string[20];
-            var offsetParts = new LSEntryObject[20];
+            var offsetParts = new LSEntry[20];
             using (FileStream strm = File.Create("dt_rebuild"))
             {
                 int lsSize = 0;
-                foreach (ResourceEntryObject rsobj in rfFile.ResourceEntries.Where(rsobj => rsobj != null))
+                foreach (ResourceEntry rsobj in rfFile.ResourceEntries.Where(rsobj => rsobj != null))
                 {
                     pathParts[rsobj.FolderDepth - 1] = rsobj.EntryString;
                     Array.Clear(pathParts, rsobj.FolderDepth, pathParts.Length - (rsobj.FolderDepth + 1));
                     var path = string.Join("", pathParts);
 
-                    LSEntryObject fileEntry;
-                    if (rsobj.HasPack)
+                    LSEntry fileEntry;
+                    if (rsobj.Packed)
                     {
                         // if this is the end of a pack, update info and write end padding
                         if (offsetParts.Where(x => x != null).ToArray().Length > 0)
                         {
-                            LSEntryObject lsentry = offsetParts.Last(x => x != null);
+                            LSEntry lsentry = offsetParts.Last(x => x != null);
                             int align = lsSize.RoundUp(0x10) - lsSize;
 
                             if (lsentry.DTOffset != strm.Position + 0x80)
@@ -394,7 +394,7 @@ namespace DTLS.Types
                         }
                         // grab a new pack using the filepath we've built then write start padding.
                         lsSize = 0;
-                        var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Compressed ? "/packed" : "")}";
+                        var crcPath = $"data/{path.TrimEnd('/') + (rsobj.Packed ? "/packed" : "")}";
                         var crc = calc_crc(crcPath);
                         lsFile.Entries.TryGetValue(crc, out fileEntry);
                         fileEntry.DTOffset = (uint)strm.Position;
@@ -410,7 +410,7 @@ namespace DTLS.Types
                     if (!path.EndsWith("/"))
                         if (File.Exists($"{patchFolder}/{path}"))
                         {
-                            LSEntryObject lsentry = offsetParts.Last(x => x != null);
+                            LSEntry lsentry = offsetParts.Last(x => x != null);
 
                             Console.WriteLine($"{patchFolder}/{path}");
                             Logstream.WriteLine($"{patchFolder}/{path}");
@@ -436,8 +436,8 @@ namespace DTLS.Types
 
                 // Update resource and LS files.
                 rfFile.UpdateEntries();
-                byte[] dec = rfFile._workingSource.Slice((int)rfFile.Header.HeaderLen1,
-                    (int)(rfFile._workingSource.Length - rfFile.Header.HeaderLen1));
+                byte[] dec = rfFile.WorkingSource.Slice((int)rfFile.Header.HeaderLen1,
+                    (int)(rfFile.WorkingSource.Length - rfFile.Header.HeaderLen1));
                 byte[] cmp = Util.Compress(dec);
                 rfFile.Header.CompressedLen = (uint)cmp.Length;
                 rfFile.Header.DecompressedLen = (uint)dec.Length;
@@ -446,7 +446,7 @@ namespace DTLS.Types
                 // Patch the resource data back into the DT file.
                 long rOff = strm.Position;
                 strm.Write(full, 0, full.Length);
-                rfFile._workingSource.Close();
+                rfFile.WorkingSource.Close();
                 lsFile.Entries[calc_crc("resource")].Size = full.Length;
                 lsFile.Entries[calc_crc("resource")].DTOffset = (uint)rOff;
                 lsFile.Entries[calc_crc("resource(us_en)")].Size = full.Length;

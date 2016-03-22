@@ -146,7 +146,7 @@ namespace Sm4shCommand
             }
             Lines.Add(new Line(_list[i].ToString(), this));
             Lines.Add(new Line("}", this));
-            return i - startIndex;
+            return ++i - startIndex;
         }
         private int ParseCommands(int index, uint ident)
         {

@@ -13,6 +13,7 @@ namespace Parameters
         {
             Text = text;
             Parameters = new List<ParamEntry>();
+            labels = new List<string>();
         }
         public virtual void Wrap() { }
         public virtual byte[] GetBytes()
@@ -25,5 +26,9 @@ namespace Parameters
             return output;
         }
         public List<ParamEntry> Parameters { get; set; }
+        public List<string> labels { get; set; }
+
+
+        protected static T GetInstance<T>() where T : ValuesWrapper { return FormProvider.Instance.treeView1.SelectedNode as T; }
     }
 }

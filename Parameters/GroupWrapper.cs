@@ -3,12 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
 
 namespace Parameters
 {
     class GroupWrapper : ValuesWrapper
     {
-        public GroupWrapper(int index) : base($"Group[{index}]") { }
+        private static ContextMenuStrip _menu;
+        static GroupWrapper()
+        {
+            _menu = new ContextMenuStrip();
+            _menu.Items.Add(new ToolStripMenuItem("Apply Labels..", null, ApplyLablesAction));
+        }
+        public GroupWrapper(int index) : base($"Group[{index}]")
+        {
+            ContextMenuStrip = _menu;
+        }
 
         public int EntryCount { get; set; }
         public override void Wrap()
@@ -34,6 +45,23 @@ namespace Parameters
                 }
             }
             return output;
+        }
+        private static void ApplyLablesAction(object sender, EventArgs e)
+        {
+            GetInstance<GroupWrapper>().ApplyLabels();
+        }
+        public void ApplyLabels()
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    using (StreamReader reader = new StreamReader(dlg.FileName))
+                    {
+                        string[] lines = reader.ReadLine().Split('\n');
+                        foreach (var node in Nodes)
+                            ((ValuesWrapper)node).labels = lines.ToList();
+                    }
+                }
         }
     }
 }

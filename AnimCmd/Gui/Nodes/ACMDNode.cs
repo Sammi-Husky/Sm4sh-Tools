@@ -58,12 +58,11 @@ namespace Sm4shCommand.Nodes
 
                 TreeNode n = null;
                 if (Runtime.isRoot)
-                    n = new CommandListGroup(Runtime._curFighter, cml.AnimationCRC) { Text = $"{this.Nodes.Count:X} - {frm.NewName}" };
+                    n = new ScriptGroupNode(Runtime._curFighter, cml.AnimationCRC) { Text = $"{this.Nodes.Count:X} - {frm.NewName}" };
                 else
-                   n = new CommandListNode(cml) { Text = $"{this.Nodes.Count:X} - {frm.NewName}" };
+                   n = new ScriptNode(cml) { Text = $"{this.Nodes.Count:X} - {frm.NewName}" };
                 this.Nodes.Add(n);
                 Runtime.Instance.FileTree.SelectedNode = n;
-                Runtime.Instance.FileTree.Invalidate();
             }
         }
     }

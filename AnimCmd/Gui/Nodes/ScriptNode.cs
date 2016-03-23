@@ -7,10 +7,10 @@ using Sm4shCommand.Classes;
 
 namespace Sm4shCommand.Nodes
 {
-    public class CommandListNode : BaseNode
+    public class ScriptNode : BaseNode
     {
-        public CommandListNode(string name, ACMDScript list) { Text = name; _list = list; CRC = list.AnimationCRC; }
-        public CommandListNode(ACMDScript list) { _list = list; CRC = list.AnimationCRC; }
+        public ScriptNode(string name, ACMDScript list) { Text = name; _list = list; CRC = list.AnimationCRC; }
+        public ScriptNode(ACMDScript list) { _list = list; CRC = list.AnimationCRC; }
 
         public new string Name
         {

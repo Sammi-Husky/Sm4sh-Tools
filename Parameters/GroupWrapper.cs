@@ -57,9 +57,10 @@ namespace Parameters
                 {
                     using (StreamReader reader = new StreamReader(dlg.FileName))
                     {
-                        string[] lines = reader.ReadLine().Split('\n');
+                        string[] lines = reader.ReadToEnd().Split('\n');
                         foreach (var node in Nodes)
                             ((ValuesWrapper)node).labels = lines.ToList();
+                        
                     }
                 }
         }

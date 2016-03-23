@@ -63,8 +63,8 @@
     <Compile Include="crc32.cs" />
     <Compile Include="GUI\Nodes\ACMDNode.cs" />
     <Compile Include="GUI\Nodes\BaseNode.cs" />
-    <Compile Include="GUI\Nodes\CommandListGroupNode.cs" />
-    <Compile Include="GUI\Nodes\CommandListNode.cs" />
+    <Compile Include="GUI\Nodes\ScriptGroupNode.cs" />
+    <Compile Include="GUI\Nodes\ScriptNode.cs" />
     <Compile Include="GUI\Nodes\DataNode.cs" />
     <Compile Include="IO\DataSource.cs" />
     <Compile Include="IO\FileMap.cs" />
@@ -84,7 +84,7 @@
     <Compile Include="Type Extensions\UInt32Extension.cs" />
     <Compile Include="Type Extensions\VoidPtr.cs" />
     <Compile Include="GUI\CodeEditControl.cs">
-      <SubType>UserControl</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="GUI\CodeEditControl.Designer.cs">
       <DependentUpon>CodeEditControl.cs</DependentUpon>

@@ -11,9 +11,9 @@ using Sm4shCommand.Nodes;
 
 namespace Sm4shCommand
 {
-    public partial class CodeEditControl : UserControl
+    public partial class CodeEditControl : TabPage
     {
-        public CodeEditControl(CommandListGroup group)
+        public CodeEditControl(ScriptGroupNode group)
         {
             InitializeComponent();
             pnlParams.Enabled = true;
@@ -30,7 +30,7 @@ namespace Sm4shCommand
             p.Controls.Add(new ITSCodeBox(group.lists[3], Runtime.commandDictionary) { Dock = DockStyle.Fill });
             tabControl1.TabPages.Add(p);
         }
-        public CodeEditControl(CommandListNode node)
+        public CodeEditControl(ScriptNode node)
         {
             InitializeComponent();
             pnlParams.Enabled = false;

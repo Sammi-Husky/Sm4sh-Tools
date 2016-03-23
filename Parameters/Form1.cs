@@ -33,6 +33,7 @@ namespace Parameters
             {
                 treeView1.Nodes.Clear();
                 ParseParams(dlg.FileName);
+                tbl.Rows.Clear();
             }
         }
         private void ParseParams(string filepath)
@@ -104,7 +105,7 @@ namespace Parameters
             for (int i = 0; i < node.Parameters.Count; i++)
             {
                 // Add row with first column set as index or label
-                if (i < node.labels.Count)
+                if (i < node.labels.Count && !string.IsNullOrWhiteSpace(node.labels[i]))
                     tbl.Rows.Add(node.labels[i]);
                 else
                     tbl.Rows.Add(i);
@@ -210,6 +211,11 @@ namespace Parameters
                 }
                 ((ValuesWrapper)treeView1.SelectedNode).Parameters[i].Value = val;
             }
+        }
+
+        private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            treeView1.SelectedNode = e.Node;
         }
     }
 

@@ -15,6 +15,6 @@ namespace Parameters
                 return _inst;
             }
         }
-        private static Form1 _inst = new Form1();
+        private static readonly Form1 _inst = new Form1();
     }
 }

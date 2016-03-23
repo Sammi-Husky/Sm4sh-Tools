@@ -47,7 +47,7 @@ namespace Sm4shCommand
                     if (u == 0)
                         continue;
 
-                    CommandListGroup g = new CommandListGroup(_curFighter, u) { ToolTipText = $"[{u:X8}]" };
+                    ScriptGroupNode g = new ScriptGroupNode(_curFighter, u) { ToolTipText = $"[{u:X8}]" };
 
                     if (Manager.AnimHashPairs.ContainsKey(u))
                         g.Text = Manager.AnimHashPairs[u];
@@ -190,7 +190,7 @@ namespace Sm4shCommand
                     for (int i = 0; i < _curFile.EventLists.Count; i++)
                     {
                         ACMDScript cml = _curFile.EventLists.Values[i];
-                        root.Nodes.Add(new CommandListNode($"{i:X}-[{cml.AnimationCRC:X8}]", cml));
+                        root.Nodes.Add(new ScriptNode($"{i:X}-[{cml.AnimationCRC:X8}]", cml));
                     }
                     FileTree.Nodes.Add(root);
                     FileTree.EndUpdate();
@@ -241,12 +241,12 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                TabPage p = tabControl1.TabPages[i];
+                var p = tabControl1.TabPages[i] as CodeEditControl;
 
-                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                TabControl tmp = (TabControl)p.Controls[0];
 
                 Rectangle r = tabControl1.GetTabRect(i);
-                Rectangle closeButton = new Rectangle(r.Right - 18, r.Top + 3, 12, 10);
+                Rectangle closeButton = new Rectangle(r.Right - 18, r.Top + 3, 13, Font.Height);
                 if (closeButton.Contains(e.Location))
                 {
                     for (int x = 0; x < tmp.TabCount; x++)
@@ -281,7 +281,7 @@ namespace Sm4shCommand
             foreach (TreeNode n in tree.Nodes)
                 if (n.Text == "ACMD")
                     for (int i = 0; i < n.Nodes.Count; i++)
-                        if (n.Nodes[i] is CommandListNode | n.Nodes[i] is CommandListGroup)
+                        if (n.Nodes[i] is ScriptNode | n.Nodes[i] is ScriptGroupNode)
                         {
                             var node = ((BaseNode)n.Nodes[i]);
                             string str = "";
@@ -294,7 +294,7 @@ namespace Sm4shCommand
         }
         private void FileTree_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (!(FileTree.SelectedNode is CommandListGroup || FileTree.SelectedNode is CommandListNode)) return;
+            if (!(FileTree.SelectedNode is ScriptGroupNode || FileTree.SelectedNode is ScriptNode)) return;
 
             BaseNode node = (BaseNode)FileTree.SelectedNode;
 
@@ -302,13 +302,25 @@ namespace Sm4shCommand
                 tabControl1.SelectTab(node.Name + node.Index);
             else
             {
-                var p = new TabPage($"{node.Name}") { Name = node.Name + node.Index };
-                if (node is CommandListGroup)
-                    p.Controls.Add(new CodeEditControl((CommandListGroup)node) { Dock = DockStyle.Fill });
-                else if (node is CommandListNode)
-                    p.Controls.Add(new CodeEditControl((CommandListNode)node) { Dock = DockStyle.Fill });
-                tabControl1.TabPages.Insert(0, p);
-                tabControl1.SelectedIndex = 0;
+                if (node is ScriptGroupNode)
+                {
+                    var page = new CodeEditControl((ScriptGroupNode)node)
+                    {
+                        Text = node.Name,
+                        Name = node.Name + node.Index
+                    };
+                    tabControl1.TabPages.Insert(0, page);
+                }
+                else if (node is ScriptNode)
+                {
+                    var page = new CodeEditControl((ScriptNode)node)
+                    {
+                        Text = node.Name,
+                        Name = node.Name + node.Index
+                    };
+                    tabControl1.TabPages.Insert(0, page);
+                }
+                tabControl1.SelectTab(0);
             }
         }
 
@@ -326,16 +338,18 @@ namespace Sm4shCommand
 
                 FileTree.BeginUpdate();
                 _curFighter = _manager.OpenFighter(dlg.SelectedPath);
+                TreeNode root = new TreeNode("Root");
                 TreeNode nScript = new ACMDNode() { Text = "ACMD" };
 
                 for (int i = 0; i < _curFighter.MotionTable.Count; i++)
                 {
                     uint CRC = _curFighter.MotionTable[i];
-                    nScript.Nodes.Add(new CommandListGroup(_curFighter, CRC) { Text = $"{i:X}-[{CRC:X8}]" });
+                    nScript.Nodes.Add(new ScriptGroupNode(_curFighter, CRC) { Text = $"{i:X}-[{CRC:X8}]" });
                 }
                 TreeNode nParams = new TreeNode("Params");
                 TreeNode nMscsb = new TreeNode("MSCSB");
-                FileTree.Nodes.AddRange(new TreeNode[] { nScript, nParams, nMscsb });
+                root.Nodes.AddRange(new TreeNode[] { nScript, nParams, nMscsb });
+                FileTree.Nodes.Add(root);
                 FileTree.EndUpdate();
 
                 cboMode.SelectedIndex = (int)Runtime.WorkingEndian;

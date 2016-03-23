@@ -8,11 +8,11 @@ using Sm4shCommand.Classes;
 
 namespace Sm4shCommand.Nodes
 {
-    public class CommandListGroup : BaseNode
+    public class ScriptGroupNode : BaseNode
     {
         private static ContextMenuStrip _menu;
         public bool Dirty { get { return Fighter.Dirty; } }
-        public CommandListGroup(Fighter fighter, uint CRC)
+        public ScriptGroupNode(Fighter fighter, uint CRC)
         {
 
             ContextMenuStrip = _menu;

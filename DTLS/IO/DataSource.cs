@@ -67,12 +67,17 @@ namespace System.IO
         {
             if (len > Length | start > Length)
                 return null;
-
             byte[] b = new byte[len];
-            for (int i = 0; i < b.Length; i++)
-                b[i] = *(byte*)(Address + start + i);
+            fixed (byte* ptr = b)
+            {
+                Win32.MoveMemory(ptr, Address + start, (uint)len);
 
-            return b;
+                //byte[] b = new byte[len];
+                //for (int i = 0; i < b.Length; i++)
+                //    b[i] = *(byte*)(Address + start + i);
+
+                return b;
+            }
         }
     }
 

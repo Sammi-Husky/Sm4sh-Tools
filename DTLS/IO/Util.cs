@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ZLibNet;
 
-namespace DTLS.IO
+namespace DTLS
 {
     public static class Util
     {
@@ -38,6 +38,17 @@ namespace DTLS.IO
 
             data[offset + 3] = (byte)((value & 0xFF000000) / 0x1000000);
             data[offset + 2] = (byte)((value & 0xFF0000) / 0x10000);
+            data[offset + 1] = (byte)((value & 0xFF00) / 0x100);
+            data[offset + 0] = (byte)((value & 0xFF) / 0x1);
+        }
+        public static void SetHalf(ref byte[] data, short value, long offset)
+        {
+            if (offset % 2 != 0) throw new Exception("Odd word offset");
+            if (offset >= data.Length)
+            {
+                Array.Resize<byte>(ref data, (int)offset + 4);
+            }
+
             data[offset + 1] = (byte)((value & 0xFF00) / 0x100);
             data[offset + 0] = (byte)((value & 0xFF) / 0x1);
         }

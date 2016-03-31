@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using System.IO;
-using DTLS.IO;
 
 namespace DTLS
 {
     public unsafe class RFFile
     {
         public DataSource WorkingSource { get; set; }
+        public DataSource CompressedSource { get; set; }
         public RfHeader Header { get; set; }
-        public RFFile(byte[] data)
+
+        public RFFile(string filepath)
         {
-            fixed (byte* src = data)
-            {
-                DataSource cmpSource = new DataSource(src, data.Length);
-                byte[] header = cmpSource.Slice(0, 0x80);
-                byte[] filedata = Util.DeCompress(cmpSource.Slice(0x80, cmpSource.Length - 0x80));
-                Parse(header.Concat(filedata).ToArray());
-                cmpSource.Close();
-            }
+
+            CompressedSource = new DataSource(FileMap.FromFile(filepath));
+            byte[] header = CompressedSource.Slice(0, 0x80);
+            byte[] filedata = Util.DeCompress(CompressedSource.Slice(0x80, CompressedSource.Length - 0x80));
+            File.WriteAllBytes(filepath + ".dec", header.Concat(filedata).ToArray());
+            WorkingSource = new DataSource(FileMap.FromFile(filepath + ".dec"));
+            Parse();
         }
 
-        public int RegionCode { get { return Header.RegionEtc & 3; } }
+        public int RegionCode { get { return (Header.RegionEtc & 3) - 1; } }
         private string[] Extensions;
         public string Locale { get; set; }
 
@@ -37,11 +35,8 @@ namespace DTLS
             set { ResourceEntries[i] = value; }
         }
 
-        public void Parse(byte[] data)
+        public void Parse()
         {
-            fixed (byte* src = data)
-                WorkingSource = new DataSource(src, data.Length);
-
             _s_RFHeader rfheader = *(_s_RFHeader*)WorkingSource.Address;
             Header = new RfHeader
             {
@@ -102,9 +97,9 @@ namespace DTLS
                     var strbytes = GetStrRef((int)rsobj.NameOffset);
                     var reference = BitConverter.ToUInt16(strbytes, 0);
 
-                    var referenceLen = (reference & 0x1f) + 4;
-                    var refReloff = (reference & 0xe0) >> 6 << 8 | (reference >> 8);
-                    name = GetStr((int)rsobj.NameOffset - refReloff).Remove(referenceLen) + GetStr((int)rsobj.NameOffset + 2);
+                    var reflen = (reference & 0x1f) + 4;
+                    var refoff = (reference & 0xe0) >> 6 << 8 | (reference >> 8);
+                    name = GetStr((int)rsobj.NameOffset - refoff).Remove(reflen) + GetStr((int)rsobj.NameOffset + 2);
                 }
                 else
                     name = GetStr((int)rsobj.NameOffset);
@@ -208,6 +203,19 @@ namespace DTLS
             return new String((sbyte*)(WorkingSource.Address +
                 Header.StrsChunkOffset + 4 + start));
         }
+
+        public byte[] GetBytes()
+        {
+            byte[] data = WorkingSource.Slice((int)Header.HeaderLen1,
+                WorkingSource.Length - (int)Header.HeaderLen1);
+            Header.DecompressedLen = (uint)data.Length;
+            data = Util.Compress(data);
+            Header.CompressedLen = (uint)data.Length;
+            byte[] header = Header.ToArray();
+            byte[] full = header.Concat(data).ToArray();
+
+            return full;
+        }
     }
 
     public class RfHeader
@@ -241,6 +249,7 @@ namespace DTLS
         {
             byte[] b = new byte[0x80];
             Util.SetWord(ref b, tag, 0);
+            Util.SetHalf(ref b, RegionEtc, 2);
             Util.SetWord(ref b, headerLen1, 4);
             Util.SetWord(ref b, pad, 8);
             Util.SetWord(ref b, EntriesChunkOffset, 0x0C);

@@ -338,7 +338,6 @@ namespace Sm4shCommand
 
                 FileTree.BeginUpdate();
                 _curFighter = _manager.OpenFighter(dlg.SelectedPath);
-                TreeNode root = new TreeNode("Root");
                 TreeNode nScript = new ACMDNode() { Text = "ACMD" };
 
                 for (int i = 0; i < _curFighter.MotionTable.Count; i++)
@@ -348,8 +347,7 @@ namespace Sm4shCommand
                 }
                 TreeNode nParams = new TreeNode("Params");
                 TreeNode nMscsb = new TreeNode("MSCSB");
-                root.Nodes.AddRange(new TreeNode[] { nScript, nParams, nMscsb });
-                FileTree.Nodes.Add(root);
+                FileTree.Nodes.AddRange(new TreeNode[] { nScript, nParams, nMscsb });
                 FileTree.EndUpdate();
 
                 cboMode.SelectedIndex = (int)Runtime.WorkingEndian;

@@ -24,7 +24,7 @@ namespace DTLS
         public int EntryCount { get { return _entryCount; } set { _entryCount = value; } }
         private int _entryCount;
 
-        public SortedList<uint, LSEntry> Entries;
+        private SortedList<uint, LSEntry> Entries;
 
         public void Parse(string path)
         {
@@ -54,7 +54,7 @@ namespace DTLS
                     lsobj.DTOffset = entry._start;
                     lsobj.Size = entry._size;
                     lsobj.DTIndex = entry._dtIndex;
-                    lsobj.PaddingLength = entry._padlen;
+                    lsobj.PaddingLength = entry._unk;
                 }
                 Entries.Add(lsobj.FileNameCRC, lsobj);
             }
@@ -88,36 +88,29 @@ namespace DTLS
                         _start = lsobj.DTOffset,
                         _size = lsobj.Size,
                         _dtIndex = lsobj.DTIndex,
-                        _padlen = lsobj.PaddingLength
+                        _unk = lsobj.PaddingLength
                     };
                 }
             }
         }
 
-        public void ConvertToV2()
+        private uint calc_crc(string filename)
         {
-            int size = 0x08 + Entries.Count * 0x10;
-            string path = _workingSource.Map.FilePath;
-            _workingSource.Close();
-            _workingSource = new DataSource(FileMap.FromTempFile(size));
-            VoidPtr addr = _workingSource.Address;
-            *(uint*)addr = 0x0002666f;
-            *(int*)(addr + 4) = Entries.Count;
-            addr += 0x08;
-            for (int i = 0; i < Entries.Count; i++)
-            {
-                LSEntry lsobj = Entries.Values[i];
-                _s_LSEntry_v2* entry = (_s_LSEntry_v2*)(addr + (i * 0x10));
-                *entry = new _s_LSEntry_v2()
-                {
-                    _crc = lsobj.FileNameCRC,
-                    _start = lsobj.DTOffset,
-                    _size = lsobj.Size,
-                    _dtIndex = lsobj.DTIndex,
-                    _padlen = lsobj.PaddingLength
-                };
-            }
-            _workingSource.Export(path);
+            var b = Encoding.ASCII.GetBytes(filename);
+            for (var i = 0; i < 4; i++)
+                b[i] = (byte)(~filename[i] & 0xff);
+            return ZLibNet.CrcCalculator.CaclulateCRC32(b) & 0xFFFFFFFF;
+        }
+        public LSEntry TryGetValue(string name)
+        {
+            uint CRC = calc_crc(name);
+            LSEntry tmp = null;
+            Entries.TryGetValue(CRC, out tmp);
+            return tmp;
+        }
+        public void TrySetValue(string key, LSEntry data)
+        {
+            Entries[calc_crc(key)] = data;
         }
     }
     // Proxy class for LSEntries to deal with multiple versions
@@ -133,6 +126,8 @@ namespace DTLS
         private short _dtIndex = 0;
         public short PaddingLength { get { return _padLen; } set { _padLen = value; } }
         private short _padLen;
+
+        public int FirstFile { get; set; }
     }
     public struct _s_LSEntry_v1
     {
@@ -146,6 +141,6 @@ namespace DTLS
         public uint _start;
         public int _size;
         public short _dtIndex;
-        public short _padlen;
+        public short _unk;
     }
 }

@@ -51,14 +51,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GLOBALS.cs" />
     <Compile Include="IO\DataSource.cs" />
     <Compile Include="IO\FileMap.cs" />
     <Compile Include="IO\Util.cs" />
     <Compile Include="IO\Win32.cs" />
+    <Compile Include="Type Extensions\StreamExtensions.cs" />
+    <Compile Include="Types\IndexedPath.cs" />
+    <Compile Include="ResourceManager.cs" />
     <Compile Include="Type Extensions\DateTimeExtension.cs" />
     <Compile Include="Types\LSFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\PACKFile.cs" />
     <Compile Include="Types\RFFile.cs" />
     <Compile Include="Type Extensions\BigEndianTypes.cs" />
     <Compile Include="Type Extensions\ByteExtension.cs" />

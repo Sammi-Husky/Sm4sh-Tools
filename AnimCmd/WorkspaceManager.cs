@@ -147,10 +147,11 @@ namespace Sm4shCommand
                     VoidPtr addr = src.Address + off;
                     while (*(byte*)addr != 0)
                     {
-                        string AnimName = Regex.Match(s, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
+                        var tmp = new string((sbyte*)addr);
+                        string AnimName = Regex.Match(tmp, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
                         if (string.IsNullOrEmpty(AnimName))
                         {
-                            addr += s.Length + 1;
+                            addr += tmp.Length + 1;
                             continue;
                         }
 
@@ -165,7 +166,7 @@ namespace Sm4shCommand
                            AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
                             AddAnimHash(AnimName.Substring(0, AnimName.Length - 1));
 
-                        addr += s.Length + 1;
+                        addr += tmp.Length + 1;
                     }
                 }
             }

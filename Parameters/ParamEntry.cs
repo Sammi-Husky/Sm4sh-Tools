@@ -73,7 +73,7 @@ namespace Parameters
                     return data.ToArray();
                 case ParameterType.str:
                     data.Add(8);
-                    data.AddRange(BitConverter.GetBytes(((string)Value).Length));
+                    data.AddRange(BitConverter.GetBytes(((string)Value).Length).Reverse());
                     data.AddRange(Encoding.ASCII.GetBytes((string)Value));
                     return data.ToArray();
                 default:

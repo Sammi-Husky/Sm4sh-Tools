@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTLS", "DTLS\DTLS.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "N0aH", "Noah\N0aH.csproj", "{056D33CC-715B-423F-9CF7-46122A7D0CBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parameters", "Parameters\Parameters.csproj", "{22D571D7-D327-46C0-8BA7-663F5EC0BA28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PARAM", "PARAM\PARAM.csproj", "{22D571D7-D327-46C0-8BA7-663F5EC0BA28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

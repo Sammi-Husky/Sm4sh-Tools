@@ -22,6 +22,9 @@ Miscellaneous tools for dealing with Smash 4 files.
 - **[PACKManager](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/PACKManager)**
   - Used to unpack and repack .pac files, most commonly used to pack .omo animation files together.
 
+- **[PARAM](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/PARAM)**
+  - Editor used to open / edit / view smash 4's param files. Due to the way the game handles param files, it's near impossible to fully rebuild or properly display some files. However, around 80%+ or more of them will work fine. Includes standard templates used to label entries. (right click a group to open the file and apply lables to all entries in a group)
+
 ## Building
   - Checkout the repo: `git checkout https://github.com/Sammi-Husky/Sm4sh-Tools.git`
   - Use the Solution file to build the projects.

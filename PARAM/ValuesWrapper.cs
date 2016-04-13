@@ -27,7 +27,16 @@ namespace Parameters
         }
         public List<ParamEntry> Parameters { get; set; }
         public List<string> labels { get; set; }
-
+        public TreeNode Root
+        {
+            get
+            {
+                TreeNode root = this;
+                while (root.Parent != null)
+                    root = root.Parent;
+                return root;
+            }
+        }
 
         protected static T GetInstance<T>() where T : ValuesWrapper { return FormProvider.Instance.treeView1.SelectedNode as T; }
     }

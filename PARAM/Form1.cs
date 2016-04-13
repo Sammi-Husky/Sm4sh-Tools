@@ -43,56 +43,108 @@ namespace Parameters
                 using (var reader = new BinaryReader(stream))
                 {
                     stream.Seek(0x08, SeekOrigin.Begin);
-                    var wrp = new ValuesWrapper("Group[0]");
-                    int group = 0;
-
+                    var grp = new ValuesWrapper("Values[0]");
+                    int index = 0;
                     while (stream.Position != stream.Length)
                     {
-                        ParameterType type = (ParameterType)stream.ReadByte();
+                        ParameterType type = (ParameterType)reader.BaseStream.ReadByte();
                         switch (type)
                         {
                             case ParameterType.u8:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
                                 break;
                             case ParameterType.s8:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
                                 break;
                             case ParameterType.u16:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadUInt16().Reverse(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadUInt16().Reverse(), type));
                                 break;
                             case ParameterType.s16:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadInt16().Reverse(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadInt16().Reverse(), type));
                                 break;
                             case ParameterType.u32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadUInt32().Reverse(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadUInt32().Reverse(), type));
                                 break;
                             case ParameterType.s32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadInt32().Reverse(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadInt32().Reverse(), type));
                                 break;
                             case ParameterType.f32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadSingle().Reverse(), type));
+                                grp.Parameters.Add(new ParamEntry(reader.ReadSingle().Reverse(), type));
                                 break;
                             case ParameterType.str:
                                 int tmp = reader.ReadInt32().Reverse();
-                                wrp.Parameters.Add(new ParamEntry(new string(reader.ReadChars(tmp)), type));
+                                grp.Parameters.Add(new ParamEntry(new string(reader.ReadChars(tmp)), type));
                                 break;
                             case ParameterType.group:
-                                if (wrp.Parameters.Count > 0)
+                                if (grp.Parameters.Count > 0)
                                 {
-                                    wrp.Wrap();
-                                    treeView1.Nodes.Add(wrp);
+                                    grp.Wrap();
+                                    treeView1.Nodes.Add(grp);
                                 }
-                                wrp = new GroupWrapper(++group);
-                                ((GroupWrapper)wrp).EntryCount = reader.ReadInt32().Reverse();
+                                var newnode = new GroupWrapper(++index);
+                                newnode.EntryCount = reader.ReadInt32().Reverse();
+                                treeView1.Nodes.Add(ParseGroup(newnode, reader));
+                                grp = new ValuesWrapper($"group[{index}]");
                                 break;
                             default:
-                                throw new NotImplementedException($"unk typecode: {type} at offset: {stream.Position:X}");
+                                throw new NotImplementedException($"unk typecode: {type} at offset: {reader.BaseStream.Position:X}");
                         }
                     }
-                    wrp.Wrap();
-                    treeView1.Nodes.Add(wrp);
+                    if (grp.Parameters.Count > 0)
+                    {
+                        grp.Wrap();
+                        treeView1.Nodes.Add(grp);
+                    }
                 }
             }
+        }
+        private GroupWrapper ParseGroup(GroupWrapper node, BinaryReader reader)
+        {
+            bool end = false;
+            while (!end && reader.BaseStream.Position != reader.BaseStream.Length)
+            {
+                ParameterType type = (ParameterType)reader.BaseStream.ReadByte();
+                switch (type)
+                {
+                    case ParameterType.u8:
+                        node.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
+                        break;
+                    case ParameterType.s8:
+                        node.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
+                        break;
+                    case ParameterType.u16:
+                        node.Parameters.Add(new ParamEntry(reader.ReadUInt16().Reverse(), type));
+                        break;
+                    case ParameterType.s16:
+                        node.Parameters.Add(new ParamEntry(reader.ReadInt16().Reverse(), type));
+                        break;
+                    case ParameterType.u32:
+                        node.Parameters.Add(new ParamEntry(reader.ReadUInt32().Reverse(), type));
+                        break;
+                    case ParameterType.s32:
+                        node.Parameters.Add(new ParamEntry(reader.ReadInt32().Reverse(), type));
+                        break;
+                    case ParameterType.f32:
+                        node.Parameters.Add(new ParamEntry(reader.ReadSingle().Reverse(), type));
+                        break;
+                    case ParameterType.str:
+                        int tmp = reader.ReadInt32().Reverse();
+                        node.Parameters.Add(new ParamEntry(new string(reader.ReadChars(tmp)), type));
+                        break;
+                    case ParameterType.group:
+                        reader.BaseStream.Position--;
+                        if (node.Parameters.Count > 0 && node.Parameters.Count % node.EntryCount != 0)
+                            node.Parameters.Add(new ParamEntry(ParseGroup(new GroupWrapper(0), reader), type));
+                        else
+                            end = true;
+
+                        break;
+                    default:
+                        throw new NotImplementedException($"unk typecode: {type} at offset: {reader.BaseStream.Position:X}");
+                }
+            }
+            node.Wrap();
+            return node;
         }
 
         private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)

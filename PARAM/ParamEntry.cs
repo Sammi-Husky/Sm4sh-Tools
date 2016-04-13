@@ -33,6 +33,8 @@ namespace Parameters
                         return 5;
                     case ParameterType.str:
                         return ((string)Value).Length + 1;
+                    case ParameterType.group:
+                        return ((GroupWrapper)Value).GetBytes().Length;
                     default:
                         return 0;
                 }
@@ -75,6 +77,10 @@ namespace Parameters
                     data.Add(8);
                     data.AddRange(BitConverter.GetBytes(((string)Value).Length).Reverse());
                     data.AddRange(Encoding.ASCII.GetBytes((string)Value));
+                    return data.ToArray();
+                case ParameterType.group:
+                    data.Add(0x20);
+                    data.AddRange(((GroupWrapper)Value).GetBytes().Reverse());
                     return data.ToArray();
                 default:
                     return null;

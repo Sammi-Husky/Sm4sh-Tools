@@ -60,7 +60,7 @@ namespace Parameters
                         string[] lines = reader.ReadToEnd().Split('\n');
                         foreach (var node in Nodes)
                             ((ValuesWrapper)node).labels = lines.ToList();
-                        
+
                     }
                 }
         }

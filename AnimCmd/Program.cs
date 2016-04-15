@@ -21,7 +21,7 @@ namespace Sm4shCommand
         [STAThread]
         static void Main(string[] args)
         {
-            RegisterFileAssociations();
+            //RegisterFileAssociations();
 
             if (args.Length >= 1)
             {

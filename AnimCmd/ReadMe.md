@@ -1,4 +1,4 @@
-![Screenshot](http://i.imgur.com/ehwoMSJ.png)
+![Screenshot](http://i.imgur.com/3HBRdsw.png)
   - Aims to be a full fledged moveset editor for the smash4 ACMD filetypes, commonly refered to as "Moveset Files". The application supports full text editor based code writing with syntax highlighting and code completion. The application is still under active developement and some features may be unstable / incomplete.
   
   - **Usable features**
@@ -23,11 +23,11 @@
     - Creating entirely new ACMD files.
     - Creating entirely new MTable files.
 
-*CREDITS*
-    - This application uses Open Source components. You can find the source code of
+**CREDITS**
+  - This application uses Open Source components. You can find the source code of
     their open source projects along with license information below. We acknowledge
     and are grateful to these developers for their contributions to open source.
-
+    
     Project: FastColoredTextBox https://github.com/PavelTorgashov/FastColoredTextBox
     Copyright (C) Pavel Torgashov, 2011-2014. 
     GNU Lesser General Public License (LGPLv3) https://github.com/PavelTorgashov/FastColoredTextBox/blob/master/license.txt

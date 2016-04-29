@@ -173,10 +173,11 @@ namespace Sm4shCommand
         }
         private void AddAnimHash(string name)
         {
-            if (AnimHashPairs.ContainsValue(name))
+            uint crc = Crc32.Compute(Encoding.ASCII.GetBytes(name.ToLower()));
+            if (AnimHashPairs.ContainsValue(name) || AnimHashPairs.ContainsKey(crc))
                 return;
 
-            AnimHashPairs.Add(Crc32.Compute(Encoding.ASCII.GetBytes(name.ToLower())), name);
+            AnimHashPairs.Add(crc, name);
         }
         public ACMDFile OpenFile(string Filepath)
         {

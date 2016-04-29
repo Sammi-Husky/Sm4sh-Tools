@@ -112,7 +112,6 @@ namespace Sm4shCommand.Classes
         }
         private List<ACMDCommand> _commands = new List<ACMDCommand>();
 
-
         #region IEnumerable Implemntation
         public int Count { get { return _commands.Count; } }
 

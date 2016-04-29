@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using static Sm4shCommand.Runtime;
 using Sm4shCommand.Nodes;
+using Sm4shCommand.GUI;
 
 namespace Sm4shCommand
 {
@@ -88,21 +89,22 @@ namespace Sm4shCommand
 
             for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                TabPage p = tabControl1.TabPages[i];
-                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                var p = tabControl1.TabPages[i] as CodeEditControl;
+
+                TabControl tmp = (TabControl)p.Controls[0];
                 for (int x = 0; x < tmp.TabCount; x++)
                 {
-                    ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
+                    ACMD_EDITOR box = (ACMD_EDITOR)tmp.TabPages[x].Controls[0];
 
-                    if (box.CommandList.Empty)
+                    if (box.Script.Empty)
                         continue;
 
                     box.ApplyChanges();
 
                     if (!isRoot)
-                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                        _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                     else
-                        _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                        _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
                 }
             }
 
@@ -122,21 +124,22 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                TabPage p = tabControl1.TabPages[i];
-                TabControl tmp = (TabControl)p.Controls[0].Controls[0];
+                var p = tabControl1.TabPages[i] as CodeEditControl;
+
+                TabControl tmp = (TabControl)p.Controls[0];
                 for (int x = 0; x < tmp.TabCount; x++)
                 {
-                    ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
+                    ACMD_EDITOR box = (ACMD_EDITOR)tmp.TabPages[x].Controls[0];
 
-                    if (box.CommandList.Empty)
+                    if (box.Script.Empty)
                         continue;
 
                     box.ApplyChanges();
 
                     if (!isRoot)
-                        _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                        _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                     else
-                        _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                        _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
                 }
             }
 
@@ -251,16 +254,16 @@ namespace Sm4shCommand
                 {
                     for (int x = 0; x < tmp.TabCount; x++)
                     {
-                        ITSCodeBox box = (ITSCodeBox)tmp.TabPages[x].Controls[0];
-                        if (box.CommandList.Empty)
+                        ACMD_EDITOR box = (ACMD_EDITOR)tmp.TabPages[x].Controls[0];
+                        if (box.Script.Empty)
                             continue;
 
                         box.ApplyChanges();
 
                         if (!isRoot)
-                            _curFile.EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                            _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                         else
-                            _curFighter[(ACMDType)x].EventLists[box.CommandList.AnimationCRC] = box.CommandList;
+                            _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
 
                     }
                     tabControl1.TabPages.Remove(p);
@@ -388,6 +391,12 @@ namespace Sm4shCommand
         private void cboMode_SelectedIndexChanged(object sender, EventArgs e)
         {
             Runtime.WorkingEndian = (Endianness)cboMode.SelectedIndex;
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var abtBox = new AboutBox();
+            abtBox.ShowDialog();
         }
     }
 

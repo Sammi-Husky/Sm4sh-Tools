@@ -22,4 +22,12 @@
     - Adding new event lists to files.
     - Creating entirely new ACMD files.
     - Creating entirely new MTable files.
-    - Undo and redo support.
+
+*CREDITS*
+    - This application uses Open Source components. You can find the source code of
+    their open source projects along with license information below. We acknowledge
+    and are grateful to these developers for their contributions to open source.
+
+    Project: FastColoredTextBox https://github.com/PavelTorgashov/FastColoredTextBox
+    Copyright (C) Pavel Torgashov, 2011-2014. 
+    GNU Lesser General Public License (LGPLv3) https://github.com/PavelTorgashov/FastColoredTextBox/blob/master/license.txt

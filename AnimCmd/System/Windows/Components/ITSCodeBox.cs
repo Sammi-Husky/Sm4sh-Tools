@@ -1,96 +1,160 @@
-﻿using System;
+﻿using FastColoredTextBoxNS;
+using Sm4shCommand.Classes;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using Sm4shCommand.Classes;
-using static Sm4shCommand.Tokenizer;
-using System.Text;
 
 namespace Sm4shCommand
 {
-    public class ITSCodeBox : UserControl
+    public abstract class ITS_EDITOR : FastColoredTextBox
     {
-        private Timer tooltipTimer = new Timer();
-        private eToolTip toolTip = new eToolTip();
-        private AutoCompleteBox autocomplete;
-        private Stack<ITSSnapshot> _undoStack = new Stack<ITSSnapshot>();
-        private Stack<ITSSnapshot> _redoStack = new Stack<ITSSnapshot>();
+        TextStyle keywordStyle = new TextStyle(Brushes.Blue, null, FontStyle.Regular);
+        TextStyle HexStyle = new TextStyle(Brushes.DarkCyan, null, FontStyle.Regular);
+        TextStyle DecStyle = new TextStyle(Brushes.Red, null, FontStyle.Regular);
+        public AutocompleteMenu AutocompleteMenu { get; set; }
 
-        public ITSCodeBox()
+        public ITS_EDITOR()
         {
-            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            this.SetStyle(ControlStyles.UserPaint, true);
-            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-            this.SetStyle(ControlStyles.ResizeRedraw, true);
-            base.AutoScroll = true;
-            this.SizeChanged += ITSCodeBox_SizeChanged;
-            this.Font = new Font(FontFamily.GenericMonospace, 9.75f);
-            this.CharWidth = (int)Math.Round(MeasureChar(Font, 'A').Width);
-            this.CharHeight = Font.Height + 2;
-            this.Cursor = Cursors.IBeam;
-            this.VerticalScroll.Maximum = ClientSize.Height;
-            this.VerticalScroll.SmallChange = CharHeight;
-            this.VerticalScroll.Minimum = 0;
-            this.HorizontalScroll.Maximum = ClientSize.Width;
-            this.HorizontalScroll.SmallChange = CharWidth;
-            this.HorizontalScroll.Minimum = 0;
-            Lines = new List<Line>();
-            autocomplete = new AutoCompleteBox(this);
-            autocomplete.Parent = this;
-            autocomplete.Visible = false;
-            autocomplete.DisplayMember = "Name";
-            tooltipTimer.Interval = 500;
-            tooltipTimer.Tick += tooltipTimer_Tick;
-            this.KeyDown += ITSCodeBox_KeyDown;
+            this.TextChanged += NewBox_TextChanged;
+            this.AutoCompleteBrackets = true;
+            this.AutoIndent = true;
         }
-        public ITSCodeBox(ACMDScript list, List<ACMD_CMD_INFO> dict) : this()
+        private void NewBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Set source after everything is setup to mitigate shenanigans
-            CommandDictionary = dict;
-            autocomplete.Dictionary = dict;
-            SetSource(list);
+            //clear previous highlighting
+            e.ChangedRange.ClearStyle(StyleIndex.All);
+            //highlight tags
+            e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+\b");
+            e.ChangedRange.SetStyle(HexStyle, @"0x[^\),]+\b");
+            e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
         }
-        public void SetSource(ACMDScript list)
+    }
+    public class ACMD_EDITOR : ITS_EDITOR
+    {
+        public ACMD_EDITOR(ACMDScript list, List<ACMD_CMD_INFO> dict)
         {
-            _undoStack.Clear();
-            _list = list;
-            Lines = new List<Line>();
-            for (int i = 0; i < list.Count; i++)
+            this.AutocompleteMenu = new AutocompleteMenu(this) { AppearInterval = 1 };
+            this.AutocompleteMenu.Items.SetAutocompleteItems(dict.Select(x => x.Name).ToArray());
+            this.AutoCompleteBrackets = true;
+            this.AutoIndent = true;
+
+            Script = list;
+            CommandDict = dict;
+            Deserialize();
+        }
+        public List<ACMD_CMD_INFO> CommandDict { get; set; }
+        public ACMDScript Script { get; set; }
+        private List<string> tmplines = new List<string>();
+
+        public void Deserialize()
+        {
+            this.Text = string.Empty;
+            for (int i = 0; i < Script.Count; i++)
             {
                 int amt = 0;
-                if ((amt = SerializeCommand(i, list[i]._commandInfo.Identifier)) > 0)
+                if ((amt = DeserializeCommand(i, Script[i]._commandInfo.Identifier)) > 0)
                     i += amt;
 
-                if (i < list.Count)
-                    Lines.Add(new Line(list[i].ToString(), this));
+                if (i < Script.Count)
+                    tmplines.Add(Script[i].ToString());
             }
-            if (list.Empty)
-                Lines.Add(new Line("// Empty List", this));
+            if (Script.Empty)
+                tmplines.Add("// Empty list");
 
-            List<Line> clone = new List<Line>(Lines);
-            _undoStack.Push(TakeSnapshot());
             DoFormat();
+            this.Text = string.Join(Environment.NewLine, tmplines);
         }
-        public Line[] FromRTF(string text)
+        public void Serialize()
         {
-            List<Line> _lines = new List<Line>();
-            return text.Split('\n').Where(t =>
-                !string.IsNullOrEmpty(t)).Select(x =>
-                    new Line(x.Trim(), this)).ToArray();
+            Serialize(Lines.ToList());
         }
-        public string ToRTF(List<Line> lines)
+        public void Serialize(List<string> lines)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (Line l in lines)
-                sb.Append(l.Text + Environment.NewLine);
-            return sb.ToString();
+            lines.RemoveAll(x => string.IsNullOrEmpty(x));
+            Script.Clear();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                string lineText = lines[i].Trim();
+                if (lineText.StartsWith("//"))
+                    continue;
+
+                ACMDCommand cmd = ParseCMD(lines[i]);
+                uint ident = cmd._commandInfo.Identifier;
+
+
+                int amt = 0;
+                if ((amt = SerializeCommands(i, ident)) > 0)
+                {
+                    i += amt;
+                    continue;
+                }
+                else
+                    Script.Add(cmd);
+            }
         }
-        #region Command Handling
-        private int SerializeCommand(int index, uint ident)
+
+        private int DeserializeCommand(int index, uint ident)
+        {
+            switch (ident)
+            {
+                case 0xA5BD4F32:
+                case 0x895B9275:
+                case 0x870CF021:
+                    return DeserializeConditional(index);
+                case 0x0EB375E3:
+                    return DeserializeLoop(index);
+            }
+            return 0;
+        }
+        private int DeserializeConditional(int startIndex)
+        {
+            int i = startIndex;
+
+            string str = Script[startIndex].ToString();
+            int len = (int)Script[startIndex].parameters[0] - 2;
+            tmplines.Add($"{str}{{");
+            int count = 1;
+            i++;
+
+            while (len > 0)
+            {
+                len -= Script[i].CalcSize() / 4;
+
+                if (IsCmdHandled(Script[i]._commandInfo.Identifier))
+                    break;
+                else
+                {
+                    tmplines.Add('\t' + Script[i].ToString());
+                    i++;
+                    count++;
+                }
+            }
+            if (IsCmdHandled(Script[i]._commandInfo.Identifier))
+                i += (count += DeserializeCommand(i, Script[i]._commandInfo.Identifier));
+            tmplines.Add("}");
+            return count;
+        }
+        private int DeserializeLoop(int startIndex)
+        {
+            int i = startIndex;
+
+            string str = Script[startIndex].ToString();
+            int len = 0;
+            str += '{';
+            tmplines.Add(str);
+            while (Script[++i]._commandInfo.Identifier != 0x38A3EC78)
+            {
+                len += Script[i].CalcSize() / 4;
+                i += DeserializeCommand(i, Script[i]._commandInfo.Identifier);
+                tmplines.Add('\t' + Script[i].ToString());
+            }
+            tmplines.Add('\t' + Script[i].ToString());
+            tmplines.Add("}");
+            return ++i - startIndex;
+        }
+
+        private int SerializeCommands(int index, uint ident)
         {
             switch (ident)
             {
@@ -105,100 +169,70 @@ namespace Sm4shCommand
         }
         private int SerializeConditional(int startIndex)
         {
-            int i = startIndex;
-
-            string str = _list[startIndex].ToString();
-            int len = (int)_list[startIndex].parameters[0] - 2;
-            Lines.Add(new Line($"{str}{{", this));
-            int count = 1;
-            i++;
-
-            while (len > 0)
-            {
-                len -= _list[i].CalcSize() / 4;
-
-                if (IsCmdHandled(_list[i]._commandInfo.Identifier))
-                    break;
-                else {
-                    Lines.Add(new Line(_list[i].ToString(), this));
-                    i++;
-                    count++;
-                }
-            }
-            if (IsCmdHandled(_list[i]._commandInfo.Identifier))
-                i += (count += SerializeCommand(i, _list[i]._commandInfo.Identifier));
-            Lines.Add(new Line("}", this));
-            return count;
-        }
-        private int SerializeLoop(int startIndex)
-        {
-            int i = startIndex;
-
-            string str = _list[startIndex].ToString();
-            int len = 0;
-            str += '{';
-            Lines.Add(new Line(str, this));
-            while (_list[++i]._commandInfo.Identifier != 0x38A3EC78)
-            {
-                len += _list[i].CalcSize() / 4;
-                i += SerializeCommand(i, _list[i]._commandInfo.Identifier);
-                Lines.Add(new Line(_list[i].ToString(), this));
-            }
-            Lines.Add(new Line(_list[i].ToString(), this));
-            Lines.Add(new Line("}", this));
-            return ++i - startIndex;
-        }
-        private int ParseCommands(int index, uint ident)
-        {
-            switch (ident)
-            {
-                case 0xA5BD4F32:
-                case 0x895B9275:
-                case 0x870CF021:
-                    return ParseConditional(index);
-                case 0x0EB375E3:
-                    return ParseLoop(index);
-            }
-            return 0;
-        }
-        private int ParseConditional(int startIndex)
-        {
-            ACMDCommand cmd = Lines[startIndex].Parse();
+            ACMDCommand cmd = ParseCMD(Lines[startIndex]);
             int i = startIndex;
             int len = 2;
-            CommandList.Add(cmd);
-            while (Lines[++i].TrimText != "}")
+            Script.Add(cmd);
+            while (Lines[++i].Trim() != "}")
             {
-                ACMDCommand tmp = Lines[i].Parse();
+                ACMDCommand tmp = ParseCMD(Lines[i]);
                 len += tmp.CalcSize() / 4;
                 if (IsCmdHandled(tmp._commandInfo.Identifier))
-                    i += ParseCommands(i, tmp._commandInfo.Identifier);
+                    i += SerializeCommands(i, tmp._commandInfo.Identifier);
                 else
-                    CommandList.Add(tmp);
+                    Script.Add(tmp);
             }
-            CommandList[CommandList.IndexOf(cmd)].parameters[0] = len;
+            Script[Script.IndexOf(cmd)].parameters[0] = len;
             // Next line should be closing bracket, ignore and skip it
             return i - startIndex;
         }
-        private int ParseLoop(int index)
+        private int SerializeLoop(int index)
         {
             int i = index;
-            CommandList.Add(Lines[i].Parse());
+            Script.Add(ParseCMD(Lines[i]));
             decimal len = 0;
-            while (Lines[++i].Parse()._commandInfo.Identifier != 0x38A3EC78)
+            while (ParseCMD(Lines[++i])._commandInfo.Identifier != 0x38A3EC78)
             {
-                ACMDCommand tmp = Lines[i].Parse();
+                ACMDCommand tmp = ParseCMD(Lines[i]);
                 len += (tmp.CalcSize() / 4);
-                i += ParseCommands(i, tmp._commandInfo.Identifier);
-                CommandList.Add(tmp);
+                i += SerializeCommands(i, tmp._commandInfo.Identifier);
+                Script.Add(tmp);
             }
-            ACMDCommand endLoop = Lines[i].Parse();
+            ACMDCommand endLoop = ParseCMD(Lines[i]);
             endLoop.parameters[0] = len / -1;
-            CommandList.Add(endLoop);
+            Script.Add(endLoop);
             // Next line should be closing bracket, ignore and skip it
             return ++i - index;
         }
 
+        private ACMDCommand ParseCMD(string line)
+        {
+            string s = line.TrimStart();
+            s = s.Substring(0, s.IndexOf(')'));
+            var name = s.Substring(0, s.IndexOf('('));
+            var parameters =
+                s.Substring(s.IndexOf('(')).TrimEnd(')').Split(',').Select(x =>
+                x.Remove(0, x.IndexOf('=') + 1)).ToArray();
+
+            var info = CommandDict.Single(x => x.Name == name);
+            ACMDCommand cmd = new ACMDCommand(info);
+            for (int i = 0; i < info.ParamSpecifiers.Count; i++)
+            {
+                switch (info.ParamSpecifiers[i])
+                {
+                    case 0:
+                        cmd.parameters.Add(int.Parse(parameters[i].Substring(2), System.Globalization.NumberStyles.HexNumber));
+                        break;
+                    case 1:
+                        cmd.parameters.Add(float.Parse(parameters[i]));
+                        break;
+                    case 2:
+                        cmd.parameters.Add(decimal.Parse(parameters[i]));
+                        break;
+                }
+            }
+            return cmd;
+        }
         private bool IsCmdHandled(uint ident)
         {
             switch (ident)
@@ -212,1005 +246,49 @@ namespace Sm4shCommand
             }
             return false;
         }
-        #endregion
-
-        private void tooltipTimer_Tick(object sender, EventArgs e)
+        private void DoFormat()
         {
-            tooltipTimer.Stop();
-
-            int yIndex = lastMouseCoords.Y.RoundDown(CharHeight) / CharHeight;
-
-            if (yIndex >= Lines.Count | yIndex >= _list.Count)
-                return;
-            if (iCharFromPoint(lastMouseCoords) >= Lines[yIndex].Length)
-                return;
-
-            string str = TokenFromPoint(lastMouseCoords).Text.TrimStart();
-            if (!String.IsNullOrEmpty(str))
+            int curindent = 0;
+            for (int i = 0; i < tmplines.Count; i++)
             {
-                ACMD_CMD_INFO cmi;
-                if ((cmi = CommandDictionary.FirstOrDefault(x => x.Name.StartsWith(str))) != null)
-                {
-                    if (cmi.EventDescription == "NONE")
-                        return;
+                if (tmplines[i].StartsWith("//"))
+                    continue;
 
-                    toolTip.ToolTipTitle = cmi.Name;
-                    toolTip.ToolTipDescription = cmi.EventDescription;
-                    toolTip.Show(cmi.Name, this, lastMouseCoords, 5000);
-                }
-            }
-        }
-        private void ITSCodeBox_SizeChanged(object sender, EventArgs e)
-        {
-            UpdateRectPositions();
-        }
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            UpdateRectPositions();
-            IndentWidth = CharWidth * 4;
-        }
-        protected override void OnScroll(ScrollEventArgs se)
-        {
-            base.OnScroll(se);
-            Invalidate();
-        }
-        protected virtual new void TextChanged(EventArgs e)
-        {
-            EventHandler handler = OnTextChanged;
-            List<Line> clone = new List<Line>(Lines);
-            _redoStack.Clear();
-            _undoStack.Push(TakeSnapshot());
-            if (handler != null)
-            {
-                handler(this, e);
+                if (tmplines[i].EndsWith("}"))
+                    curindent--;
+                string tmp = tmplines[i].TrimStart();
+                for (int x = 0; x < curindent; x++)
+                    tmp = tmp.Insert(0, "    ");
+                tmplines[i] = tmp;
+                if (tmplines[i].EndsWith("{"))
+                    curindent++;
             }
         }
 
         public void ApplyChanges()
         {
-            Lines.RemoveAll(x => x.Empty);
-            CommandList.Clear();
+            var tmp = Lines.ToList();
+            tmp.RemoveAll(x => string.IsNullOrEmpty(x));
+            Script.Clear();
             for (int i = 0; i < Lines.Count; i++)
             {
-                string lineText = Lines[i].Text.Trim();
+                string lineText = tmp[i].Trim();
                 if (lineText.StartsWith("//"))
                     continue;
 
-                ACMDCommand cmd = Lines[i].Parse();
+                ACMDCommand cmd = ParseCMD(tmp[i]);
                 uint ident = cmd._commandInfo.Identifier;
 
 
                 int amt = 0;
-                if ((amt = ParseCommands(i, ident)) > 0)
+                if ((amt = SerializeCommands(i, ident)) > 0)
                 {
                     i += amt;
                     continue;
                 }
                 else
-                    CommandList.Add(cmd);
+                    Script.Add(cmd);
             }
         }
-        public StringToken TokenFromCaret()
-        {
-            Point cp;
-            GetCaretPos(out cp);
-            return TokenFromPoint(cp);
-        }
-        public ITSSnapshot TakeSnapshot()
-        {
-            return new ITSSnapshot()
-            {
-                SelectionStart = SelectionStart,
-                RTFText = ToRTF(Lines)
-            };
-        }
-        public void ApplySnapshot(ITSSnapshot shot)
-        {
-            Lines = FromRTF(shot.RTFText).ToList();
-            SelectionStart = shot.SelectionStart;
-            UpdateSelection();
-            Invalidate();
-        }
-
-        #region Properties
-        public event EventHandler OnTextChanged;
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public ACMDScript CommandList { get { return _list; } set { _list = value; } }
-        private ACMDScript _list;
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public List<Line> Lines { get; set; }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public List<ACMD_CMD_INFO> CommandDictionary { get; set; }
-        [Browsable(false)]
-        public Rectangle ContentRect { get; private set; }
-        [Browsable(false)]
-        public Rectangle LInfoRect { get; private set; }
-
-        public int CharWidth { get; set; }
-        public int CharHeight { get; set; }
-        public float IndentWidth { get; set; }
-        public Point SelectionStart;
-        public Point SelectionEnd;
-        #endregion
-        #region Members
-        private bool IsDrag = false;
-        private Point lastMouseCoords;
-        #endregion
-        #region Painting Methods
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            Graphics g = e.Graphics;
-
-            g.Clear(Color.White);
-            // Draw lineInfo background
-            g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
-            g.FillRectangle(Brushes.LightGray, LInfoRect);
-            g.DrawRectangle(Pens.Black, LInfoRect);
-
-            for (int i = 0; i < Lines.Count; i++)
-            {
-                // Line Number
-                g.DrawString(i.ToString(), Font, SystemBrushes.MenuText, LInfoRect.X, CharHeight * i);
-
-                // Text
-                if (!Lines[i].Empty)
-                    Lines[i].Draw(ContentRect.X, CharHeight * i, g);
-                else
-                    g.DrawString(Lines[i].Text, Font, Brushes.Black, ContentRect.X /*+ curIndent * IndentWidth*/, CharHeight * i);
-            }
-        }
-        public new void Invalidate()
-        {
-            UpdateRectPositions();
-            if (InvokeRequired)
-                BeginInvoke(new MethodInvoker(Invalidate));
-            else
-                base.Invalidate();
-        }
-        #endregion
-        #region Positioning Methods
-        public void UpdateSelection()
-        {
-            int iLine = Lines.Count - 1;
-            if (SelectionStart.Y < Lines.Count)
-                iLine = SelectionStart.Y;
-
-            SetCaret(Lines[iLine].Length, iLine);
-            SelectionStart.X = Lines[iLine].Length;
-
-        }
-        private float MeasureString(string str, Font font, StringFormat _fmt)
-        {
-            var tokens = Tokenize(str);
-            float width = 0;
-            using (Graphics g = CreateGraphics())
-            {
-                foreach (StringToken tkn in tokens)
-                {
-                    // Make a CharacterRange for the string's characters.
-                    List<CharacterRange> range_list = new List<CharacterRange>();
-                    for (int i = 0; i < tkn.Text.Length; i++)
-                        range_list.Add(new CharacterRange(i, 1));
-                    _fmt.SetMeasurableCharacterRanges(range_list.ToArray());
-
-                    // Measure the string's character ranges.
-                    Region[] regions = g.MeasureCharacterRanges(
-                        tkn.Text, font, ContentRect, _fmt);
-
-                    width += regions.Select(x => x.GetBounds(g)).ToArray().Sum(x => x.Width);
-                }
-            }
-            return width;
-        }
-        public static SizeF MeasureChar(Font font, char c)
-        {
-            Size tmp1 = TextRenderer.MeasureText("M" + c.ToString() + "M", font);
-            Size tmp2 = TextRenderer.MeasureText("MM", font);
-
-            return new SizeF(tmp1.Width - tmp2.Width, font.Height);
-        }
-        public static SizeF MeasureString(Font font, string str)
-        {
-            Size tmp1 = TextRenderer.MeasureText("M" + str + "M", font);
-            Size tmp2 = TextRenderer.MeasureText("MM", font);
-
-            return new SizeF(tmp1.Width - tmp2.Width, font.Height);
-        }
-        private void UpdateRectPositions()
-        {
-            LInfoRect = new Rectangle(ClientRectangle.X, ClientRectangle.Y,
-                (int)MeasureString(Font, Lines.Count.ToString()).Width + 4, CharHeight * Lines.Count);
-
-            ContentRect = new Rectangle(LInfoRect.Width + 2, ClientRectangle.Y,
-                ClientRectangle.Width - LInfoRect.Width, LInfoRect.Height);
-
-            int x = (Lines.OrderByDescending(s => s.Length).First().Length * CharWidth) + ContentRect.X + 2;
-            AutoScrollMinSize = new Size(x, CharHeight * Lines.Count);
-        }
-        private int iCharFromPoint(Point val)
-        {
-            int x = (int)Math.Round((float)(val.X - ContentRect.X) / CharWidth);
-            int scroll = HorizontalScroll.Value / CharWidth;
-            x = x.Clamp(0, Lines[iLineFromPoint(val)].Length - scroll) + scroll;
-
-            return x;
-        }
-        private int iLineFromPoint(Point val)
-        {
-            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
-            y = val.Y.RoundDown(CharHeight);
-            return (y / CharHeight).Clamp(0, Lines.Count - 1) + (VerticalScroll.Value / CharHeight);
-        }
-        private Point pointFromPos(int charIndex, int lineIndex)
-        {
-            return new Point()
-            {
-                X = ((charIndex.Clamp(0, Lines[lineIndex].Length) * CharWidth) + ContentRect.X),
-                Y = lineIndex * CharHeight
-            };
-        }
-        #endregion
-        #region Caret Methods
-        public void SetCaret(int charIndex, int lineIndex)
-        {
-            Point p = pointFromPos(charIndex, lineIndex);
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretMoveLeft(int num)
-        {
-            if (SelectionStart.X - num < 0)
-            {
-                CaretPrevLine();
-                CaretMoveLeft(num - 1);
-                return;
-            }
-            SelectionStart.X -= num;
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(-(CharWidth * num), 0);
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretMoveRight(int num)
-        {
-            if (SelectionStart.X + num > Lines[SelectionStart.Y].Length)
-            {
-                CaretNextLine();
-                CaretMoveRight(num - 1);
-                return;
-            }
-            SelectionStart.X += num;
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(CharWidth * num, 0);
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretMoveDown(int num)
-        {
-            if (SelectionStart.Y + num >= Lines.Count)
-                return;
-            SelectionStart.Y += num;
-
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(0, CharHeight * num);
-            if (SelectionStart.X > Lines[SelectionStart.Y].Length)
-            {
-                SelectionStart.X = Lines[SelectionStart.Y].Length;
-                p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
-            }
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretMoveUp(int num)
-        {
-            if (SelectionStart.Y - num < 0)
-                return;
-            SelectionStart.Y -= num;
-
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(0, -(CharHeight * num));
-            if (SelectionStart.X > Lines[SelectionStart.Y].Length)
-            {
-                SelectionStart.X = Lines[SelectionStart.Y].Length;
-                p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
-            }
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretNextLine()
-        {
-            if (SelectionStart.Y + 1 >= Lines.Count)
-                return;
-            SelectionStart.Y++;
-
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(0, CharHeight);
-            SelectionStart.X = 0;
-            p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private void CaretPrevLine()
-        {
-            if (SelectionStart.Y == 0)
-                return;
-            SelectionStart.Y--;
-
-            Point p;
-            GetCaretPos(out p);
-            p.Offset(0, -(Font.Height + 2));
-            SelectionStart.X = Lines[SelectionStart.Y].Length;
-            p.X = (SelectionStart.X * CharWidth) + ContentRect.X;
-            DestroyCaret();
-            CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-            SetCaretPos(p.X, p.Y);
-            ShowCaret(Handle);
-        }
-        private Point CaretPosFromPoint(Point val)
-        {
-            int y = val.Y.Clamp(ContentRect.Y + 2, (Lines.Count - 1) * CharHeight);
-            y = y.RoundDown(CharHeight);
-            int x = (iCharFromPoint(val) * CharWidth) + ContentRect.X + 1;
-            x -= HorizontalScroll.Value;
-            return new Point(x, y);
-        }
-        public Point GetCaretPos()
-        {
-            Point p;
-            GetCaretPos(out p);
-            return p;
-        }
-        #endregion
-        #region Key Methods
-        private void ITSCodeBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Handled)
-                return;
-
-            if (ProcessKeystroke(e.KeyData))
-                e.Handled = true;
-
-            if (e.KeyData == (Keys.Control | Keys.Space))
-            {
-                autocomplete.DataSource = CommandDictionary;
-                Point cp = GetCaretPos();
-                autocomplete.SetBounds(cp.X + CharWidth, cp.Y + CharHeight, 280, 100);
-                autocomplete.Show();
-                e.Handled = true;
-            }
-        }
-        protected override void OnKeyPress(KeyPressEventArgs e)
-        {
-            base.OnKeyPress(e);
-            if (e.Handled)
-                return;
-
-            if (!char.IsControl(e.KeyChar))
-            {
-                InsertText(e.KeyChar.ToString(), SelectionStart.X, SelectionStart.Y);
-                if (e.KeyChar == '(')
-                {
-                    InsertText(")", SelectionStart.X, SelectionStart.Y);
-                    CaretMoveLeft(1);
-                }
-                else if (e.KeyChar == '}')
-                {
-                    DoFormat();
-                }
-                e.Handled = true;
-                Invalidate();
-            }
-        }
-        private bool ProcessKeystroke(Keys key)
-        {
-            switch (key)
-            {
-                case Keys.Left:
-                    CaretMoveLeft(1);
-                    return true;
-                case Keys.Right:
-                    CaretMoveRight(1);
-                    return true;
-                case Keys.Up:
-                    CaretMoveUp(1);
-                    return true;
-                case Keys.Down:
-                    CaretMoveDown(1);
-                    return true;
-                case Keys.PageDown:
-                    CaretMoveDown(5);
-                    return true;
-                case Keys.PageUp:
-                    CaretMoveUp(5);
-                    return true;
-                case Keys.Back:
-                    DoBackspace();
-                    return true;
-                case Keys.Return:
-                    DoNewline();
-                    return true;
-                case Keys.Control | Keys.Z:
-                    DoUndo();
-                    return true;
-                case Keys.Control | Keys.Y:
-                    DoRedo();
-                    return true;
-
-            }
-            return false;
-        }
-        protected override bool IsInputKey(Keys keyData)
-        {
-            switch (keyData)
-            {
-                case Keys.Right:
-                case Keys.Left:
-                case Keys.Up:
-                case Keys.Down:
-                case Keys.Tab:
-                    return true;
-                case Keys.Control:
-                    return false;
-            }
-            return base.IsInputKey(keyData);
-        }
-        protected override bool ProcessTabKey(bool forward)
-        {
-            return true;
-        }
-        #endregion
-        #region Text Handling
-        public void SetLineText(string text)
-        {
-            SetLineText(text, SelectionStart.Y);
-        }
-        public void SetLineText(string text, int iLine)
-        {
-            var oldlen = Lines[iLine].Length;
-            Lines[iLine].Text = text;
-            CaretMoveRight(text.Length - oldlen);
-            TextChanged(new EventArgs());
-            Invalidate();
-        }
-        public void InsertText(string text)
-        {
-            InsertText(text, SelectionStart.X, SelectionStart.Y);
-        }
-        public void InsertText(string text, int iChar, int iLine)
-        {
-            Lines[iLine].Text = Lines[iLine].Text.Insert(iChar, text);
-            CaretMoveRight(text.Length);
-            TextChanged(new EventArgs());
-            Invalidate();
-        }
-        private void DoBackspace()
-        {
-            if (SelectionStart.X == 0 && SelectionStart.Y > 0)
-            {
-                if (!Lines[SelectionStart.Y - 1].Empty)
-                {
-                    var str = Lines[SelectionStart.Y].Text;
-                    Lines[SelectionStart.Y - 1].Text += str;
-                    Lines.RemoveAt(SelectionStart.Y);
-                    CaretPrevLine();
-                    CaretMoveLeft(str.Length);
-                }
-                else
-                {
-                    Lines.RemoveAt(SelectionStart.Y - 1);
-                    CaretMoveUp(1);
-                }
-            }
-            else if (SelectionStart.X > 0)
-            {
-                Lines[SelectionStart.Y].Text =
-                    Lines[SelectionStart.Y].Text.Remove(SelectionStart.X - 1, 1);
-                CaretMoveLeft(1);
-            }
-            TextChanged(new EventArgs());
-            Invalidate();
-        }
-        private void DoNewline()
-        {
-            if (SelectionStart.X < Lines[SelectionStart.Y].Length)
-            {
-                string str = Lines[SelectionStart.Y].Text.Substring(SelectionStart.X);
-                Lines[SelectionStart.Y].Text = Lines[SelectionStart.Y].Text.Remove(SelectionStart.X);
-                Lines.Insert(SelectionStart.Y + 1, new Line(str, this));
-                _list.Insert(SelectionStart.Y + 1, null);
-                CaretNextLine();
-            }
-            else if (SelectionStart.X == Lines[SelectionStart.Y].Length)
-            {
-                Lines.Insert(SelectionStart.Y + 1, new Line(string.Empty, this));
-                if (SelectionStart.Y + 1 > _list.Count)
-                    _list.Add(null);
-                else
-                    _list.Insert(SelectionStart.Y + 1, null);
-                CaretNextLine();
-            }
-            TextChanged(new EventArgs());
-            Invalidate();
-        }
-
-        public void DoFormat()
-        {
-            int curindent = 0;
-            for (int i = 0; i < Lines.Count; i++)
-            {
-                if (Lines[i].Text.StartsWith("//"))
-                    continue;
-
-                if (Lines[i].Text.EndsWith("}"))
-                    curindent--;
-                string tmp = Lines[i].Text.TrimStart();
-                for (int x = 0; x < curindent; x++)
-                    tmp = tmp.Insert(0, "    ");
-                Lines[i].Text = tmp;
-                if (Lines[i].Text.EndsWith("{"))
-                    curindent++;
-            }
-            Invalidate();
-        }
-        private void DoUndo()
-        {
-            if (_undoStack.Count == 1)
-                return;
-
-            _redoStack.Push(_undoStack.Pop());
-            ApplySnapshot(_undoStack.Peek());
-        }
-        private void DoRedo()
-        {
-            if (_redoStack.Count == 1)
-                return;
-
-            _undoStack.Push(_redoStack.Pop());
-            ApplySnapshot(_redoStack.Peek());
-        }
-        public StringToken TokenFromPoint(Point val)
-        {
-            int cIndex = iCharFromPoint(val);
-            int lIndex = iLineFromPoint(val);
-
-            return Tokenize(Lines[lIndex].Text).FirstOrDefault(x => x.Length + x.Index >= cIndex);
-        }
-        #endregion
-        #region Mouse Methods
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-            if (autocomplete.Visible)
-                autocomplete.Hide();
-
-            if (ClientRectangle.Contains(e.Location) && e.Button == MouseButtons.Left)
-            {
-                IsDrag = true;
-
-                SelectionStart = new Point(iCharFromPoint(e.Location), iLineFromPoint(e.Location));
-
-                Point caret = CaretPosFromPoint(e.Location);
-                DestroyCaret();
-                CreateCaret(Handle, IntPtr.Zero, 1, Font.Height);
-                SetCaretPos(caret.X, caret.Y);
-                ShowCaret(Handle);
-                Invalidate();
-            }
-        }
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-            if (lastMouseCoords != e.Location | autocomplete.Visible)
-            {
-                tooltipTimer.Stop();
-                tooltipTimer.Start();
-                toolTip.SetToolTip(this, null);
-                toolTip.Hide(this);
-            }
-            lastMouseCoords = e.Location;
-
-            if (IsDrag)
-            {
-                int iChar = iCharFromPoint(e.Location);
-                int iLine = iLineFromPoint(e.Location);
-                var caret = CaretPosFromPoint(e.Location);
-                SetCaretPos(caret.X, caret.Y);
-                Invalidate();
-            }
-        }
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            tooltipTimer.Stop();
-            toolTip.SetToolTip(this, null);
-            toolTip.Hide();
-        }
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-            IsDrag = false;
-        }
-        #endregion
-
-        #region Native Methods
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool CreateCaret(IntPtr hWnd, IntPtr hBitmap, int nWidth, int nHeight);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool ShowCaret(IntPtr hWnd);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool DestroyCaret();
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool SetCaretPos(int x, int y);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetCaretPos(out Point lpPoint);
-        #endregion
-
-    }
-    public class ITSSnapshot
-    {
-        public string RTFText { get; set; }
-        public Point SelectionStart;
-    }
-    public class ITSRange
-    {
-        public ITSRange(int start, string text)
-        {
-            Index = start;
-            Text = text;
-        }
-        public int Index { get; set; }
-        public int Length { get { return Text.Length; } }
-        public string Text { get; set; }
-    }
-    public class Line
-    {
-        public Line(string val, ITSCodeBox owner)
-        {
-            CodeBox = owner;
-            Text = val;
-        }
-        public ITSRange Selection { get; set; }
-
-        public string Text
-        {
-            get
-            {
-                return _text;
-            }
-            set
-            {
-                _text = value;
-                _tokens = Tokenize(_text);
-                Info = GetInfo();
-            }
-        }
-        public string TrimText
-        {
-            get
-            {
-                return Text.TrimStart();
-            }
-        }
-        private string _text;
-        private StringToken[] _tokens;
-        public int Length { get { return Text.Length; } }
-        public ITSCodeBox CodeBox { get; set; }
-        public ACMD_CMD_INFO Info { get; set; }
-        public bool Empty { get { return String.IsNullOrEmpty(Text); } }
-        public ACMD_CMD_INFO GetInfo()
-        {
-            if (!Empty)
-                return CodeBox.CommandDictionary?.FirstOrDefault(x =>
-                     x.Name.Equals(_tokens.FirstOrDefault(y => y.TokType != TokenType.Seperator).Text,
-                        StringComparison.InvariantCultureIgnoreCase));
-            else
-                return null;
-        }
-        public override string ToString()
-        {
-            return Text;
-        }
-
-        public void Draw(int x, int y, Graphics g)
-        {
-            Draw(x, y, CodeBox.Font, g);
-        }
-        public void Draw(int x, int y, Font font, Graphics g)
-        {
-            if (Empty)
-            {
-                g.DrawString(Text, CodeBox.Font, SystemBrushes.MenuText, x, y);
-                return;
-            }
-            float posX = x;
-
-            if (Selection != null)
-            {
-                int start = Text.IndexOf(Selection.Text);
-                start *= CodeBox.CharWidth;
-                using (SolidBrush brush = new SolidBrush(Color.LightSteelBlue))
-                    g.FillRectangle(brush, x + Selection.Index * CodeBox.CharWidth, y, Selection.Length * CodeBox.CharWidth, CodeBox.CharHeight);
-            }
-
-            foreach (StringToken tkn in _tokens)
-            {
-                using (SolidBrush brush = new SolidBrush(tkn.TokColor))
-                    g.DrawString(tkn.Text, CodeBox.Font, brush, posX, y);
-
-                posX += tkn.Text.Length * CodeBox.CharWidth;
-            }
-
-        }
-        public ACMDCommand Parse()
-        {
-            var cmd = new ACMDCommand(GetInfo());
-            var parameters = _tokens.Where(x => x.TokType != TokenType.Syntax &&
-                                            x.TokType != TokenType.String &&
-                                            x.TokType != TokenType.Seperator).ToArray();
-
-            for (int i = 0; i < Info.ParamSpecifiers.Count; i++)
-            {
-                if (parameters[i].TokType == TokenType.Integer)
-                    cmd.parameters.Add(int.Parse(parameters[i].Text.Remove(0, 2),
-                        System.Globalization.NumberStyles.HexNumber));
-                else if (Info.ParamSpecifiers[i] == 2)
-                    cmd.parameters.Add(decimal.Parse(parameters[i].Text));
-                else if (parameters[i].TokType == TokenType.FloatingPoint)
-                    cmd.parameters.Add(float.Parse(parameters[i].Text));
-            }
-            return cmd;
-        }
-    }
-
-    public static class Tokenizer
-    {
-        static char[] seps = { '=', ',', '(', ')', ' ', '\n' };
-        static char[] integers = { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-        static string[] Keywords = { "if", "Goto", "else" };
-
-        public static StringToken[] Tokenize(string data)
-        {
-            List<StringToken> _tokens = new List<StringToken>();
-            int i = 0;
-            while (i < data.Length)
-            {
-                StringToken str = new StringToken();
-                str.Index = i;
-                if (seps.Contains(data[i]))
-                    _tokens.Add(new StringToken() { Index = i, Text = data[i++].ToString(), TokType = TokenType.Seperator });
-                else
-                {
-                    while (i < data.Length && !seps.Contains(data[i]))
-                    {
-                        str.Text += data[i];
-                        i++;
-                    }
-
-                    if (str.Text.TrimStart().StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
-                        str.TokType = TokenType.Integer;
-                    else if (integers.Contains(str.Text[0]))
-                        str.TokType = TokenType.FloatingPoint;
-                    else if (i < data.Length && data[i] == '=')
-                        str.TokType = TokenType.Syntax;
-                    //else if (data[i] == '{' || data[i] == '}')
-                    //    str.TokType = TokenType.Bracket;
-                    else
-                        str.TokType = TokenType.String;
-
-                    _tokens.Add(str);
-                }
-            }
-            return _tokens.ToArray();
-        }
-
-        public struct StringToken
-        {
-            public int Index { get; set; }
-            public int Length { get { return Text.Length; } }
-            public string Text { get; set; }
-            public TokenType TokType { get; set; }
-            public Color TokColor
-            {
-                get
-                {
-                    switch (TokType)
-                    {
-                        case TokenType.String:
-                            return Color.Black;
-                        case TokenType.Integer:
-                            return Color.DarkCyan;
-                        case TokenType.FloatingPoint:
-                            return Color.Red;
-                        case TokenType.Syntax:
-                            return Color.DarkBlue;
-                        default:
-                            return Color.Black;
-                    }
-                }
-            }
-        }
-
-        public enum TokenType
-        {
-            String,
-            Syntax,
-            Integer,
-            FloatingPoint,
-            Seperator,
-            Bracket
-        }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [DesignTimeVisible(false)]
-    [Browsable(false)]
-    public class AutoCompleteBox : ListBox
-    {
-        private Timer timer;
-        private eToolTip tooltip;
-        public AutoCompleteBox(ITSCodeBox box)
-        {
-            this.Parent = Owner = box;
-            this.tooltip = new eToolTip();
-            this.timer = new Timer();
-            this.timer.Interval = 300;
-            this.timer.Tick += TtTimer_Tick;
-            this.SelectedIndexChanged += AutoCompleteBox_SelectedIndexChanged;
-            this.VisibleChanged += AutoCompleteBox_VisibleChanged;
-            box.KeyDown += Box_KeyDown;
-            this.KeyDown += AutoCompleteBox_KeyDown;
-            this.DoubleClick += AutoCompleteBox_DoubleClick;
-            SetStyle(ControlStyles.Selectable, false);
-        }
-
-        private void AutoCompleteBox_DoubleClick(object sender, EventArgs e)
-        {
-            DoAutocomplete();
-        }
-        private void AutoCompleteBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (!Visible)
-                return;
-
-            if (e.KeyCode == Keys.Enter)
-                DoAutocomplete();
-        }
-        private void Box_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (Visible)
-                if (ProcessKeystroke(e.KeyData))
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-            StringToken tkn = Owner.TokenFromCaret();
-            Point cp = Owner.GetCaretPos();
-            if (string.IsNullOrEmpty(tkn.Text) | tkn.TokType == TokenType.Seperator)
-            {
-                if (Visible)
-                    Hide();
-                return;
-            }
-
-            var filtered = Owner.CommandDictionary.Cast<ACMD_CMD_INFO>().Where(x =>
-                x.Name.StartsWith(tkn.Text.TrimStart(), StringComparison.InvariantCultureIgnoreCase) &
-                    !tkn.Text.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-
-            if (filtered.Length > 0)
-            {
-                DataSource = filtered;
-                SetBounds(cp.X + Owner.CharWidth, cp.Y + Owner.CharHeight, 280, 100);
-                Show();
-            }
-            else
-                Hide();
-        }
-        private void AutoCompleteBox_VisibleChanged(object sender, EventArgs e)
-        {
-            if (Visible)
-                return;
-
-            timer.Stop();
-            tooltip.SetToolTip(this, null);
-            tooltip.Hide();
-        }
-        private void AutoCompleteBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            tooltip.SetToolTip(this, null);
-            tooltip.Hide();
-            timer.Stop();
-            timer.Start();
-        }
-        private void TtTimer_Tick(object sender, EventArgs e)
-        {
-            timer.Stop();
-            ACMD_CMD_INFO info = SelectedItem as ACMD_CMD_INFO;
-            var itemRect = GetItemRectangle(SelectedIndex);
-            tooltip.ToolTipTitle = info.Name;
-            tooltip.ToolTipDescription = info.EventDescription;
-            tooltip.Show(info.Name, this, this.Right, itemRect.Y, 5000);
-        }
-
-        private bool ProcessKeystroke(Keys key)
-        {
-            switch (key)
-            {
-
-                case Keys.Up:
-                    SelectPrev(1);
-                    return true;
-                case Keys.Down:
-                    SelectNext(1);
-                    return true;
-                case Keys.Enter:
-                case Keys.Tab:
-                case Keys.Space:
-                    DoAutocomplete();
-                    return true;
-            }
-            return false;
-        }
-        private void SelectNext(int shift)
-        {
-            if (SelectedIndex + shift > Items.Count - 1)
-                SelectedIndex = Items.Count - 1;
-            else
-                SelectedIndex += shift;
-        }
-        private void SelectPrev(int shift)
-        {
-            if (SelectedIndex - shift < 0)
-                SelectedIndex = 0;
-            else
-                SelectedIndex -= shift;
-        }
-        private void DoAutocomplete()
-        {
-            if (!Visible)
-                return;
-
-            timer.Stop();
-            tooltip.SetToolTip(this, null);
-            tooltip.Hide();
-
-            var text = $"{((ACMD_CMD_INFO)SelectedItem).Name}";
-            Owner.SetLineText(text);
-            Hide();
-            Owner.Focus();
-        }
-
-
-        public List<ACMD_CMD_INFO> Dictionary { get; set; }
-        private ITSCodeBox Owner { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
 
-namespace SALT.AnimCMD
+namespace SALT.Scripting.AnimCMD
 {
     public unsafe class ACMDScript : IEnumerable<ACMDCommand>
     {
@@ -40,7 +40,7 @@ namespace SALT.AnimCMD
         {
             get
             {
-                byte[] data = ToArray();
+                byte[] data = GetBytes(Endianness.Big);
                 if (data.Length != _data.Length)
                     return true;
 
@@ -58,19 +58,19 @@ namespace SALT.AnimCMD
 
         public void Initialize()
         {
-            _data = ToArray();
+            _data = GetBytes(Endianness.Big);
         }
         /// <summary>
         /// Rebuilds data, applying changes made
         /// </summary>
         /// <param name="address"></param>
         /// <param name="size"></param>
-        public void Rebuild(VoidPtr address, int size)
+        public void Rebuild(VoidPtr address, int size, Endianness endian)
         {
             VoidPtr addr = address;
             for (int x = 0; x < _commands.Count; x++)
             {
-                byte[] a = _commands[x].GetBytes();
+                byte[] a = _commands[x].GetBytes(endian);
                 byte* tmp = stackalloc byte[a.Length];
                 for (int i = 0; i < a.Length; i++)
                     tmp[i] = a[i];
@@ -83,23 +83,23 @@ namespace SALT.AnimCMD
         /// Applies changes, then exports data to file.
         /// </summary>
         /// <param name="path"></param>
-        public void Export(string path)
+        public void Export(string path, Endianness endian)
         {
-            byte[] file = ToArray();
+            byte[] file = GetBytes(endian);
             File.WriteAllBytes(path, file);
         }
         /// <summary>
         /// Returns an array of bytes representing this object.
         /// </summary>
         /// <returns></returns>
-        public byte[] ToArray()
+        public byte[] GetBytes(Endianness endian)
         {
             byte[] file = new byte[Size];
 
             int i = 0;
             foreach (ACMDCommand c in _commands)
             {
-                byte[] command = c.GetBytes();
+                byte[] command = c.GetBytes(endian);
                 for (int x = 0; x < command.Length; x++, i++)
                     file[i] = command[x];
             }

@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PARAM", "PARAM\PARAM.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SALT", "SALT\SALT.csproj", "{90CBD9AB-41E3-4868-9632-F894F5BF5B26}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.csproj", "{DC0A09F9-F1CD-4F4E-BC94-8221D18076C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC0A09F9-F1CD-4F4E-BC94-8221D18076C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC0A09F9-F1CD-4F4E-BC94-8221D18076C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC0A09F9-F1CD-4F4E-BC94-8221D18076C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC0A09F9-F1CD-4F4E-BC94-8221D18076C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

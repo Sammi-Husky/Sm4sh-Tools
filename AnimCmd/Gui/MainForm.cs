@@ -9,6 +9,7 @@ using System.Linq;
 using static Sm4shCommand.Runtime;
 using Sm4shCommand.Nodes;
 using Sm4shCommand.GUI;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand
 {
@@ -66,18 +67,13 @@ namespace Sm4shCommand
 
         private void ACMDMain_Load(object sender, EventArgs e)
         {
-
-            if (File.Exists(Application.StartupPath + "/Events.cfg"))
-                GetCommandInfo(Application.StartupPath + "/Events.cfg");
-            else
-                MessageBox.Show("Could not load Events.cfg");
-
+            GetCommandInfo(Path.Combine(Application.StartupPath, "Events.cfg"));
             if (!String.IsNullOrEmpty(Manager.WorkspaceRoot))
                 OpenWorkspace(Manager.WorkspaceRoot);
         }
         private void ACMDMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveCommandInfo(Application.StartupPath + "/Events.cfg");
+
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -104,7 +100,7 @@ namespace Sm4shCommand
                     if (!isRoot)
                         _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                     else
-                        _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
+                        _curFighter[x].EventLists[box.Script.AnimationCRC] = box.Script;
                 }
             }
 
@@ -139,7 +135,7 @@ namespace Sm4shCommand
                     if (!isRoot)
                         _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                     else
-                        _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
+                        _curFighter[x].EventLists[box.Script.AnimationCRC] = box.Script;
                 }
             }
 
@@ -208,8 +204,6 @@ namespace Sm4shCommand
         }
         private void eventLibraryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            EventLibrary dlg = new EventLibrary();
-            dlg.Show();
         }
         private void dumpAsTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -233,7 +227,7 @@ namespace Sm4shCommand
                 e.Graphics.FillRectangle(Brushes.ForestGreen, e.Bounds);
             else
                 e.Graphics.FillRectangle(SystemBrushes.ActiveBorder, e.Bounds);
-
+ 
             e.Graphics.FillEllipse(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
             e.Graphics.DrawEllipse(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);
             e.Graphics.DrawString("X", new Font(e.Font, FontStyle.Bold), Brushes.Black, e.Bounds.Right - 17, e.Bounds.Top + 3);
@@ -263,7 +257,7 @@ namespace Sm4shCommand
                         if (!isRoot)
                             _curFile.EventLists[box.Script.AnimationCRC] = box.Script;
                         else
-                            _curFighter[(ACMDType)x].EventLists[box.Script.AnimationCRC] = box.Script;
+                            _curFighter[x].EventLists[box.Script.AnimationCRC] = box.Script;
 
                     }
                     tabControl1.TabPages.Remove(p);
@@ -398,11 +392,5 @@ namespace Sm4shCommand
             var abtBox = new AboutBox();
             abtBox.ShowDialog();
         }
-    }
-
-    public enum Endianness
-    {
-        Big = 0,
-        Little = 1
     }
 }

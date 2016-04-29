@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Security.Cryptography;
 using Sm4shCommand.Classes;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand.Nodes
 {
@@ -21,8 +22,8 @@ namespace Sm4shCommand.Nodes
 
             for (int i = 0; i < 4; i++)
             {
-                if (fighter[(ACMDType)i].EventLists.ContainsKey(CRC))
-                    lists.Add(fighter[(ACMDType)i].EventLists[CRC]);
+                if (fighter[i].EventLists.ContainsKey(CRC))
+                    lists.Add(fighter[i].EventLists[CRC]);
                 else
                 {
                     ACMDScript cml = new ACMDScript(CRC);

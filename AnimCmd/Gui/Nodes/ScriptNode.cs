@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Sm4shCommand.Classes;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand.Nodes
 {

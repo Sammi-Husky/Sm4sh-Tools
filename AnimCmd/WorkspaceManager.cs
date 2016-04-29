@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using Sm4shCommand.Classes;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand
 {
@@ -181,9 +182,9 @@ namespace Sm4shCommand
         }
         public ACMDFile OpenFile(string Filepath)
         {
-            return OpenFile(Filepath, ACMDType.NONE);
+            return OpenFile(Filepath, 255);
         }
-        public ACMDFile OpenFile(string Filepath, ACMDType type)
+        public ACMDFile OpenFile(string Filepath, int type)
         {
             DataSource source = new DataSource(FileMap.FromFile(Filepath));
             if (*(buint*)source.Address != 0x41434D44) // ACMD
@@ -200,17 +201,17 @@ namespace Sm4shCommand
                 return null;
 
 
-            return new ACMDFile(source) { Type = type };
+            return new ACMDFile(source);
         }
         public Fighter OpenFighter(string dirPath)
         {
             return new Fighter()
             {
 
-                Main = OpenFile(dirPath + "/game.bin", ACMDType.Main),
-                GFX = OpenFile(dirPath + "/effect.bin", ACMDType.GFX),
-                SFX = OpenFile(dirPath + "/sound.bin", ACMDType.SFX),
-                Expression = OpenFile(dirPath + "/expression.bin", ACMDType.Expression),
+                Main = OpenFile(dirPath + "/game.bin", 0),
+                GFX = OpenFile(dirPath + "/effect.bin", 1),
+                SFX = OpenFile(dirPath + "/sound.bin", 2),
+                Expression = OpenFile(dirPath + "/expression.bin", 3),
 
                 MotionTable = ParseMTable(new DataSource(FileMap.FromFile(dirPath + "/motion.mtable")), Runtime.WorkingEndian)
             };

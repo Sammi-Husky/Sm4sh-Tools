@@ -5,6 +5,7 @@ using System.Text;
 using Sm4shCommand.Classes;
 using System.Windows.Forms;
 using System.ComponentModel;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand.Nodes
 {
@@ -48,10 +49,10 @@ namespace Sm4shCommand.Nodes
                 var cml = new ACMDScript(crc);
                 if (Runtime.isRoot)
                 {
-                    Runtime._curFighter[(ACMDType)0].EventLists.Add(crc, cml);
-                    Runtime._curFighter[(ACMDType)1].EventLists.Add(crc, cml);
-                    Runtime._curFighter[(ACMDType)2].EventLists.Add(crc, cml);
-                    Runtime._curFighter[(ACMDType)3].EventLists.Add(crc, cml);
+                    Runtime._curFighter[0].EventLists.Add(crc, cml);
+                    Runtime._curFighter[1].EventLists.Add(crc, cml);
+                    Runtime._curFighter[2].EventLists.Add(crc, cml);
+                    Runtime._curFighter[3].EventLists.Add(crc, cml);
                 }
                 else
                     Runtime._curFile.EventLists.Add(crc, cml);

@@ -1,4 +1,5 @@
 ﻿using FastColoredTextBoxNS;
+using SALT.Scripting.AnimCMD;
 using Sm4shCommand.Classes;
 using System;
 using System.Collections.Generic;
@@ -25,25 +26,23 @@ namespace Sm4shCommand
             //clear previous highlighting
             e.ChangedRange.ClearStyle(StyleIndex.All);
             //highlight tags
-            e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+\b");
+            e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\),]+\b");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
         }
     }
     public class ACMD_EDITOR : ITS_EDITOR
     {
-        public ACMD_EDITOR(ACMDScript list, List<ACMD_CMD_INFO> dict)
+        public ACMD_EDITOR(ACMDScript list)
         {
             this.AutocompleteMenu = new AutocompleteMenu(this) { AppearInterval = 1 };
-            this.AutocompleteMenu.Items.SetAutocompleteItems(dict.Select(x => x.Name).ToArray());
+            this.AutocompleteMenu.Items.SetAutocompleteItems(ACMD_INFO.CMD_NAMES.Select(x => x.Value).ToArray());
             this.AutoCompleteBrackets = true;
             this.AutoIndent = true;
 
             Script = list;
-            CommandDict = dict;
             Deserialize();
         }
-        public List<ACMD_CMD_INFO> CommandDict { get; set; }
         public ACMDScript Script { get; set; }
         private List<string> tmplines = new List<string>();
 
@@ -53,7 +52,7 @@ namespace Sm4shCommand
             for (int i = 0; i < Script.Count; i++)
             {
                 int amt = 0;
-                if ((amt = DeserializeCommand(i, Script[i]._commandInfo.Identifier)) > 0)
+                if ((amt = DeserializeCommand(i, Script[i].CRC)) > 0)
                     i += amt;
 
                 if (i < Script.Count)
@@ -80,7 +79,7 @@ namespace Sm4shCommand
                     continue;
 
                 ACMDCommand cmd = ParseCMD(lines[i]);
-                uint ident = cmd._commandInfo.Identifier;
+                uint ident = cmd.CRC;
 
 
                 int amt = 0;
@@ -112,7 +111,7 @@ namespace Sm4shCommand
             int i = startIndex;
 
             string str = Script[startIndex].ToString();
-            int len = (int)Script[startIndex].parameters[0] - 2;
+            int len = (int)Script[startIndex].Parameters[0] - 2;
             tmplines.Add($"{str}{{");
             int count = 1;
             i++;
@@ -121,7 +120,7 @@ namespace Sm4shCommand
             {
                 len -= Script[i].CalcSize() / 4;
 
-                if (IsCmdHandled(Script[i]._commandInfo.Identifier))
+                if (IsCmdHandled(Script[i].CRC))
                     break;
                 else
                 {
@@ -130,8 +129,8 @@ namespace Sm4shCommand
                     count++;
                 }
             }
-            if (IsCmdHandled(Script[i]._commandInfo.Identifier))
-                i += (count += DeserializeCommand(i, Script[i]._commandInfo.Identifier));
+            if (IsCmdHandled(Script[i].CRC))
+                i += (count += DeserializeCommand(i, Script[i].CRC));
             tmplines.Add("}");
             return count;
         }
@@ -143,10 +142,10 @@ namespace Sm4shCommand
             int len = 0;
             str += '{';
             tmplines.Add(str);
-            while (Script[++i]._commandInfo.Identifier != 0x38A3EC78)
+            while (Script[++i].CRC != 0x38A3EC78)
             {
                 len += Script[i].CalcSize() / 4;
-                i += DeserializeCommand(i, Script[i]._commandInfo.Identifier);
+                i += DeserializeCommand(i, Script[i].CRC);
                 tmplines.Add('\t' + Script[i].ToString());
             }
             tmplines.Add('\t' + Script[i].ToString());
@@ -177,12 +176,12 @@ namespace Sm4shCommand
             {
                 ACMDCommand tmp = ParseCMD(Lines[i]);
                 len += tmp.CalcSize() / 4;
-                if (IsCmdHandled(tmp._commandInfo.Identifier))
-                    i += SerializeCommands(i, tmp._commandInfo.Identifier);
+                if (IsCmdHandled(tmp.CRC))
+                    i += SerializeCommands(i, tmp.CRC);
                 else
                     Script.Add(tmp);
             }
-            Script[Script.IndexOf(cmd)].parameters[0] = len;
+            Script[Script.IndexOf(cmd)].Parameters[0] = len;
             // Next line should be closing bracket, ignore and skip it
             return i - startIndex;
         }
@@ -191,15 +190,15 @@ namespace Sm4shCommand
             int i = index;
             Script.Add(ParseCMD(Lines[i]));
             decimal len = 0;
-            while (ParseCMD(Lines[++i])._commandInfo.Identifier != 0x38A3EC78)
+            while (ParseCMD(Lines[++i]).CRC != 0x38A3EC78)
             {
                 ACMDCommand tmp = ParseCMD(Lines[i]);
                 len += (tmp.CalcSize() / 4);
-                i += SerializeCommands(i, tmp._commandInfo.Identifier);
+                i += SerializeCommands(i, tmp.CRC);
                 Script.Add(tmp);
             }
             ACMDCommand endLoop = ParseCMD(Lines[i]);
-            endLoop.parameters[0] = len / -1;
+            endLoop.Parameters[0] = len / -1;
             Script.Add(endLoop);
             // Next line should be closing bracket, ignore and skip it
             return ++i - index;
@@ -214,20 +213,20 @@ namespace Sm4shCommand
                 s.Substring(s.IndexOf('(')).TrimEnd(')').Split(',').Select(x =>
                 x.Remove(0, x.IndexOf('=') + 1)).ToArray();
 
-            var info = CommandDict.Single(x => x.Name == name);
-            ACMDCommand cmd = new ACMDCommand(info);
-            for (int i = 0; i < info.ParamSpecifiers.Count; i++)
+            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value == name).Key;
+            ACMDCommand cmd = new ACMDCommand(crc);
+            for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
             {
-                switch (info.ParamSpecifiers[i])
+                switch (cmd.ParamSpecifiers[i])
                 {
                     case 0:
-                        cmd.parameters.Add(int.Parse(parameters[i].Substring(2), System.Globalization.NumberStyles.HexNumber));
+                        cmd.Parameters.Add(int.Parse(parameters[i].Substring(2), System.Globalization.NumberStyles.HexNumber));
                         break;
                     case 1:
-                        cmd.parameters.Add(float.Parse(parameters[i]));
+                        cmd.Parameters.Add(float.Parse(parameters[i]));
                         break;
                     case 2:
-                        cmd.parameters.Add(decimal.Parse(parameters[i]));
+                        cmd.Parameters.Add(decimal.Parse(parameters[i]));
                         break;
                 }
             }
@@ -277,7 +276,7 @@ namespace Sm4shCommand
                     continue;
 
                 ACMDCommand cmd = ParseCMD(tmp[i]);
-                uint ident = cmd._commandInfo.Identifier;
+                uint ident = cmd.CRC;
 
 
                 int amt = 0;

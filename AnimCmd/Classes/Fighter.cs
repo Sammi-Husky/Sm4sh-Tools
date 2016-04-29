@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SALT.Scripting.AnimCMD;
 
 namespace Sm4shCommand.Classes
 {
@@ -47,7 +48,7 @@ namespace Sm4shCommand.Classes
             get
             {
                 for (int i = 0; i < 4; i++)
-                    if (this[(ACMDType)i].Dirty)
+                    if (this[i].Dirty)
                         return true;
                 return false;
             }
@@ -122,19 +123,19 @@ namespace Sm4shCommand.Classes
             Expression.Export($"{dirpath}/expression.bin");
             MotionTable.Export($"{dirpath}/motion.mtable");
         }
-        public ACMDFile this[ACMDType type]
+        public ACMDFile this[int index]
         {
             get
             {
-                switch (type)
+                switch (index)
                 {
-                    case ACMDType.Main:
+                    case 0:
                         return Main;
-                    case ACMDType.GFX:
+                    case 1:
                         return GFX;
-                    case ACMDType.SFX:
+                    case 2:
                         return SFX;
-                    case ACMDType.Expression:
+                    case 3:
                         return Expression;
                     default:
                         return null;
@@ -143,18 +144,18 @@ namespace Sm4shCommand.Classes
             }
             set
             {
-                switch (type)
+                switch (index)
                 {
-                    case ACMDType.Main:
+                    case 0:
                         Main = value;
                         break;
-                    case ACMDType.GFX:
+                    case 1:
                         GFX = value;
                         break;
-                    case ACMDType.SFX:
+                    case 2:
                         SFX = value;
                         break;
-                    case ACMDType.Expression:
+                    case 3:
                         Expression = value;
                         break;
                 }

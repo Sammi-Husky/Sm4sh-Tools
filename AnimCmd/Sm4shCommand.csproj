@@ -57,10 +57,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\ACMD\ACMDCommand.cs" />
-    <Compile Include="Classes\ACMD\ACMDFile.cs" />
-    <Compile Include="Classes\ACMD\ACMDScript.cs" />
-    <Compile Include="Classes\ACMD\ACMD_CMD_INFO.cs" />
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
     <Compile Include="crc32.cs" />
@@ -75,23 +71,7 @@
     <Compile Include="GUI\Nodes\ScriptGroupNode.cs" />
     <Compile Include="GUI\Nodes\ScriptNode.cs" />
     <Compile Include="GUI\Nodes\DataNode.cs" />
-    <Compile Include="IO\DataSource.cs" />
-    <Compile Include="IO\FileMap.cs" />
-    <Compile Include="IO\Win32.cs" />
     <Compile Include="Runtime.cs" />
-    <Compile Include="Type Extensions\BigEndianTypes.cs" />
-    <Compile Include="Type Extensions\ByteExtension.cs" />
-    <Compile Include="Type Extensions\DoubleExtension.cs" />
-    <Compile Include="Type Extensions\EncodingExtension.cs" />
-    <Compile Include="Type Extensions\Int16Extension.cs" />
-    <Compile Include="Type Extensions\Int32Extension.cs" />
-    <Compile Include="Type Extensions\Int64Extension.cs" />
-    <Compile Include="Type Extensions\RoundingExtensions.cs" />
-    <Compile Include="Type Extensions\ShortExtension.cs" />
-    <Compile Include="Type Extensions\StringExtension.cs" />
-    <Compile Include="Type Extensions\UInt16Extension.cs" />
-    <Compile Include="Type Extensions\UInt32Extension.cs" />
-    <Compile Include="Type Extensions\VoidPtr.cs" />
     <Compile Include="GUI\CodeEditControl.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -110,14 +90,13 @@
     <Compile Include="GUI\WorkspaceWizard.Designer.cs">
       <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </Compile>
-    <Compile Include="Util.cs" />
     <Compile Include="WorkspaceManager.cs" />
-    <Compile Include="GUI\Event Library\Event Library.cs">
+    <None Include="GUI\Event Library\Event Library.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="GUI\Event Library\Event Library.Designer.cs">
+    </None>
+    <None Include="GUI\Event Library\Event Library.Designer.cs">
       <DependentUpon>Event Library.cs</DependentUpon>
-    </Compile>
+    </None>
     <Compile Include="GUI\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -194,6 +173,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="s4.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SALT\SALT.csproj">
+      <Project>{90cbd9ab-41e3-4868-9632-f894f5bf5b26}</Project>
+      <Name>SALT</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

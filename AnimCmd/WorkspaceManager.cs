@@ -200,7 +200,6 @@ namespace Sm4shCommand
             else
                 return null;
 
-
             return new ACMDFile(source);
         }
         public Fighter OpenFighter(string dirPath)

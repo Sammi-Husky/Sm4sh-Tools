@@ -43,6 +43,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PARAMS\IParamCollection.cs" />
+    <Compile Include="PARAMS\ParamEntry.cs" />
+    <Compile Include="PARAMS\ParamGroup.cs" />
+    <Compile Include="PARAMS\ParamList.cs" />
+    <Compile Include="PARAMS\ParamType.cs" />
+    <Compile Include="PARAMS\ParamFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDCommand.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDScript.cs" />
@@ -69,7 +75,6 @@
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="PARAMS\" />
     <Folder Include="Scripting\MSC\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

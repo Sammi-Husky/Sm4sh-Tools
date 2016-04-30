@@ -52,6 +52,7 @@
     <Compile Include="System\IO\Util.cs" />
     <Compile Include="System\IO\Win32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\Security\Cryptography\crc32.cs" />
     <Compile Include="System\Type Extensions\BigEndianTypes.cs" />
     <Compile Include="System\Type Extensions\ByteExtension.cs" />
     <Compile Include="System\Type Extensions\DoubleExtension.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="PARAMS\" />
     <Folder Include="Scripting\MSC\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

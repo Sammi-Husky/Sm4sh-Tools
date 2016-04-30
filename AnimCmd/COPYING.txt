@@ -5,3 +5,7 @@ and are grateful to these developers for their contributions to open source.
 Project: FastColoredTextBox https://github.com/PavelTorgashov/FastColoredTextBox
 Copyright (C) Pavel Torgashov, 2011-2014. 
 GNU Lesser General Public License (LGPLv3) https://github.com/PavelTorgashov/FastColoredTextBox/blob/master/license.txt
+
+Project: klinkby.checksum https://github.com/klinkby/klinkby.checksum
+Copyright(c) 2014 Mads Breusch Klinkby.
+Licensed under the MIT License https://opensource.org/licenses/MIT

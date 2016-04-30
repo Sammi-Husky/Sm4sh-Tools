@@ -119,12 +119,12 @@ namespace Sm4shCommand
                 if (s.EndsWith(".pac"))
                 {
                     byte[] filebytes = File.ReadAllBytes(s);
-                    int count = (int)Util.GetWord(filebytes, 8, Runtime.WorkingEndian);
+                    int count = (int)Util.GetWord(filebytes, 8, Endianness.Big);
 
                     for (int i = 0; i < count; i++)
                     {
-                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Runtime.WorkingEndian);
-                        string FileName = Util.GetString(filebytes, off, Runtime.WorkingEndian);
+                        uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Endianness.Big);
+                        string FileName = Util.GetString(filebytes, off, Endianness.Big);
                         string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
                         if (string.IsNullOrEmpty(AnimName))
                             continue;
@@ -174,7 +174,7 @@ namespace Sm4shCommand
         }
         private void AddAnimHash(string name)
         {
-            uint crc = Crc32.Compute(Encoding.ASCII.GetBytes(name.ToLower()));
+            uint crc = Crc32.Compute(name.ToLower());
             if (AnimHashPairs.ContainsValue(name) || AnimHashPairs.ContainsKey(crc))
                 return;
 

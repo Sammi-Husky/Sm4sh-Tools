@@ -59,18 +59,17 @@
   <ItemGroup>
     <Compile Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Mtable.cs" />
-    <Compile Include="crc32.cs" />
     <Compile Include="GUI\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="GUI\AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="GUI\Nodes\ACMDNode.cs" />
-    <Compile Include="GUI\Nodes\BaseNode.cs" />
-    <Compile Include="GUI\Nodes\ScriptGroupNode.cs" />
-    <Compile Include="GUI\Nodes\ScriptNode.cs" />
-    <Compile Include="GUI\Nodes\DataNode.cs" />
+    <Compile Include="Classes\Nodes\ACMDNode.cs" />
+    <Compile Include="Classes\Nodes\BaseNode.cs" />
+    <Compile Include="Classes\Nodes\ScriptGroupNode.cs" />
+    <Compile Include="Classes\Nodes\ScriptNode.cs" />
+    <Compile Include="Classes\Nodes\DataNode.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="GUI\CodeEditControl.cs">
       <SubType>Component</SubType>

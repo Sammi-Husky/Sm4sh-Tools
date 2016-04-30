@@ -144,10 +144,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
-    <value>This application uses Open Source components. You can find the source code of their open source projects along with license information below. We acknowledge and are grateful to these developers for their contributions to open source.
+    <value>This application uses Open Source components. You can find the source code of
+their open source projects along with license information below. We acknowledge
+and are grateful to these developers for their contributions to open source.
 
 Project: FastColoredTextBox https://github.com/PavelTorgashov/FastColoredTextBox
 Copyright (C) Pavel Torgashov, 2011-2014. 
-GNU Lesser General Public License (LGPLv3) https://github.com/PavelTorgashov/FastColoredTextBox/blob/master/license.txt</value>
+GNU Lesser General Public License (LGPLv3) https://github.com/PavelTorgashov/FastColoredTextBox/blob/master/license.txt
+
+Project: klinkby.checksum https://github.com/klinkby/klinkby.checksum
+Copyright(c) 2014 Mads Breusch Klinkby.
+Licensed under the MIT License https://opensource.org/licenses/MIT
+</value>
   </data>
 </root>

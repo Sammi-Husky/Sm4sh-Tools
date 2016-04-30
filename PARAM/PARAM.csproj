@@ -69,12 +69,12 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="FormProvider.cs" />
-    <Compile Include="GroupWrapper.cs" />
     <Compile Include="Extensions\LinqExtension.cs" />
-    <Compile Include="ValuesWrapper.cs" />
+    <Compile Include="GroupWrapper.cs" />
     <Compile Include="ParamEntry.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ValuesWrapper.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

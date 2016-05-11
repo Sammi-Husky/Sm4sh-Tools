@@ -95,7 +95,7 @@ namespace Parameters
             }
         }
 
-        private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var node = e.Node as ValuesWrapper;
             if (node is GroupWrapper)

@@ -43,7 +43,7 @@ namespace Sm4shCommand
         }
 
         private uint unkParam0;
-        private uint UnkParam1;
+        private uint unkParam1;
         private uint IASAFrame;
         private uint unkParam3;
         private uint unkParam4;

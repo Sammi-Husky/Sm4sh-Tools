@@ -16,6 +16,8 @@ namespace Parameters
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            if (args.Length > 0)
+                FormProvider.Instance.LoadFile(args[0]);
             Application.Run(FormProvider.Instance);
         }
     }

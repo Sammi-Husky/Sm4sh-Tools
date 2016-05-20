@@ -13,6 +13,7 @@ namespace Sm4shCommand
         TextStyle keywordStyle = new TextStyle(Brushes.Blue, null, FontStyle.Regular);
         TextStyle HexStyle = new TextStyle(Brushes.DarkCyan, null, FontStyle.Regular);
         TextStyle DecStyle = new TextStyle(Brushes.Red, null, FontStyle.Regular);
+        TextStyle CommentStyle = new TextStyle(Brushes.Gray, null, FontStyle.Regular);
         public AutocompleteMenu AutocompleteMenu { get; set; }
 
         public ITS_EDITOR()
@@ -29,6 +30,7 @@ namespace Sm4shCommand
             e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\),]+\b");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
+            e.ChangedRange.SetStyle(CommentStyle, @"\/\/.+");
         }
     }
     public class ACMD_EDITOR : ITS_EDITOR
@@ -75,12 +77,13 @@ namespace Sm4shCommand
             for (int i = 0; i < lines.Count; i++)
             {
                 string lineText = lines[i].Trim();
-                if (lineText.StartsWith("//"))
+                if (lineText.Contains("//"))
+                    lineText = lineText.Substring(0, lineText.IndexOf("//"));
+                if (lineText.Length == 0)
                     continue;
 
                 ACMDCommand cmd = ParseCMD(lines[i]);
                 uint ident = cmd.CRC;
-
 
                 int amt = 0;
                 if ((amt = SerializeCommands(i, ident)) > 0)

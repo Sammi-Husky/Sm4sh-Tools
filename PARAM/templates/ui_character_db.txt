@@ -1,0 +1,14 @@
+ID
+
+
+
+
+
+CharacterID
+Costume Count
+
+
+
+
+
+OrderInTheCSS

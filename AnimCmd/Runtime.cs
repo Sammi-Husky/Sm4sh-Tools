@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using Sm4shCommand.Classes;
 using System.IO;
+using SALT.Scripting;
 using SALT.Scripting.AnimCMD;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace Sm4shCommand
 {
@@ -107,12 +110,21 @@ namespace Sm4shCommand
         public static Endianness WorkingEndian { get { return _workingEndian; } set { _workingEndian = value; } }
         private static Endianness _workingEndian;
 
+        public static void LogMessage(string message)
+        {
+            Action<object, DoWorkEventArgs> work = (object snd, DoWorkEventArgs arg) =>
+            {
+                Instance.Invoke(
+                    new MethodInvoker(
+                        delegate { Instance.richTextBox1.AppendText($"> {message}\n"); }));
+            };
+            using (BackgroundWorker wrk = new BackgroundWorker())
+            {
+                wrk.DoWork += new DoWorkEventHandler(work);
+                wrk.RunWorkerAsync();
+            }
+        }
+
         public static bool isRoot = false;
-        public static string FileName;
-        public static string rootPath;
-
-        public static ACMDFile _curFile;
-        public static Fighter _curFighter;
-
     }
 }

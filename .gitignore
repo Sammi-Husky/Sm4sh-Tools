@@ -109,3 +109,31 @@ UpgradeLog*.XML
 Thumbs.db
 .DS_Store
 
+/SALT/System/Type Extensions/StreamExtensions.cs
+/SALT/Scripting/MSC/MSC_INFO.cs
+/SALT/Scripting/MSC/MSCScript.cs
+/SALT/Scripting/MSC/MSCFile.cs
+/SALT/Scripting/MSC/MSCCommand.cs
+/SALT/Scripting/IScriptCollection.cs
+/SALT/Scripting/IScript.cs
+/SALT/Scripting/ICommand.cs
+/PythonApplication2/PythonApplication2.pyproj
+/PythonApplication2/PythonApplication2.py
+/PythonApplication2/out.txt
+/PythonApplication2/mscsb_commands.pyc
+/PythonApplication2/mscsb_commands.py
+/PythonApplication2/bat.mscsb
+/PARAM/templates/ui_character_db.txt
+/PARAM/templates/Fighter_Param.txt
+/PARAM/templates/battle_object_param[0].txt
+/PARAM/popupTextbox.resx
+/PARAM/popupTextbox.Designer.cs
+/PARAM/popupTextbox.cs
+/ConsoleApplication1/Properties/AssemblyInfo.cs
+/ConsoleApplication1/Program.cs
+/ConsoleApplication1/ConsoleApplication1.csproj
+/ConsoleApplication1/App.config
+/AnimCmd/Resources/play.png
+/AnimCmd/GUI/CodeEditor.resx
+/AnimCmd/GUI/CodeEditor.Designer.cs
+/AnimCmd/GUI/CodeEditor.cs

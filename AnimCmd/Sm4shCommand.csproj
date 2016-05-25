@@ -41,6 +41,10 @@
   <PropertyGroup>
     <ApplicationIcon>s4.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <Win32Resource>
+    </Win32Resource>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="FastColoredTextBox">
       <HintPath>C:\Users\Husky\Desktop\FastColoredTextBox-master\FastColoredTextBox\bin\Debug\FastColoredTextBox.dll</HintPath>
@@ -67,16 +71,20 @@
     </Compile>
     <Compile Include="Classes\Nodes\ACMDNode.cs" />
     <Compile Include="Classes\Nodes\BaseNode.cs" />
-    <Compile Include="Classes\Nodes\ScriptGroupNode.cs" />
     <Compile Include="Classes\Nodes\ScriptNode.cs" />
     <Compile Include="Classes\Nodes\DataNode.cs" />
-    <Compile Include="Runtime.cs" />
-    <Compile Include="GUI\CodeEditControl.cs">
+    <Compile Include="GUI\CodeEditor.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GUI\CodeEditControl.Designer.cs">
-      <DependentUpon>CodeEditControl.cs</DependentUpon>
+    <Compile Include="GUI\CodeEditor.Designer.cs">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Runtime.cs" />
     <Compile Include="GUI\Rename.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -117,9 +125,8 @@
     <EmbeddedResource Include="GUI\AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GUI\CodeEditControl.resx">
-      <DependentUpon>CodeEditControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="GUI\CodeEditor.resx">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\Event Library\Event Library.resx">
       <DependentUpon>Event Library.cs</DependentUpon>
@@ -135,15 +142,10 @@
       <DependentUpon>WorkspaceWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
+      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="System\Windows\Components\ITSCodeBox.resx">
       <DependentUpon>ITSCodeBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -171,6 +173,7 @@
     <Content Include="LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\play.png" />
     <Content Include="s4.ico" />
   </ItemGroup>
   <ItemGroup>

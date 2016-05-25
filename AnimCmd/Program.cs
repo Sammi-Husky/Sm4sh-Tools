@@ -21,18 +21,6 @@ namespace Sm4shCommand
         [STAThread]
         static void Main(string[] args)
         {
-            //RegisterFileAssociations();
-
-            if (args.Length >= 1)
-            {
-                if (args[0].EndsWith(".wrkspc", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    Runtime.Instance.Manager.WorkspaceRoot = args[0];
-                    Application.Run(Runtime.Instance);
-                    return;
-                }
-            }
-
             Application.Run(Runtime.Instance);
         }
 

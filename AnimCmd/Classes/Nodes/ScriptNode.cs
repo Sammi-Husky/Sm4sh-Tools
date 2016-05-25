@@ -4,24 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Sm4shCommand.Classes;
-using SALT.Scripting.AnimCMD;
+using SALT.Scripting;
 
 namespace Sm4shCommand.Nodes
 {
     public class ScriptNode : BaseNode
     {
-        public ScriptNode(string name, ACMDScript list) { Text = name; _list = list; CRC = list.AnimationCRC; }
-        public ScriptNode(ACMDScript list) { _list = list; CRC = list.AnimationCRC; }
-
-        public new string Name
+        private static ContextMenuStrip _menu;
+        static ScriptNode()
         {
-            get
-            {
-                return $"[{CRC:X8}]";
-            }
+            _menu = new ContextMenuStrip();
         }
-        public bool Dirty { get { return _list.Dirty; } }
-        public ACMDScript CommandList { get { return _list; } set { _list = value; } }
-        private ACMDScript _list;
+        public ScriptNode(string text)
+        {
+            this.Text = text;
+            this.ContextMenuStrip = _menu;
+            Scripts = new Dictionary<string, IScript>(4);
+        }
+        public Dictionary<string, IScript> Scripts { get; set; }
+        public string ScriptName { get; set; }
     }
 }

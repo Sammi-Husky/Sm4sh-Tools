@@ -72,11 +72,20 @@
     <Compile Include="Extensions\LinqExtension.cs" />
     <Compile Include="GroupWrapper.cs" />
     <Compile Include="ParamEntry.cs" />
+    <Compile Include="popupTextbox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="popupTextbox.Designer.cs">
+      <DependentUpon>popupTextbox.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValuesWrapper.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="popupTextbox.resx">
+      <DependentUpon>popupTextbox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -102,7 +111,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="templates\CharAttrs.txt">
+    <Content Include="templates\Fighter_Param.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="templates\battle_object_param[0].txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="templates\ui_character_db.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

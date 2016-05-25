@@ -45,7 +45,7 @@ namespace DTLS.Types
 
                         lsFile = new LSFile(lspath);
                         manager = new ResourceManager(DtPaths, lsFile);
-                        manager.UnpackAll("content_rebuild");
+                        manager.UnpackAll("content");
                     }
                     if (lsFile != null)
                         lsFile.WorkingSource.Close();

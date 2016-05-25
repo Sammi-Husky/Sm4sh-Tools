@@ -10,6 +10,14 @@ namespace DTLS
 {
     public static class Util
     {
+        private static uint calc_crc(string filename)
+        {
+            var b = Encoding.ASCII.GetBytes(filename);
+            for (var i = 0; i < 4; i++)
+                b[i] = (byte)(~filename[i] & 0xff);
+            return CrcCalculator.CaclulateCRC32(b) & 0xFFFFFFFF;
+
+        }
         public static byte[] Compress(byte[] src)
         {
             using (var source = new MemoryStream(src))

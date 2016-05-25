@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace DTLS
 {
-    class ResourceManager
+    public class ResourceManager
     {
         public ResourceManager(string[] dt, LSFile ls)
         {
@@ -25,21 +25,10 @@ namespace DTLS
         public int RegionCode { get; set; }
         public Dictionary<string, Tuple<LSEntry, ResourceEntry>> Files { get; set; }
 
-        public bool InitializePartition(string partition)
+        public bool InitializePartition(RFFile rf, string partition)
         {
             Files.Clear();
-            LSEntry resource = null;
-            if ((resource = LS.TryGetValue(partition)) == null)
-                return false;
-
-            File.WriteAllBytes(partition,
-                GetFile(resource.DTOffset, resource.Size, resource.DTIndex));
-
-            RF = new RFFile(partition);
-            if (partition.Contains("("))
-                RF.Locale = partition.Substring(partition.IndexOf("("));
-            RegionCode = RF.RegionCode;
-
+            RegionCode = rf.RegionCode;
             LSEntry lsentry = null;
             IndexedPath path = new IndexedPath($"data{RF.Locale}/");
             foreach (ResourceEntry rsobj in RF.ResourceEntries)
@@ -62,6 +51,21 @@ namespace DTLS
                 }
             }
             return true;
+        }
+        public bool InitializePartition(string partition)
+        {
+            LSEntry resource = null;
+            if ((resource = LS.TryGetValue(partition)) == null)
+                return false;
+
+            File.WriteAllBytes(partition,
+                GetFile(resource.DTOffset, resource.Size, resource.DTIndex));
+
+            var rf = new RFFile(partition);
+            if (partition.Contains("("))
+                rf.Locale = partition.Substring(partition.IndexOf("("));
+
+            return InitializePartition(rf, partition);
         }
         public void Unpack(string partition, string outfolder)
         {

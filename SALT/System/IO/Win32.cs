@@ -42,7 +42,7 @@ namespace System
 
 
         [DllImport("Kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
-        public static extern void MoveMemory(VoidPtr dest, VoidPtr src, uint size);
+        public static extern void MoveMemory(VoidPtr dest, VoidPtr src, uint Size);
         [DllImport("Kernel32.dll", EntryPoint = "RtlFillMemory", SetLastError = false)]
         public static extern void FillMemory(VoidPtr dest, uint length, byte value);
 

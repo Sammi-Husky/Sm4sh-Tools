@@ -72,14 +72,14 @@ namespace Sm4shCommand.Classes
                 ACMDScript c1 = null, c2 = null,
                             c3 = null, c4 = null;
 
-                if (Main.EventLists.ContainsKey(u))
-                    c1 = Main.EventLists[u];
-                if (GFX.EventLists.ContainsKey(u))
-                    c2 = GFX.EventLists[u];
-                if (SFX.EventLists.ContainsKey(u))
-                    c3 = SFX.EventLists[u];
-                if (Expression.EventLists.ContainsKey(u))
-                    c4 = Expression.EventLists[u];
+                if (Main.Scripts.ContainsKey(u))
+                    c1 = ((ACMDScript)Main.Scripts[u]);
+                if (GFX.Scripts.ContainsKey(u))
+                    c2 = ((ACMDScript)GFX.Scripts[u]);
+                if (SFX.Scripts.ContainsKey(u))
+                    c3 = ((ACMDScript)SFX.Scripts[u]);
+                if (Expression.Scripts.ContainsKey(u))
+                    c4 = ((ACMDScript)Expression.Scripts[u]);
 
                 sb.Append("\n\tGame:{");
                 if (c1 != null)

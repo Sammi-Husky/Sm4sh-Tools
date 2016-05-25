@@ -7,29 +7,29 @@ using System.IO;
 
 namespace SALT.Scripting.AnimCMD
 {
-    public class ACMDCommand
+    public class ACMDCommand : ICommand
     {
         public ACMDCommand(uint crc)
         {
-            CRC = crc;
+            Ident = crc;
             Parameters = new List<object>();
         }
-        public uint CRC { get; set; }
+        public uint Ident { get; set; }
         public bool Dirty { get; set; }
-
-        public string Name { get { return ACMD_INFO.CMD_NAMES[CRC]; } }
-        public int WordSize { get { return ACMD_INFO.CMD_SIZES[CRC]; } }
+        public int Size { get { return WordSize * 4; } }
+        public string Name { get { return ACMD_INFO.CMD_NAMES[Ident]; } }
+        public int WordSize { get { return ACMD_INFO.CMD_SizeS[Ident]; } }
         public int[] ParamSpecifiers
         {
             get
             {
-                if (!string.IsNullOrEmpty(ACMD_INFO.PARAM_FORMAT[CRC]))
-                    return ACMD_INFO.PARAM_FORMAT[CRC].Split(',').Select(x => int.Parse(x)).ToArray();
+                if (!string.IsNullOrEmpty(ACMD_INFO.PARAM_FORMAT[Ident]))
+                    return ACMD_INFO.PARAM_FORMAT[Ident].Split(',').Select(x => int.Parse(x)).ToArray();
                 else
                     return new int[0];
             }
         }
-        public string[] ParamSyntax { get { return ACMD_INFO.PARAM_SYNTAX[CRC].Split(','); } }
+        public string[] ParamSyntax { get { return ACMD_INFO.PARAM_SYNTAX[Ident].Split(','); } }
 
         public List<object> Parameters { get; set; }
         public override string ToString()
@@ -39,7 +39,7 @@ namespace SALT.Scripting.AnimCMD
             {
                 if (ParamSpecifiers.Length > 0)
                     Param += $"{ParamSyntax[i]}=";
-                  
+
                 if (Parameters[i] is int | Parameters[i] is bint)
                     Param += String.Format("0x{0:X}{1}", Parameters[i], i + 1 != Parameters.Count ? ", " : "");
                 if (Parameters[i] is float | Parameters[i] is bfloat)
@@ -53,8 +53,8 @@ namespace SALT.Scripting.AnimCMD
         }
         public virtual byte[] GetBytes(Endianness endian)
         {
-            byte[] tmp = new byte[CalcSize()];
-            Util.SetWord(ref tmp, CRC, 0, endian);
+            byte[] tmp = new byte[Size];
+            Util.SetWord(ref tmp, Ident, 0, endian);
             for (int i = 0; i < ParamSpecifiers.Length; i++)
             {
                 if (ParamSpecifiers[i] == 0)
@@ -74,9 +74,6 @@ namespace SALT.Scripting.AnimCMD
             }
             return tmp;
         }
-        public int CalcSize()
-        {
-            return WordSize * 4;
-        }
+
     }
 }

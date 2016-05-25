@@ -53,6 +53,14 @@
     <Compile Include="Scripting\AnimCMD\ACMDFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDScript.cs" />
     <Compile Include="Scripting\AnimCMD\ACMD_INFO.cs" />
+    <Compile Include="Scripting\ICommand.cs" />
+    <Compile Include="Scripting\IScript.cs" />
+    <Compile Include="Scripting\IScriptCollection.cs" />
+    <Compile Include="Scripting\MSC\MSCCommand.cs" />
+    <Compile Include="Scripting\MSC\MSCFile.cs" />
+    <Compile Include="Scripting\MSC\MSCScript.cs" />
+    <Compile Include="Scripting\MSC\MSC_INFO.cs" />
+    <Compile Include="System\Type Extensions\StreamExtensions.cs" />
     <Compile Include="System\IO\DataSource.cs" />
     <Compile Include="System\IO\FileMap.cs" />
     <Compile Include="System\IO\Util.cs" />
@@ -74,9 +82,7 @@
     <Compile Include="System\Type Extensions\UInt32Extension.cs" />
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripting\MSC\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

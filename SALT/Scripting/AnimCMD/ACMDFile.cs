@@ -7,11 +7,11 @@ using System.IO;
 
 namespace SALT.Scripting.AnimCMD
 {
-    public unsafe class ACMDFile
+    public unsafe class ACMDFile : IScriptCollection
     {
         public ACMDFile()
         {
-            EventLists = new SortedList<uint, ACMDScript>();
+            Scripts = new SortedList<uint, IScript>();
             AnimationHashPairs = new Dictionary<uint, string>();
         }
         public ACMDFile(DataSource source) : this()
@@ -31,7 +31,7 @@ namespace SALT.Scripting.AnimCMD
                 uint _crc = (uint)Util.GetWordUnsafe(_workingSource.Address + 0x10 + (i * 8), Endian);
                 int _offset = Util.GetWordUnsafe((_workingSource.Address + 0x10 + (i * 8)) + 0x04, Endian);
 
-                EventLists.Add(_crc, ParseEventList(_crc, _offset));
+                Scripts.Add(_crc, ParseEventList(_crc, _offset));
             }
         }
         public ACMDFile(string filepath) : this(new DataSource(FileMap.FromFile(filepath))) { }
@@ -48,20 +48,20 @@ namespace SALT.Scripting.AnimCMD
         /// <summary>
         /// List of all CommandLists in this file.
         /// </summary>
-        public SortedList<uint, ACMDScript> EventLists { get; set; }
+        public SortedList<uint, IScript> Scripts { get; set; }
         /// <summary>
         /// Linked list containing all animation names and their CRC32 hash.
         /// </summary>
         public Dictionary<uint, string> AnimationHashPairs { get; set; }
 
         /// <summary>
-        /// Total size in bytes.
+        /// Total Size in bytes.
         /// </summary>
-        public int Size => 0x10 + (EventLists.Count * 8) + EventLists.Values.Sum(e => e.Size);
+        public int Size => 0x10 + (Scripts.Count * 8) + Scripts.Values.Sum(e => e.Size);
         /// <summary>
         /// True if the file has changes.
         /// </summary>
-        public bool Dirty => EventLists.Values.Any(cl => cl.Dirty);
+        public bool Dirty => Scripts.Values.Any(cl => ((ACMDScript)cl).Dirty);
         /// <summary>
         /// Applies changes.
         /// </summary>
@@ -81,9 +81,9 @@ namespace SALT.Scripting.AnimCMD
         private void OnRebuild(VoidPtr address, int length)
         {
             //  Remove empty event lists
-            for (int i = 0; i < EventLists.Count; i++)
-                if (EventLists.Values[i].Empty)
-                    EventLists.RemoveAt(i);
+            //for (int i = 0; i < Scripts.Count; i++)
+            //    if (Scripts.Values[i].Empty)
+            //        Scripts.RemoveAt(i);
 
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD     
@@ -93,25 +93,25 @@ namespace SALT.Scripting.AnimCMD
             //==========================================================================//
 
             Util.SetWordUnsafe(address + 0x04, 2, Endian); // Version (2)
-            Util.SetWordUnsafe(address + 0x08, EventLists.Count, Endian);
+            Util.SetWordUnsafe(address + 0x08, Scripts.Count, Endian);
 
-            int count = EventLists.Values.Sum(e => e.Count);
+            int count = Scripts.Values.Sum(e => e.Count());
 
             Util.SetWordUnsafe(address + 0x0C, count, Endian);
             addr += 0x10;
 
             //===============Write Event List offsets and CRC's=================//              
-            for (int i = 0, prev = 0; i < EventLists.Count; i++)
+            for (int i = 0, prev = 0; i < Scripts.Count; i++)
             {
-                int dataOffset = 0x10 + (EventLists.Count * 8) + prev;
-                Util.SetWordUnsafe(addr, (int)EventLists.Keys[i], Endian);
+                int dataOffset = 0x10 + (Scripts.Count * 8) + prev;
+                Util.SetWordUnsafe(addr, (int)Scripts.Keys[i], Endian);
                 Util.SetWordUnsafe(addr + 4, dataOffset, Endian);
-                prev += EventLists.Values[i].Size;
+                prev += Scripts.Values[i].Size;
                 addr += 8;
             }
 
             // Write event lists at final address.
-            foreach (ACMDScript e in EventLists.Values)
+            foreach (ACMDScript e in Scripts.Values)
             {
                 e.Rebuild(addr, e.Size, Endian);
                 addr += e.Size;
@@ -151,7 +151,7 @@ namespace SALT.Scripting.AnimCMD
                 }
 
                 _list.Add(c);
-                addr += c.CalcSize();
+                addr += c.Size;
             }
 
             // If we hit a script_end command, add it to the the Event List and terminate looping.
@@ -190,30 +190,32 @@ namespace SALT.Scripting.AnimCMD
         /// Returns an array of bytes representing this ACMDFile.
         /// </summary>
         /// <returns></returns>
-        public byte[] ToArray()
+        public byte[] GetBytes(Endianness endian)
         {
             DataSource src = _workingSource;
             byte[] tmp = new byte[Size];
             for (int i = 0; i < tmp.Length; i++)
                 tmp[i] = *(byte*)(src.Address + i);
-            return tmp;
+
+            return endian == Endianness.Little ?
+                tmp : tmp.Reverse().ToArray();
         }
         public string Serialize()
         {
             StringBuilder sb = new StringBuilder();
 
-            foreach (uint u in EventLists.Keys)
+            foreach (uint u in Scripts.Keys)
             {
                 string label = "";
                 AnimationHashPairs.TryGetValue(u, out label);
                 if (string.IsNullOrEmpty(label))
                     label = $"{u:X8}";
 
-                sb.Append(String.Format($"\n\n{EventLists.Keys.IndexOf(u):X}: [{label}]"));
+                sb.Append(String.Format($"\n\n{Scripts.Keys.IndexOf(u):X}: [{label}]"));
 
                 sb.Append("\n\tScript:{");
-                if (EventLists[u] != null)
-                    foreach (ACMDCommand cmd in EventLists[u])
+                if (Scripts[u] != null)
+                    foreach (ACMDCommand cmd in Scripts[u])
                         sb.Append(String.Format("\n\t\t{0}", cmd.ToString()));
                 else
                     sb.Append("\n\t\tEmpty");

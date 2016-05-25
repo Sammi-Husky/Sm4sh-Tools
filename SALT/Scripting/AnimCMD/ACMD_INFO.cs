@@ -9,7 +9,7 @@ namespace SALT.Scripting.AnimCMD
     public static class ACMD_INFO
     {
         #region Sizes
-        public static Dictionary<uint, int> CMD_SIZES = new Dictionary<uint, int>()
+        public static Dictionary<uint, int> CMD_SizeS = new Dictionary<uint, int>()
         {
              {0x99CF7BE6,1}, {0x37784F8D,1}, {0xA873499D,3}, {0x3CFB7580,4},{0xF1FBEFEE,3},
              {0x663DE182,3}, {0x6F4AACA8,24}, {0xE07CF8BB,24}, {0xD7F6CBCD,27},{0x11097635,27},
@@ -1563,7 +1563,7 @@ namespace SALT.Scripting.AnimCMD
             {0x7B48FE1C,"ID,Bone,Size,Z,Y,X,Action,AirGround,Unknown,Unknown,Unknown"},
             {0xEF787D43,"unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown"},
             {0x46F15F52,"unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown"},
-            {0x1EAF840C,"ID,bone,size,Z,Y,X,Unknown,airground,Unknown"},
+            {0x1EAF840C,"ID,bone,Size,Z,Y,X,Unknown,airground,Unknown"},
             {0x1B26C673,"unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown,unknown"},
             {0xE74D94EE,"Unknown"},
             {0xAA02262F,"unknown"},
@@ -1902,12 +1902,12 @@ namespace SALT.Scripting.AnimCMD
         #endregion
 
         #endregion
-        public static void SetCMDInfo(uint crc, int size, string name, int[] param, string[] Syntax)
+        public static void SetCMDInfo(uint crc, int Size, string name, int[] param, string[] Syntax)
         {
-            if (!CMD_SIZES.ContainsKey(crc))
-                CMD_SIZES.Add(crc, size);
+            if (!CMD_SizeS.ContainsKey(crc))
+                CMD_SizeS.Add(crc, Size);
             else
-                CMD_SIZES[crc] = size;
+                CMD_SizeS[crc] = Size;
 
             if (!CMD_NAMES.ContainsKey(crc))
                 CMD_NAMES.Add(crc, name);

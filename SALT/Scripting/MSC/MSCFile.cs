@@ -12,9 +12,12 @@ namespace SALT.Scripting.MSC
         {
             Strings = new List<string>();
             Scripts = new SortedList<uint, IScript>();
+            Offsets = new List<uint>();
+            Sizes = new SortedList<uint, int>();
+
             DoParse(filepath);
         }
-        public const int HEADER_Size = 0x30;
+        public const int HEADER_SIZE = 0x30;
         public int Size
         {
             get
@@ -43,7 +46,8 @@ namespace SALT.Scripting.MSC
 
         public List<string> Strings { get; set; }
         public SortedList<uint, IScript> Scripts { get; set; }
-        private uint[] _offsets;
+        public SortedList<uint, int> Sizes { get; set; }
+        public List<uint> Offsets { get; set; }
 
         public void DoParse(string path)
         {
@@ -62,16 +66,26 @@ namespace SALT.Scripting.MSC
                     Unk1 = reader.ReadUInt32();
                     Unk2 = reader.ReadUInt32();
 
-                    // Script offsets
-                    uint baseAddr = (EntryOffsets + HEADER_Size).RoundUp(0x10);
+                    // Offsets
+                    uint baseAddr = (EntryOffsets + HEADER_SIZE).RoundUp(0x10);
                     stream.Seek(baseAddr, SeekOrigin.Begin);
-                    _offsets = new uint[EntryCount];
-                    for (int i = 0; i < _offsets.Length; i++)
-                        _offsets[i] = reader.ReadUInt32();
+                    for (int i = 0; i < EntryCount; i++)
+                        Offsets.Add(reader.ReadUInt32());
+                    Offsets.Sort();
+
+                    for (int i = 0; i < Offsets.Count; i++)
+                    {
+                        if (i + 1 != Offsets.Count)
+                            Sizes.Add(Offsets[i], (int)(Offsets[i + 1] - Offsets[i]));
+                        else
+                            Sizes.Add(Offsets[i], (int)(EntryOffsets - Offsets[i]));
+                    }
 
                     // Scripts
-                    foreach (uint off in _offsets)
-                        Scripts.Add(off, ParseScript(reader, off + HEADER_Size));
+                    for (int i = 0; i < Offsets.Count; i++)
+                    {
+                        Scripts.Add(Offsets[i], ParseScript(reader, Offsets[i] + HEADER_SIZE, Sizes[Offsets[i]]));
+                    }
 
                     // Strings
                     stream.Seek(baseAddr + (EntryCount * 4).RoundUp(0x10), SeekOrigin.Begin);
@@ -80,13 +94,14 @@ namespace SALT.Scripting.MSC
                 }
             }
         }
-        public MSCScript ParseScript(BinaryReader reader, uint offset)
+        public MSCScript ParseScript(BinaryReader reader, uint offset, int size)
         {
             MSCScript script = new MSCScript();
             reader.BaseStream.Seek(offset, SeekOrigin.Begin);
             uint ident;
-            while ((ident = reader.ReadByte()) != 0x3)
+            while (reader.BaseStream.Position != offset + size)
             {
+                ident = reader.ReadByte();
                 var cmd = new MSCCommand(ident);
                 for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
                 {
@@ -102,14 +117,13 @@ namespace SALT.Scripting.MSC
                 }
                 script.Add(cmd);
             }
-            if (ident == 0x03)
-                script.Add(new MSCCommand(3));
             return script;
         }
         public byte[] GetBytes(Endianness endian)
         {
             List<byte> data = new List<byte>();
-            _offsets = new uint[Scripts.Count];
+            Offsets = new List<uint>(EntryCount);
+
             // Header
             data.AddRange(BitConverter.GetBytes(MAGIC));
             data.AddRange(BitConverter.GetBytes(STUFF1));
@@ -127,14 +141,22 @@ namespace SALT.Scripting.MSC
             data.AddRange(new byte[] { 0, 0, 0, 0 });
             data.AddRange(new byte[] { 0, 0, 0, 0 });
             data.AddRange(new byte[] { 0, 0, 0, 0 });
+
             // Scripts
             for (int i = 0; i < Scripts.Count; i++)
             {
-                _offsets[i] = (uint)data.Count - 0x40;
+                Offsets.Add((uint)data.Count - HEADER_SIZE);
                 data.AddRange(Scripts.Values[i].GetBytes(endian));
             }
-            foreach (var off in _offsets)
+            while (data.Count % 0x10 > 0)
+                data.Add(0);
+
+            // Offsets
+            foreach (var off in Offsets)
                 data.AddRange(BitConverter.GetBytes(off));
+            while (data.Count % 0x10 > 0)
+                data.Add(0);
+
             // Strings
             foreach (var str in Strings)
             {
@@ -142,6 +164,8 @@ namespace SALT.Scripting.MSC
                 for (int i = str.Length; i % StringSize > 0; i++)
                     data.Add(0x00);
             }
+            while (data.Count % 0x10 > 0)
+                data.Add(0);
 
             return data.ToArray();
         }

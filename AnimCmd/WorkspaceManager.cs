@@ -32,7 +32,7 @@ namespace Sm4shCommand
         {
             foreach (Project proj in Projects.Values)
             {
-                proj.ProjPath = $"{outPath + proj.Name}.fitproj";
+                proj.ProjPath = $"{outPath}/{proj.Text}.fitproj";
                 var path = proj.ProjRoot + "/ACMD";
                 Directory.CreateDirectory(path);
                 foreach (var acmd in proj.ACMD_FILES)

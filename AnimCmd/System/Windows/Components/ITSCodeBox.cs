@@ -27,10 +27,10 @@ namespace Sm4shCommand
             //clear previous highlighting
             e.ChangedRange.ClearStyle(StyleIndex.All);
             //highlight tags
+            e.ChangedRange.SetStyle(CommentStyle, @"\/\/.+");
             e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\),]+\b");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
-            e.ChangedRange.SetStyle(CommentStyle, @"\/\/.+");
         }
     }
     public class ACMD_EDITOR : ITS_EDITOR
@@ -51,15 +51,35 @@ namespace Sm4shCommand
         public void Deserialize()
         {
             this.Text = string.Empty;
+
+            //float frame = 0;
+
             for (int i = 0; i < Script.Count; i++)
             {
                 int amt = 0;
                 if ((amt = DeserializeCommand(i, Script[i].CRC)) > 0)
                     i += amt;
 
-                if (i < Script.Count)
-                    tmplines.Add(Script[i].ToString());
+                if (i < Script.Count) {
+                    var command = Script[i].ToString();
+
+                    /*
+                    if (Script[i].Name == "Asynchronous_Timer") {
+                        frame = (float)Script[i].Parameters[0];
+                        command += $" //frame {frame}";
+                    }
+
+                    if (Script[i].Name == "Synchronous_Timer") {
+                        frame += (float)Script[i].Parameters[0];
+                        command += $" //frame {frame}";
+                    }
+                    */
+
+                    tmplines.Add(command);
+                }
+
             }
+            
             if (Script.Empty)
                 tmplines.Add("// Empty list");
 

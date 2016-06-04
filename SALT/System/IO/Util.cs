@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace System.IO
+﻿namespace System.IO
 {
     public unsafe static class Util
     {
@@ -42,21 +36,22 @@ namespace System.IO
                      + (uint)(data[offset + 3] * 0x1);
             }
         }
+
         /// <summary>
         /// Retrieves an 32 bit integer from the specified address.
         /// </summary>
-        /// <param name="Address"></param>
+        /// <param name="address"></param>
         /// <param name="endian"></param>
         /// <returns></returns>
-        public static int GetWordUnsafe(VoidPtr Address, Endianness endian)
+        public static int GetWordUnsafe(VoidPtr address, Endianness endian)
         {
-            if (Address % 4 != 0)
+            if (address % 4 != 0)
                 return 0;
 
             if (endian == Endianness.Big)
-                return *(bint*)Address;
+                return *(bint*)address;
             else
-                return *(int*)Address;
+                return *(int*)address;
         }
 
         /// <summary>
@@ -73,6 +68,7 @@ namespace System.IO
             {
                 Array.Resize<byte>(ref data, (int)offset + 4);
             }
+
             if (endian == Endianness.Big)
             {
                 data[offset + 0] = (byte)((value & 0xFF000000) / 0x1000000);
@@ -88,22 +84,24 @@ namespace System.IO
                 data[offset + 0] = (byte)((value & 0xFF) / 0x1);
             }
         }
+
         /// <summary>
         /// Sets a value into memory at the specified address.
         /// </summary>
-        /// <param name="Address"></param>
+        /// <param name="address"></param>
         /// <param name="value"></param>
         /// <param name="endian"></param>
-        public static void SetWordUnsafe(VoidPtr Address, int value, Endianness endian)
+        public static void SetWordUnsafe(VoidPtr address, int value, Endianness endian)
         {
-            if (Address % 4 != 0)
+            if (address % 4 != 0)
                 return;
 
             if (endian == Endianness.Big)
-                *(bint*)Address = (bint)value;
+                *(bint*)address = (bint)value;
             else
-                *(int*)Address = value;
+                *(int*)address = value;
         }
+
         /// <summary>
         /// Sets a floating point value into an array of bytes, resizing if necessary.
         /// </summary>
@@ -115,37 +113,39 @@ namespace System.IO
         {
             SetWord(ref data, FloatToHex(value), offset,endian);
         }
+
         /// <summary>
         /// Sets a floating point value into memory at the specified address.
         /// </summary>
-        /// <param name="Address"></param>
+        /// <param name="address"></param>
         /// <param name="value"></param>
         /// <param name="endian"></param>
-        public static void SetFloatUnsafe(VoidPtr Address, float value, Endianness endian)
+        public static void SetFloatUnsafe(VoidPtr address, float value, Endianness endian)
         {
-            if (Address % 4 != 0)
+            if (address % 4 != 0)
                 return;
 
             if (endian == Endianness.Big)
-                *(bfloat*)Address = value;
+                *(bfloat*)address = value;
             else
-                *(float*)Address = value;
+                *(float*)address = value;
         }
+
         /// <summary>
         /// Gets a floating point value from a specified adress.
         /// </summary>
-        /// <param name="Address"></param>
+        /// <param name="address"></param>
         /// <param name="endian"></param>
         /// <returns></returns>
-        public static float GetFloatUnsafe(VoidPtr Address, Endianness endian)
+        public static float GetFloatUnsafe(VoidPtr address, Endianness endian)
         {
-            if (Address % 4 != 0)
+            if (address % 4 != 0)
                 return 0;
 
             if (endian == Endianness.Big)
-                return *(bfloat*)Address;
+                return *(bfloat*)address;
             else
-                return *(float*)Address;
+                return *(float*)address;
         }
 
         /// <summary>
@@ -161,11 +161,16 @@ namespace System.IO
             float mantissa = Math.Abs(val);
 
             if (mantissa > 1)
+            {
                 while (mantissa > 2)
                 { mantissa /= 2; exponent++; }
+            }
             else
+            {
                 while (mantissa < 1)
                 { mantissa *= 2; exponent--; }
+            }
+
             mantissa -= 1;
             mantissa *= (float)Math.Pow(2, 23);
 
@@ -174,6 +179,7 @@ namespace System.IO
                 + exponent * 0x800000
                 + (long)mantissa);
         }
+
         /// <summary>
         /// Returns the floating point value of the passed in hexadecimal value.
         /// </summary>
@@ -188,14 +194,18 @@ namespace System.IO
             long mantissaBits = 23;
 
             if (mantissa != 0)
+            {
                 while (((long)mantissa & 0x1) != 1)
                 { mantissa /= 2; mantissaBits--; }
+            }
+
             mantissa /= (float)Math.Pow(2, mantissaBits);
             mantissa += 1;
 
             mantissa *= (float)Math.Pow(2, exponent);
             return mantissa *= sign;
         }
+
         /// <summary>
         /// Copies data from memory at a specific address into an array
         /// </summary>
@@ -204,13 +214,14 @@ namespace System.IO
         /// <param name="target"></param>
         /// <param name="targetOffset"></param>
         /// <param name="Length"></param>
-        public static byte[] GetArrayFromAddress(VoidPtr Address, int length)
+        public static byte[] GetArrayFromAddress(VoidPtr address, int length)
         {
             byte[] arr = new byte[length];
             for (int i = 0; i < length; i++)
-                arr[i] = *(byte*)(Address + i);
+                arr[i] = *(byte*)(address + i);
             return arr;
         }
+
         /// <summary>
         /// Returns a string from an array of bytes at the specified offset
         /// </summary>
@@ -221,7 +232,7 @@ namespace System.IO
         public static string GetString(byte[] data, long offset, Endianness endian)
         {
             if (offset >= data.Length) throw new Exception("Offset outside of expected value range.");
-            string s = "";
+            string s = string.Empty;
 
             while (data[offset] != 0)
                 s += (char)data[offset++];
@@ -229,6 +240,7 @@ namespace System.IO
             return s;
         }
     }
+
     public enum Endianness
     {
         Big = 0,

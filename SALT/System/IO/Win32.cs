@@ -4,7 +4,6 @@
 //              My deepest apologies to anyone who i've missed             \\
 //=========================================================================\\
 
-using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
@@ -16,13 +15,13 @@ namespace System
         public class SafeHandle : IDisposable
         {
             private uint _handle;
-            public VoidPtr Handle { get { return _handle; } }
+            public VoidPtr Handle { get { return this._handle; } }
 
-            public SafeHandle(VoidPtr handle) { _handle = handle; }
+            public SafeHandle(VoidPtr handle) { this._handle = handle; }
 
-            ~SafeHandle() { Dispose(); }
-            public void Dispose() { if (_handle != 0) { CloseHandle(_handle); _handle = 0; } GC.SuppressFinalize(this); }
-            public void ErrorCheck() { if (_handle == 0)  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error()); }
+            ~SafeHandle() { this.Dispose(); }
+            public void Dispose() { if (this._handle != 0) { CloseHandle(this._handle); this._handle = 0; } GC.SuppressFinalize(this); }
+            public void ErrorCheck() { if (this._handle == 0)  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error()); }
 
             public static implicit operator SafeHandle(VoidPtr handle) { return new SafeHandle(handle); }
 
@@ -42,7 +41,7 @@ namespace System
 
 
         [DllImport("Kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
-        public static extern void MoveMemory(VoidPtr dest, VoidPtr src, uint Size);
+        public static extern void MoveMemory(VoidPtr dest, VoidPtr src, uint size);
         [DllImport("Kernel32.dll", EntryPoint = "RtlFillMemory", SetLastError = false)]
         public static extern void FillMemory(VoidPtr dest, uint length, byte value);
 
@@ -123,7 +122,6 @@ namespace System
             All = 0x000F001F
         }
         #endregion
-
 
     }
 }

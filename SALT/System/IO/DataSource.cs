@@ -13,25 +13,25 @@ namespace System.IO
         public int Length;
         public FileMap Map;
 
-
         public DataSource(VoidPtr addr, int len)
         {
-            Address = addr;
-            Length = len;
-            Map = null;
+            this.Address = addr;
+            this.Length = len;
+            this.Map = null;
         }
+
         public DataSource(FileMap map)
         {
-            Address = map.Address;
-            Length = map.Length;
-            Map = map;
+            this.Address = map.Address;
+            this.Length = map.Length;
+            this.Map = map;
         }
 
         public void Close()
         {
-            if (Map != null) { Map.Dispose(); Map = null; }
-            Address = null;
-            Length = 0;
+            if (this.Map != null) { this.Map.Dispose(); this.Map = null; }
+            this.Address = null;
+            this.Length = 0;
         }
 
         public static bool operator ==(DataSource src1, DataSource src2) { return (src1.Address == src2.Address) && (src1.Length == src2.Length) && (src1.Map == src2.Map); }
@@ -42,7 +42,7 @@ namespace System.IO
                 return this == (DataSource)obj;
             return base.Equals(obj);
         }
+
         public override int GetHashCode() { return base.GetHashCode(); }
     }
-
 }

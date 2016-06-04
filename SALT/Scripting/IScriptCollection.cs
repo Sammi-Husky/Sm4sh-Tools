@@ -1,7 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SALT.Scripting
 {
@@ -12,5 +12,6 @@ namespace SALT.Scripting
 
         byte[] GetBytes(System.IO.Endianness endian);
         void Export(string path);
+        void Export(string path, System.IO.Endianness endian);
     }
 }

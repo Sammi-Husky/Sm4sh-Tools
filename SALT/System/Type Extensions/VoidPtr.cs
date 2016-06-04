@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace System
 {
@@ -37,7 +36,7 @@ namespace System
         public static implicit operator VoidPtr(IntPtr ptr) { return new VoidPtr() { address = (void*)ptr }; }
         public static implicit operator IntPtr(VoidPtr ptr) { return (IntPtr)ptr.address; }
 
-        public override int GetHashCode() { return (int)address; }
+        public override int GetHashCode() { return (int)this.address; }
         public override bool Equals(object obj) { return base.Equals(obj); }
 
         public static void Swap(float* p1, float* p2) { float f = *p1; *p1 = *p2; *p2 = f; }

@@ -1,7 +1,9 @@
-﻿using System;
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace SALT.PARAMS
 {
@@ -9,12 +11,14 @@ namespace SALT.PARAMS
     {
         public ParamGroup()
         {
-            Values = new List<ParamEntry>();
+            this.Values = new List<ParamEntry>();
         }
+
         /// <summary>
         /// Number of structures this group contains.
         /// </summary>
         public int EntryCount { get; set; }
+
         /// <summary>
         /// Number of parameters each structure contains.
         /// </summary>
@@ -22,12 +26,13 @@ namespace SALT.PARAMS
         {
             get
             {
-                if (EntryCount > 0)
-                    return Values.Count / EntryCount;
+                if (this.EntryCount > 0)
+                    return this.Values.Count / this.EntryCount;
                 else
                     return 1;
             }
         }
+
         /// <summary>
         /// Param structures.
         /// </summary>
@@ -37,40 +42,47 @@ namespace SALT.PARAMS
         public byte[] GetBytes()
         {
             List<byte> data = new List<byte>();
-            foreach (ParamEntry[] grp in Chunks)
+            data.Add(0x20);
+            data.AddRange(BitConverter.GetBytes(this.EntryCount).Reverse());
+            foreach (ParamEntry[] grp in this.Chunks)
+            {
                 foreach (ParamEntry ent in grp)
                     data.AddRange(ent.GetBytes());
+            }
 
             return data.ToArray();
         }
+
         public void Chunk()
         {
-            Chunks = (ParamEntry[][])Values.Chunk(EntryCount);
+            this.Chunks = (ParamEntry[][])this.Values.Chunk(this.EntryCount);
         }
+
         public void Add(ParamEntry ent)
         {
-            Values.Add(ent);
+            this.Values.Add(ent);
         }
+
         public void Clear()
         {
-            Values.Clear();
+            this.Values.Clear();
         }
 
         public ParamEntry[] this[int index]
         {
             get
             {
-                if (index > Chunks.Length || index < 0)
+                if (index > this.Chunks.Length || index < 0)
                     throw new IndexOutOfRangeException();
                 else
-                    return Chunks[index];
+                    return this.Chunks[index];
             }
             set
             {
-                if (index > Chunks.Length || index < 0)
+                if (index > this.Chunks.Length || index < 0)
                     throw new IndexOutOfRangeException();
                 else
-                    Chunks[index] = value;
+                    this.Chunks[index] = value;
             }
         }
     }

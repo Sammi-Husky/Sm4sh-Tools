@@ -1,5 +1,5 @@
 ﻿// Copyright(c) 2014 Mads Breusch Klinkby. All rights reserved.
-// Licensed under the MIT License; you may not use this file except in compliance with the License. 
+// Licensed under the MIT License; you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at https://opensource.org/licenses/MIT
 // Published at https://github.com/klinkby/klinkby.checksum
 
@@ -54,6 +54,7 @@ namespace System.Security.Cryptography
                 byte index = (byte)(((crc) & 0xff) ^ bytes[i]);
                 crc = (crc >> 8) ^ Table[index];
             }
+
             return unchecked((~crc));
         }
 
@@ -76,8 +77,10 @@ namespace System.Security.Cryptography
                         temp >>= 1;
                     }
                 }
+
                 table[i] = temp;
             }
+
             return table;
         }
     }

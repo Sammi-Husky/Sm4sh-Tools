@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,33 +16,37 @@ namespace SALT.Scripting.MSC
             get
             {
                 int total = 0;
-                foreach (var cmd in _commands)
+                foreach (var cmd in this._commands)
                     total += cmd.Size;
                 return total;
             }
         }
+
         public ICommand this[int i]
         {
-            get { return _commands[i]; }
-            set { _commands[i] = value; }
+            get { return this._commands[i]; }
+            set { this._commands[i] = value; }
         }
-        public List<ICommand> Commands { get { return _commands; } set { _commands = value; } }
+
+        public List<ICommand> Commands { get { return this._commands; } set { this._commands = value; } }
         private List<ICommand> _commands = new List<ICommand>();
 
         public byte[] GetBytes(System.IO.Endianness endian)
         {
             List<byte> data = new List<byte>();
-            foreach (var cmd in _commands)
+            foreach (var cmd in this._commands)
                 data.AddRange(cmd.GetBytes(endian));
             return data.ToArray();
         }
+
         public string Deserialize()
         {
             StringBuilder sb = new StringBuilder();
-            foreach (ICommand cmd in _commands)
+            foreach (ICommand cmd in this._commands)
                 sb.Append(cmd.ToString() + Environment.NewLine);
             return sb.ToString();
         }
+
         public void Serialize(string text)
         {
             List<string> lines = text.Split('\n').Select(x => x.Trim()).ToList();
@@ -51,11 +58,12 @@ namespace SALT.Scripting.MSC
                 if (lineText.StartsWith("//"))
                     continue;
 
-                MSCCommand cmd = ParseCMD(lines[i]);
+                MSCCommand cmd = this.ParseCMD(lines[i]);
                 uint ident = cmd.Ident;
                 this.Add(cmd);
             }
         }
+
         private MSCCommand ParseCMD(string line)
         {
             string s = line.TrimStart();
@@ -82,51 +90,60 @@ namespace SALT.Scripting.MSC
                         break;
                 }
             }
+
             return cmd;
         }
         #region IEnumerable Implemntation
-        public int Count { get { return _commands.Count; } }
+        public int Count { get { return this._commands.Count; } }
 
         public bool IsReadOnly { get { return false; } }
         public void Clear()
         {
-            _commands.Clear();
+            this._commands.Clear();
         }
+
         public void Insert(int index, MSCCommand var)
         {
-            _commands.Insert(index, var);
+            this._commands.Insert(index, var);
         }
+
         public void InsertAfter(int index, MSCCommand var)
         {
-            _commands.Insert(index + 1, var);
+            this._commands.Insert(index + 1, var);
         }
+
         public void Add(MSCCommand var)
         {
-            _commands.Add(var);
+            this._commands.Add(var);
         }
+
         public bool Remove(MSCCommand var)
         {
-            return _commands.Remove(var);
+            return this._commands.Remove(var);
         }
+
         public void RemoveAt(int index) { }
         public void Remove(int index)
         {
-            _commands.RemoveAt(index);
+            this._commands.RemoveAt(index);
         }
-        public bool Contains(MSCCommand var) { return _commands.Contains(var); }
+
+        public bool Contains(MSCCommand var) { return this._commands.Contains(var); }
         public int IndexOf(MSCCommand var)
         {
-            return _commands.IndexOf(var);
+            return this._commands.IndexOf(var);
         }
-        public void CopyTo(MSCCommand[] var, int index) { _commands.CopyTo(var, index); }
+
+        public void CopyTo(MSCCommand[] var, int index) { this._commands.CopyTo(var, index); }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
+
         public IEnumerator<ICommand> GetEnumerator()
         {
-            for (int i = 0; i < _commands.Count; i++)
-                yield return (MSCCommand)_commands[i];
+            for (int i = 0; i < this._commands.Count; i++)
+                yield return (MSCCommand)this._commands[i];
         }
         #endregion
     }

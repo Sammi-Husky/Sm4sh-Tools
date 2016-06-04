@@ -1,8 +1,10 @@
-﻿using System;
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SALT.PARAMS
 {
@@ -10,8 +12,8 @@ namespace SALT.PARAMS
     {
         public ParamEntry(object value, ParamType type)
         {
-            Value = value;
-            Type = type;
+            this.Value = value;
+            this.Type = type;
         }
 
         public ParamType Type { get; set; }
@@ -20,7 +22,7 @@ namespace SALT.PARAMS
         {
             get
             {
-                switch (Type)
+                switch (this.Type)
                 {
                     case ParamType.u8:
                     case ParamType.s8:
@@ -33,7 +35,7 @@ namespace SALT.PARAMS
                     case ParamType.f32:
                         return 5;
                     case ParamType.str:
-                        return ((string)Value).Length + 1;
+                        return ((string)this.Value).Length + 1;
                     default:
                         return 0;
                 }
@@ -43,44 +45,44 @@ namespace SALT.PARAMS
         public byte[] GetBytes()
         {
             List<byte> data = new List<byte>();
-            switch (Type)
+            switch (this.Type)
             {
                 case ParamType.u8:
                     data.Add(1);
-                    data.Add((byte)Value);
+                    data.Add((byte)this.Value);
                     return data.ToArray();
                 case ParamType.s8:
                     data.Add(2);
-                    data.Add((byte)Value);
+                    data.Add((byte)this.Value);
                     return data.ToArray();
                 case ParamType.u16:
                     data.Add(3);
-                    data.AddRange(BitConverter.GetBytes((ushort)Value).Reverse());
+                    data.AddRange(BitConverter.GetBytes((ushort)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.s16:
                     data.Add(4);
-                    data.AddRange(BitConverter.GetBytes((short)Value).Reverse());
+                    data.AddRange(BitConverter.GetBytes((short)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.u32:
                     data.Add(5);
-                    data.AddRange(BitConverter.GetBytes((uint)Value).Reverse());
+                    data.AddRange(BitConverter.GetBytes((uint)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.s32:
                     data.Add(6);
-                    data.AddRange(BitConverter.GetBytes((int)Value).Reverse());
+                    data.AddRange(BitConverter.GetBytes((int)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.f32:
                     data.Add(7);
-                    data.AddRange(BitConverter.GetBytes((float)Value).Reverse());
+                    data.AddRange(BitConverter.GetBytes((float)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.str:
                     data.Add(8);
-                    data.AddRange(BitConverter.GetBytes(((string)Value).Length).Reverse());
-                    data.AddRange(Encoding.ASCII.GetBytes((string)Value));
+                    data.AddRange(BitConverter.GetBytes(((string)this.Value).Length).Reverse());
+                    data.AddRange(Encoding.ASCII.GetBytes((string)this.Value));
                     return data.ToArray();
                 case ParamType.group:
                     data.Add(0x20);
-                    data.AddRange(((ParamGroup)Value).GetBytes());
+                    data.AddRange(((ParamGroup)this.Value).GetBytes());
                     return data.ToArray();
                 default:
                     return null;

@@ -5,6 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using static Sm4shCommand.Runtime;
+using SALT.PARAMS;
+using System.ComponentModel;
 
 namespace Sm4shCommand
 {
@@ -41,9 +43,24 @@ namespace Sm4shCommand
             if (File.Exists(Path.Combine(Application.StartupPath, "Events.cfg")))
             {
                 Runtime.LogMessage("Event dictionary found, applying overrides..");
-                GetCommandInfo(Path.Combine(Application.StartupPath, "Events.cfg"));
+                Runtime.LogMessage("============================================");
+                Action<object, DoWorkEventArgs> work = (object snd, DoWorkEventArgs arg) =>
+                {
+                    GetCommandInfo(Path.Combine(Application.StartupPath, "Events.cfg"));
+                };
+                Action<object, RunWorkerCompletedEventArgs> workDone = (object snd, RunWorkerCompletedEventArgs arg) =>
+                {
+                    Runtime.LogMessage("============================================\n");
+                    Runtime.LogMessage("Done.");
+                };
+                using (BackgroundWorker wrk = new BackgroundWorker())
+                {
+                    wrk.DoWork += new DoWorkEventHandler(work);
+                    wrk.RunWorkerCompleted += new RunWorkerCompletedEventHandler(workDone);
+                    wrk.RunWorkerAsync();
+                }
             }
-            Runtime.LogMessage("Done.");
+
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
@@ -98,24 +115,27 @@ namespace Sm4shCommand
 
         private void FileTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            TabPage p = null;
             if (e.Node is ScriptNode)
+                p = new CodeEditor(e.Node as ScriptNode);
+            else if (e.Node is ParamListNode)
+                p = new ParamEditor(e.Node as ParamListNode);
+
+            if (p != null)
             {
-                var n = e.Node as ScriptNode;
-                var ce = new CodeEditor(n);
-                ce.Name = n.Text + e.Node.Index;
-                ce.Text = e.Node.Text;
-                if (tabControl1.TabPages.ContainsKey(ce.Name))
+                p.Name = e.Node.Text + e.Node.Index;
+                p.Text = e.Node.Text;
+                if (tabControl1.TabPages.ContainsKey(p.Name))
                 {
-                    tabControl1.SelectTab(ce.Name);
+                    tabControl1.SelectTab(p.Name);
                     return;
                 }
                 else
                 {
-                    tabControl1.TabPages.Insert(0, ce);
+                    tabControl1.TabPages.Insert(0, p);
                     tabControl1.SelectTab(0);
                 }
             }
-
         }
         private void FileTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
@@ -126,20 +146,31 @@ namespace Sm4shCommand
         {
             for (int i = 0; i < tabControl1.TabCount; i++)
             {
-                var p = tabControl1.TabPages[i] as CodeEditor;
-
-                TabControl tmp = (TabControl)p.Controls[0];
-
                 Rectangle r = tabControl1.GetTabRect(i);
                 Rectangle closeButton = new Rectangle(r.Right - 18, r.Top + 3, 13, Font.Height);
                 if (closeButton.Contains(e.Location))
                 {
-                    for (int x = 0; x < tmp.TabCount; x++)
+                    TabPage p = null;
+                    if (tabControl1.TabPages[i] is CodeEditor)
                     {
-                        ITS_EDITOR box = (ITS_EDITOR)tmp.TabPages[x].Controls[0];
-                        box.ApplyChanges();
+                        p = tabControl1.TabPages[i] as CodeEditor;
+                        TabControl tmp = (TabControl)p.Controls[0];
+                        for (int x = 0; x < tmp.TabCount; x++)
+                        {
+                            ITS_EDITOR box = (ITS_EDITOR)tmp.TabPages[x].Controls[0];
+                            box.ApplyChanges();
+                        }
                     }
-                    tabControl1.TabPages.Remove(p);
+                    else if (tabControl1.TabPages[i] is ParamEditor)
+                    {
+                        var tmp = tabControl1.TabPages[i] as ParamEditor;
+                        p = tmp;
+                        var node = tmp.Node;
+                        var file = Manager.Projects.Values[0].Fighter_Param_vl;
+                        ((ParamGroup)file.Groups[node.Group]).Chunks[node.Entry] = node.Parameters.ToArray();
+                    }
+                    if (p != null)
+                        tabControl1.TabPages.Remove(p);
                     return;
                 }
             }
@@ -147,11 +178,18 @@ namespace Sm4shCommand
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            foreach (var proj in Manager.Projects.Values)
+                proj.Save();
+        }
 
-            using (var dlg = new FolderSelectDialog())
-                if (dlg.ShowDialog() == DialogResult.OK)
-                    Manager.SaveProject("Wario",dlg.SelectedPath);
-
+        private void projectToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            ProjectWizard dlg = new ProjectWizard();
+            dlg.ShowDialog();
+            if (dlg.DialogResult == DialogResult.OK)
+            {
+                Manager.OpenProject(dlg.Project.ProjPath);
+            }
         }
     }
 }

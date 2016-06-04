@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace System
+﻿namespace System
 {
     public static class SingleExtension
     {
-        public static unsafe Single Reverse(this Single value)
+        public static unsafe float Reverse(this float value)
         {
             *(uint*)(&value) = ((uint*)&value)->Reverse();
             return value;
@@ -16,7 +12,7 @@ namespace System
         //public static unsafe Int32 ToInt32(this Single value)
         //{
         //    double v = value + _double2fixmagic;
-        //    return *((int*)&v) >> 16; 
+        //    return *((int*)&v) >> 16;
         //}
     }
 }

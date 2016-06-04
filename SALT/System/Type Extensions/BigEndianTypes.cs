@@ -1,12 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace System
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct bint : IConvertible
     {
-        public int Data { get { return _data; } set { _data = value; } }
+        public int Data { get { return this._data; } set { this._data = value; } }
         private int _data;
         public static implicit operator int(bint val) { return val._data.Reverse(); }
         public static implicit operator bint(int val) { return new bint { _data = val.Reverse() }; }
@@ -17,87 +16,87 @@ namespace System
 
         public TypeCode GetTypeCode()
         {
-            return Convert.GetTypeCode(_data.Reverse());
+            return Convert.GetTypeCode(this._data.Reverse());
         }
 
         public bool ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(_data.Reverse());
+            return Convert.ToBoolean(this._data.Reverse());
         }
 
         public byte ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(_data.Reverse());
+            return Convert.ToByte(this._data.Reverse());
         }
 
         public char ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(_data.Reverse());
+            return Convert.ToChar(this._data.Reverse());
         }
 
         public DateTime ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(_data.Reverse());
+            return Convert.ToDateTime(this._data.Reverse());
         }
 
         public decimal ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(_data.Reverse());
+            return Convert.ToDecimal(this._data.Reverse());
         }
 
         public double ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(_data.Reverse());
+            return Convert.ToDouble(this._data.Reverse());
         }
 
         public short ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(_data.Reverse());
+            return Convert.ToInt16(this._data.Reverse());
         }
 
         public int ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(_data.Reverse());
+            return Convert.ToInt32(this._data.Reverse());
         }
 
         public long ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(_data.Reverse());
+            return Convert.ToInt64(this._data.Reverse());
         }
 
         public sbyte ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(_data.Reverse());
+            return Convert.ToSByte(this._data.Reverse());
         }
 
         public float ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(_data.Reverse());
+            return Convert.ToSingle(this._data.Reverse());
         }
 
         public string ToString(IFormatProvider provider)
         {
-            return Convert.ToString(_data.Reverse());
+            return Convert.ToString(this._data.Reverse());
         }
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            return Convert.ChangeType(_data.Reverse(), conversionType, provider);
+            return Convert.ChangeType(this._data.Reverse(), conversionType, provider);
         }
 
         public ushort ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(_data.Reverse());
+            return Convert.ToUInt16(this._data.Reverse());
         }
 
         public uint ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(_data.Reverse());
+            return Convert.ToUInt32(this._data.Reverse());
         }
 
         public ulong ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(_data.Reverse());
+            return Convert.ToUInt64(this._data.Reverse());
         }
 
         #endregion
@@ -106,8 +105,8 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     public struct buint : IConvertible
     {
-        public uint Data { get { return _data; } set { _data = value; } }
-        private uint _data; 
+        public uint Data { get { return this._data; } set { this._data = value; } }
+        private uint _data;
         public static implicit operator uint(buint val) { return val._data.Reverse(); }
         public static implicit operator buint(uint val) { return new buint { _data = val.Reverse() }; }
         public static explicit operator int(buint val) { return (int)val._data.Reverse(); }
@@ -117,87 +116,87 @@ namespace System
 
         public TypeCode GetTypeCode()
         {
-            return Convert.GetTypeCode(_data.Reverse());
+            return Convert.GetTypeCode(this._data.Reverse());
         }
 
         public bool ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(_data.Reverse());
+            return Convert.ToBoolean(this._data.Reverse());
         }
 
         public byte ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(_data.Reverse());
+            return Convert.ToByte(this._data.Reverse());
         }
 
         public char ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(_data.Reverse());
+            return Convert.ToChar(this._data.Reverse());
         }
 
         public DateTime ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(_data.Reverse());
+            return Convert.ToDateTime(this._data.Reverse());
         }
 
         public decimal ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(_data.Reverse());
+            return Convert.ToDecimal(this._data.Reverse());
         }
 
         public double ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(_data.Reverse());
+            return Convert.ToDouble(this._data.Reverse());
         }
 
         public short ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(_data.Reverse());
+            return Convert.ToInt16(this._data.Reverse());
         }
 
         public int ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(_data.Reverse());
+            return Convert.ToInt32(this._data.Reverse());
         }
 
         public long ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(_data.Reverse());
+            return Convert.ToInt64(this._data.Reverse());
         }
 
         public sbyte ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(_data.Reverse());
+            return Convert.ToSByte(this._data.Reverse());
         }
 
         public float ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(_data.Reverse());
+            return Convert.ToSingle(this._data.Reverse());
         }
 
         public string ToString(IFormatProvider provider)
         {
-            return Convert.ToString(_data.Reverse());
+            return Convert.ToString(this._data.Reverse());
         }
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            return Convert.ChangeType(_data.Reverse(), conversionType, provider);
+            return Convert.ChangeType(this._data.Reverse(), conversionType, provider);
         }
 
         public ushort ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(_data.Reverse());
+            return Convert.ToUInt16(this._data.Reverse());
         }
 
         public uint ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(_data.Reverse());
+            return Convert.ToUInt32(this._data.Reverse());
         }
 
         public ulong ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(_data.Reverse());
+            return Convert.ToUInt64(this._data.Reverse());
         }
 
         #endregion
@@ -206,7 +205,7 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     public struct bfloat : IConvertible
     {
-        public float Data { get { return _data; } set { _data = value; } }
+        public float Data { get { return this._data; } set { this._data = value; } }
         private float _data;
         public static implicit operator float(bfloat val) { return val._data.Reverse(); }
         public static implicit operator bfloat(float val) { return new bfloat { _data = val.Reverse() }; }
@@ -215,87 +214,87 @@ namespace System
 
         public TypeCode GetTypeCode()
         {
-            return Convert.GetTypeCode(_data.Reverse());
+            return Convert.GetTypeCode(this._data.Reverse());
         }
 
         public bool ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(_data.Reverse());
+            return Convert.ToBoolean(this._data.Reverse());
         }
 
         public byte ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(_data.Reverse());
+            return Convert.ToByte(this._data.Reverse());
         }
 
         public char ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(_data.Reverse());
+            return Convert.ToChar(this._data.Reverse());
         }
 
         public DateTime ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(_data.Reverse());
+            return Convert.ToDateTime(this._data.Reverse());
         }
 
         public decimal ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(_data.Reverse());
+            return Convert.ToDecimal(this._data.Reverse());
         }
 
         public double ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(_data.Reverse());
+            return Convert.ToDouble(this._data.Reverse());
         }
 
         public short ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(_data.Reverse());
+            return Convert.ToInt16(this._data.Reverse());
         }
 
         public int ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(_data.Reverse());
+            return Convert.ToInt32(this._data.Reverse());
         }
 
         public long ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(_data.Reverse());
+            return Convert.ToInt64(this._data.Reverse());
         }
 
         public sbyte ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(_data.Reverse());
+            return Convert.ToSByte(this._data.Reverse());
         }
 
         public float ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(_data.Reverse());
+            return Convert.ToSingle(this._data.Reverse());
         }
 
         public string ToString(IFormatProvider provider)
         {
-            return Convert.ToString(_data.Reverse());
+            return Convert.ToString(this._data.Reverse());
         }
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            return Convert.ChangeType(_data.Reverse(), conversionType, provider);
+            return Convert.ChangeType(this._data.Reverse(), conversionType, provider);
         }
 
         public ushort ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(_data.Reverse());
+            return Convert.ToUInt16(this._data.Reverse());
         }
 
         public uint ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(_data.Reverse());
+            return Convert.ToUInt32(this._data.Reverse());
         }
 
         public ulong ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(_data.Reverse());
+            return Convert.ToUInt64(this._data.Reverse());
         }
 
         #endregion
@@ -304,7 +303,7 @@ namespace System
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct bshort : IConvertible
     {
-        public short Data { get { return _data; } set { _data = value; } }
+        public short Data { get { return this._data; } set { this._data = value; } }
         private short _data;
         public static implicit operator short(bshort val) { return val._data.Reverse(); }
         public static implicit operator bshort(short val) { return new bshort { _data = val.Reverse() }; }
@@ -315,87 +314,87 @@ namespace System
 
         public TypeCode GetTypeCode()
         {
-            return Convert.GetTypeCode(_data.Reverse());
+            return Convert.GetTypeCode(this._data.Reverse());
         }
 
         public bool ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(_data.Reverse());
+            return Convert.ToBoolean(this._data.Reverse());
         }
 
         public byte ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(_data.Reverse());
+            return Convert.ToByte(this._data.Reverse());
         }
 
         public char ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(_data.Reverse());
+            return Convert.ToChar(this._data.Reverse());
         }
 
         public DateTime ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(_data.Reverse());
+            return Convert.ToDateTime(this._data.Reverse());
         }
 
         public decimal ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(_data.Reverse());
+            return Convert.ToDecimal(this._data.Reverse());
         }
 
         public double ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(_data.Reverse());
+            return Convert.ToDouble(this._data.Reverse());
         }
 
         public short ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(_data.Reverse());
+            return Convert.ToInt16(this._data.Reverse());
         }
 
         public int ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(_data.Reverse());
+            return Convert.ToInt32(this._data.Reverse());
         }
 
         public long ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(_data.Reverse());
+            return Convert.ToInt64(this._data.Reverse());
         }
 
         public sbyte ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(_data.Reverse());
+            return Convert.ToSByte(this._data.Reverse());
         }
 
         public float ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(_data.Reverse());
+            return Convert.ToSingle(this._data.Reverse());
         }
 
         public string ToString(IFormatProvider provider)
         {
-            return Convert.ToString(_data.Reverse());
+            return Convert.ToString(this._data.Reverse());
         }
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            return Convert.ChangeType(_data.Reverse(), conversionType, provider);
+            return Convert.ChangeType(this._data.Reverse(), conversionType, provider);
         }
 
         public ushort ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(_data.Reverse());
+            return Convert.ToUInt16(this._data.Reverse());
         }
 
         public uint ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(_data.Reverse());
+            return Convert.ToUInt32(this._data.Reverse());
         }
 
         public ulong ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(_data.Reverse());
+            return Convert.ToUInt64(this._data.Reverse());
         }
 
         #endregion
@@ -404,7 +403,7 @@ namespace System
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct bushort : IConvertible
     {
-        public ushort Data { get { return _data; } set { _data = value; } }
+        public ushort Data { get { return this._data; } set { this._data = value; } }
         private ushort _data;
         public static implicit operator ushort(bushort val) { return val._data.Reverse(); }
         public static implicit operator bushort(ushort val) { return new bushort { _data = val.Reverse() }; }
@@ -415,87 +414,87 @@ namespace System
 
         public TypeCode GetTypeCode()
         {
-            return Convert.GetTypeCode(_data.Reverse());
+            return Convert.GetTypeCode(this._data.Reverse());
         }
 
         public bool ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(_data.Reverse());
+            return Convert.ToBoolean(this._data.Reverse());
         }
 
         public byte ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(_data.Reverse());
+            return Convert.ToByte(this._data.Reverse());
         }
 
         public char ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(_data.Reverse());
+            return Convert.ToChar(this._data.Reverse());
         }
 
         public DateTime ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(_data.Reverse());
+            return Convert.ToDateTime(this._data.Reverse());
         }
 
         public decimal ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(_data.Reverse());
+            return Convert.ToDecimal(this._data.Reverse());
         }
 
         public double ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(_data.Reverse());
+            return Convert.ToDouble(this._data.Reverse());
         }
 
         public short ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(_data.Reverse());
+            return Convert.ToInt16(this._data.Reverse());
         }
 
         public int ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(_data.Reverse());
+            return Convert.ToInt32(this._data.Reverse());
         }
 
         public long ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(_data.Reverse());
+            return Convert.ToInt64(this._data.Reverse());
         }
 
         public sbyte ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(_data.Reverse());
+            return Convert.ToSByte(this._data.Reverse());
         }
 
         public float ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(_data.Reverse());
+            return Convert.ToSingle(this._data.Reverse());
         }
 
         public string ToString(IFormatProvider provider)
         {
-            return Convert.ToString(_data.Reverse());
+            return Convert.ToString(this._data.Reverse());
         }
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            return Convert.ChangeType(_data.Reverse(), conversionType, provider);
+            return Convert.ChangeType(this._data.Reverse(), conversionType, provider);
         }
 
         public ushort ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(_data.Reverse());
+            return Convert.ToUInt16(this._data.Reverse());
         }
 
         public uint ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(_data.Reverse());
+            return Convert.ToUInt32(this._data.Reverse());
         }
 
         public ulong ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(_data.Reverse());
+            return Convert.ToUInt64(this._data.Reverse());
         }
 
         #endregion

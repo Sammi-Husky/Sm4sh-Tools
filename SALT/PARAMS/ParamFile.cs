@@ -1,7 +1,9 @@
-﻿using System;
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace SALT.PARAMS
@@ -10,9 +12,10 @@ namespace SALT.PARAMS
     {
         public ParamFile(string filepath)
         {
-            Groups = new List<IParamCollection>();
-            DoParse(filepath);
+            this.Groups = new List<IParamCollection>();
+            this.DoParse(filepath);
         }
+
         public List<IParamCollection> Groups { get; set; }
 
         private void DoParse(string path)
@@ -57,7 +60,7 @@ namespace SALT.PARAMS
                                 if (col.Values.Count > 0 && col is ParamGroup)
                                 {
                                     ((ParamGroup)col).Chunk();
-                                    Groups.Add(col);
+                                    this.Groups.Add(col);
                                 }
 
                                 col = new ParamGroup();
@@ -68,11 +71,32 @@ namespace SALT.PARAMS
                                 throw new NotImplementedException($"unk typecode: {type} at offset: {stream.Position:X}");
                         }
                     }
+
                     if (col.Values.Count > 0)
                     {
                         if (col is ParamGroup)
                             ((ParamGroup)col).Chunk();
-                        Groups.Add(col);
+                        this.Groups.Add(col);
+                    }
+                }
+            }
+        }
+
+        public void Export(string filepath)
+        {
+            using (FileStream stream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream))
+                {
+                    writer.Write(0x0000FFFF);
+                    writer.Write(0);
+                    foreach (IParamCollection col in this.Groups)
+                    {
+                        byte[] data = null;
+                        data = col.GetBytes();
+
+                        if (data != null)
+                            writer.Write(data, 0, data.Length);
                     }
                 }
             }

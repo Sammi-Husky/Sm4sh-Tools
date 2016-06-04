@@ -1,16 +1,13 @@
-﻿﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace System
+﻿namespace System
 {
     public static class UInt32Extension
     {
-        public static UInt32 Reverse(this UInt32 value)
+        public static uint Reverse(this uint value)
         {
             return ((value >> 24) & 0xFF) | (value << 24) | ((value >> 8) & 0xFF00) | ((value & 0xFF00) << 8);
         }
-        public static UInt32 Align(this UInt32 value, uint align)
+
+        public static uint Align(this uint value, uint align)
         {
             if (align <= 1) return value;
             uint temp = value % align;

@@ -1,4 +1,7 @@
-﻿namespace SALT.PARAMS
+﻿// Copyright (c) Sammi Husky. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace SALT.PARAMS
 {
     public enum ParamType : byte
     {

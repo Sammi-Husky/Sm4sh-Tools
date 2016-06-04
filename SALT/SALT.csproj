@@ -31,16 +31,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PARAMS\IParamCollection.cs" />
@@ -60,6 +57,8 @@
     <Compile Include="Scripting\MSC\MSCFile.cs" />
     <Compile Include="Scripting\MSC\MSCScript.cs" />
     <Compile Include="Scripting\MSC\MSC_INFO.cs" />
+    <Compile Include="Scripting\AnimCMD\MTable.cs" />
+    <Compile Include="System\Type Extensions\DirectoryExtension.cs" />
     <Compile Include="System\Type Extensions\StreamExtensions.cs" />
     <Compile Include="System\IO\DataSource.cs" />
     <Compile Include="System\IO\FileMap.cs" />
@@ -82,7 +81,6 @@
     <Compile Include="System\Type Extensions\UInt32Extension.cs" />
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

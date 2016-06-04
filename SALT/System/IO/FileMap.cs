@@ -4,9 +4,7 @@
 //              My deepest apologies to anyone who i've missed             \\
 //=========================================================================\\
 
-using System;
 using System.Runtime.InteropServices;
-using System.IO;
 using System.IO.MemoryMappedFiles;
 
 namespace System.IO
@@ -18,23 +16,24 @@ namespace System.IO
         protected string _path;
         protected FileStream _baseStream;
 
-        public VoidPtr Address { get { return _addr; } }
-        public int Length { get { return _length; } set { _length = value; } }
-        public string FilePath { get { return _path; } }
+        public VoidPtr Address { get { return this._addr; } }
+        public int Length { get { return this._length; } set { this._length = value; } }
+        public string FilePath { get { return this._path; } }
 
-        ~FileMap() { Dispose(); }
-        public virtual void Dispose() 
+        ~FileMap() { this.Dispose(); }
+        public virtual void Dispose()
         {
-            if (_baseStream != null)
+            if (this._baseStream != null)
             {
-                _baseStream.Close();
-                _baseStream.Dispose();
-                _baseStream = null;
+                this._baseStream.Close();
+                this._baseStream.Dispose();
+                this._baseStream = null;
             }
-//#if DEBUG
-//            Console.WriteLine("Closing file map: {0}", _path);
-//#endif
-            GC.SuppressFinalize(this); 
+
+            //#if DEBUG
+            //            Console.WriteLine("Closing file map: {0}", _path);
+            //#endif
+            GC.SuppressFinalize(this);
         }
 
         public static FileMap FromFile(string path) { return FromFile(path, FileMapProtect.ReadWrite, 0, 0); }
@@ -51,17 +50,19 @@ namespace System.IO
                 File.Copy(path, tempPath, true);
                 stream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 8, options | FileOptions.DeleteOnClose);
             }
+
             try { map = FromStreamInternal(stream, prot, offset, length); }
-            catch (Exception x) { stream.Dispose(); throw; }
+            catch { stream.Dispose(); throw; }
             map._path = path; //In case we're using a temp file
             stream.Dispose();
             return map;
         }
+
         public static FileMap FromTempFile(int length)
         {
             FileStream stream = new FileStream(Path.GetTempFileName(), FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 8, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
             try { FileMap m = FromStreamInternal(stream, FileMapProtect.ReadWrite, 0, length); stream.Dispose(); return m; }
-            catch (Exception x) { stream.Dispose(); throw; }
+            catch { stream.Dispose(); throw; }
         }
 
         public static FileMap FromStream(FileStream stream) { return FromStream(stream, FileMapProtect.ReadWrite, 0, 0); }
@@ -83,9 +84,9 @@ namespace System.IO
                     return new cFileMap(stream, prot, offset, length) { _path = stream.Name };
             }
 
-//#if DEBUG
-//            Console.WriteLine("Opening file map: {0}", stream.Name);
-//#endif
+            //#if DEBUG
+            //            Console.WriteLine("Opening file map: {0}", stream.Name);
+            //#endif
         }
 
         public static FileMap FromStreamInternal(FileStream stream, FileMapProtect prot, int offset, int length)
@@ -100,13 +101,11 @@ namespace System.IO
                 default:
                     return new cFileMap(stream, prot, offset, length) { _baseStream = stream, _path = stream.Name };
             }
-            
-//#if DEBUG
-//            Console.WriteLine("Opening file map: {0}", stream.Name);
-//#endif
-            
-        }
 
+            //#if DEBUG
+            //            Console.WriteLine("Opening file map: {0}", stream.Name);
+            //#endif
+        }
     }
 
     public enum FileMapProtect : uint
@@ -137,24 +136,25 @@ namespace System.IO
             using (Win32.SafeHandle h = Win32.CreateFileMapping(hFile, null, mProtect, maxHigh, maxLow, null))
             {
                 h.ErrorCheck();
-                _addr = Win32.MapViewOfFile(h.Handle, mAccess, (uint)(offset >> 32), (uint)offset, length);
-                if (!_addr) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-                _length = (int)length;
+                this._addr = Win32.MapViewOfFile(h.Handle, mAccess, (uint)(offset >> 32), (uint)offset, length);
+                if (!this._addr) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                this._length = (int)length;
             }
         }
 
         public override void Dispose()
         {
-            if (_addr) 
+            if (this._addr)
             {
-                Win32.FlushViewOfFile(_addr, 0);
-                Win32.UnmapViewOfFile(_addr);
-                _addr = null;
+                Win32.FlushViewOfFile(this._addr, 0);
+                Win32.UnmapViewOfFile(this._addr);
+                this._addr = null;
             }
+
             base.Dispose();
         }
     }
- 
+
 
     public unsafe class cFileMap : FileMap
     {
@@ -164,18 +164,18 @@ namespace System.IO
         public cFileMap(FileStream stream, FileMapProtect protect, int offset, int length)
         {
             MemoryMappedFileAccess cProtect = (protect == FileMapProtect.ReadWrite) ? MemoryMappedFileAccess.ReadWrite : MemoryMappedFileAccess.Read;
-            _length = length;
-            _mappedFile = MemoryMappedFile.CreateFromFile(stream, stream.Name, _length, cProtect, null, HandleInheritability.None, true);
-            _mappedFileAccessor = _mappedFile.CreateViewAccessor(offset, _length, cProtect);
-            _addr = _mappedFileAccessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
+            this._length = length;
+            this._mappedFile = MemoryMappedFile.CreateFromFile(stream, stream.Name, this._length, cProtect, null, HandleInheritability.None, true);
+            this._mappedFileAccessor = this._mappedFile.CreateViewAccessor(offset, this._length, cProtect);
+            this._addr = this._mappedFileAccessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
         }
 
         public override void Dispose()
         {
-            if (_mappedFile != null) 
-                _mappedFile.Dispose();
-            if (_mappedFileAccessor != null) 
-                _mappedFileAccessor.Dispose();
+            if (this._mappedFile != null)
+                this._mappedFile.Dispose();
+            if (this._mappedFileAccessor != null)
+                this._mappedFileAccessor.Dispose();
             base.Dispose();
         }
     }

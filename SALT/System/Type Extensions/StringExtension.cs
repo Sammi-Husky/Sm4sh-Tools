@@ -1,13 +1,11 @@
-﻿using System;
-
-namespace System
+﻿namespace System
 {
     public static class StringExtension
     {
         public static string TruncateAndFill(this string s, int length, char fillChar)
         {
             int min = length;
-            min = Math.Max(min, 0); 
+            min = Math.Max(min, 0);
             min = Math.Min(min, s.Length);
 
             return s.Substring(0, min).PadRight(length, fillChar);
@@ -38,9 +36,12 @@ namespace System
             fixed (char* cPtr = s)
             {
                 for (int i = 0, count = 0; i < len; i++)
+                {
                     if ((cPtr[i] == c) && (count++ == index))
                         return i;
+                }
             }
+
             return -1;
         }
     }

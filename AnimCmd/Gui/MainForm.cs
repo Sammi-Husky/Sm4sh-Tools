@@ -257,7 +257,19 @@ namespace Sm4shCommand
         {
             TabPage p = null;
             if (e.Node is ScriptNode)
-                p = new CodeEditor(e.Node as ScriptNode);
+            {
+                TreeNode root = e.Node.Parent;
+                while (root.Parent != null)
+                    root = root.Parent;
+
+                if (root?.Name == "nACMD")
+                    p = new CodeEditor(e.Node as ScriptNode, ACMD_INFO.CMD_NAMES.Values.ToArray());
+                else if (root?.Name == "nMSC")
+                    p = new CodeEditor(e.Node as ScriptNode, MSC_INFO.NAMES.Values.ToArray());
+                else
+                    p = new CodeEditor(e.Node as ScriptNode);
+
+            }
             else if (e.Node is ParamListNode)
                 p = new ParamEditor(e.Node as ParamListNode);
 

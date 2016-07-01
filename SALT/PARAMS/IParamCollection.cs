@@ -14,5 +14,7 @@ namespace SALT.PARAMS
         void Add(ParamEntry value);
 
         void Clear();
+
+        int CalcSize();
     }
 }

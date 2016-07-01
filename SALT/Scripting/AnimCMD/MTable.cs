@@ -78,6 +78,11 @@ namespace SALT.Scripting.AnimCMD
             this._baseList.RemoveAt(index);
         }
 
+        public bool Contains(uint value)
+        {
+            return _baseList.Contains(value);
+        }
+
         public int IndexOf(uint var)
         {
             return this._baseList.IndexOf(var);

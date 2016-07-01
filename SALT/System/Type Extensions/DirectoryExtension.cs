@@ -4,7 +4,7 @@
 
 namespace System.IO
 {
-    static class DirectoryX
+    public static class DirectoryX
     {
         public static void Copy(string sourceDirectory, string targetDirectory)
         {

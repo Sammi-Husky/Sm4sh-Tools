@@ -40,6 +40,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archives\PACFile.cs" />
     <Compile Include="PARAMS\IParamCollection.cs" />
     <Compile Include="PARAMS\ParamEntry.cs" />
     <Compile Include="PARAMS\ParamGroup.cs" />
@@ -47,6 +48,7 @@
     <Compile Include="PARAMS\ParamType.cs" />
     <Compile Include="PARAMS\ParamFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDCommand.cs" />
+    <Compile Include="Scripting\AnimCMD\ACMDCompiler.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDScript.cs" />
     <Compile Include="Scripting\AnimCMD\ACMD_INFO.cs" />
@@ -58,6 +60,7 @@
     <Compile Include="Scripting\MSC\MSCScript.cs" />
     <Compile Include="Scripting\MSC\MSC_INFO.cs" />
     <Compile Include="Scripting\AnimCMD\MTable.cs" />
+    <Compile Include="FileBase.cs" />
     <Compile Include="System\Type Extensions\DirectoryExtension.cs" />
     <Compile Include="System\Type Extensions\StreamExtensions.cs" />
     <Compile Include="System\IO\DataSource.cs" />
@@ -81,6 +84,7 @@
     <Compile Include="System\Type Extensions\UInt32Extension.cs" />
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

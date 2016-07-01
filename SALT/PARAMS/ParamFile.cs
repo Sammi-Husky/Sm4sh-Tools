@@ -8,7 +8,7 @@ using System.IO;
 
 namespace SALT.PARAMS
 {
-    public class ParamFile
+    public class ParamFile : BaseFile
     {
         public ParamFile(string filepath)
         {
@@ -82,9 +82,14 @@ namespace SALT.PARAMS
             }
         }
 
-        public void Export(string filepath)
+        public override void Export(string filepath)
         {
-            using (FileStream stream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            File.WriteAllBytes(filepath, GetBytes());
+        }
+        public override int CalcSize() { return Groups.Sum(x => x.CalcSize()); }
+        public override byte[] GetBytes()
+        {
+            using (var stream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(stream))
                 {
@@ -99,6 +104,7 @@ namespace SALT.PARAMS
                             writer.Write(data, 0, data.Length);
                     }
                 }
+                return stream.ToArray();
             }
         }
     }

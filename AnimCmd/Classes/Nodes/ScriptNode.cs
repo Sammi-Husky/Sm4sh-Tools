@@ -15,13 +15,25 @@ namespace Sm4shCommand.Nodes
         {
             _menu = new ContextMenuStrip();
         }
-        public ScriptNode(string text)
+
+        public ScriptNode()
         {
-            this.Text = text;
             this.ContextMenuStrip = _menu;
             Scripts = new Dictionary<string, IScript>(4);
+
         }
+        public ScriptNode(uint ident, string text) : this()
+        {
+            Identifier = ident;
+            this.Text = text;
+        }
+        public ScriptNode(uint ident, string text, IScript script) : this(ident, text)
+        {
+            Identifier = ident;
+            Scripts.Add("Script", script);
+        }
+
         public Dictionary<string, IScript> Scripts { get; set; }
-        public string ScriptName { get; set; }
+        public uint Identifier { get; set; }
     }
 }

@@ -61,7 +61,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Classes\Fighter.cs" />
     <Compile Include="Classes\Nodes\ParamListNode.cs" />
     <Compile Include="GUI\AboutBox.cs">
       <SubType>Form</SubType>

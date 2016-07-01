@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SALT.PARAMS
 {
@@ -27,5 +28,7 @@ namespace SALT.PARAMS
         {
             this.Values.Clear();
         }
+        public int CalcSize() { return Values.Sum(x => x.Size); }
+
     }
 }

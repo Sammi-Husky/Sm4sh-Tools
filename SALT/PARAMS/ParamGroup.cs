@@ -68,6 +68,8 @@ namespace SALT.PARAMS
             this.Values.Clear();
         }
 
+        public int CalcSize() { return Values.Sum(x => x.Size); }
+
         public ParamEntry[] this[int index]
         {
             get

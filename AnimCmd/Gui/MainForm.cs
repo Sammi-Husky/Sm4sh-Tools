@@ -2,11 +2,16 @@
 using Sm4shCommand.Nodes;
 using System;
 using System.Drawing;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Windows.Forms;
 using static Sm4shCommand.Runtime;
 using SALT.PARAMS;
+using SALT.Scripting;
+using SALT.Scripting.AnimCMD;
 using System.ComponentModel;
+using SALT.Scripting.MSC;
 
 namespace Sm4shCommand
 {
@@ -16,7 +21,18 @@ namespace Sm4shCommand
         {
             InitializeComponent();
             Manager = new WorkspaceManager();
+            ScriptFiles = new SortedList<string, IScriptCollection>();
         }
+
+        public const string FileFilter =
+                              "All Supported Files (*.bin, *.mscsb)|*.bin;*.mscsb|" +
+                              "ACMD Binary (*.bin)|*.bin|" +
+                              "MotionScript Binary (*.mscsb)|*.mscsb|" +
+                              "All Files (*.*)|*.*";
+
+        private OpenFileDialog ofDlg = new OpenFileDialog() { Filter = FileFilter };
+        private SaveFileDialog sfDlg = new SaveFileDialog() { Filter = FileFilter };
+        private FolderSelectDialog fsDlg = new FolderSelectDialog();
 
         private WorkspaceManager Manager { get; set; }
         public Project ActiveProject
@@ -36,6 +52,10 @@ namespace Sm4shCommand
                     return null;
             }
         }
+
+        public SortedList<string, IScriptCollection> ScriptFiles { get; set; }
+        public MTable MotionTable { get; set; }
+        public IDE_MODE IDEMode { get; private set; }
 
         private void ACMDMain_Load(object sender, EventArgs e)
         {
@@ -79,7 +99,6 @@ namespace Sm4shCommand
             e.DrawFocusRectangle();
         }
 
-
         private void cboMode_SelectedIndexChanged(object sender, EventArgs e)
         {
             Runtime.WorkingEndian = (Endianness)cboMode.SelectedIndex;
@@ -89,16 +108,137 @@ namespace Sm4shCommand
             var abtBox = new AboutBox();
             abtBox.ShowDialog();
         }
-        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
+
+        private unsafe void fOpen_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog())
+            if (ofDlg.ShowDialog() == DialogResult.OK)
             {
-                dlg.Filter = "All Supported Files (*.bin, *.mscsb)|*.bin;*.mscsb|" +
-                              "ACMD Binary (*.bin)|*.bin|" +
-                              "MotionScript Binary (*.mscsb)|*.mscsb|" +
-                              "All Files (*.*)|*.*";
-                //if (dlg.ShowDialog() == DialogResult.OK)
-                //Manager.OpenFile(dlg.FileName);
+                FileTree.Nodes.Clear(); ScriptFiles.Clear();
+                if (ofDlg.FileName.EndsWith(".bin"))
+                {
+                    DataSource source = new DataSource(FileMap.FromFile(ofDlg.FileName));
+                    if (*(buint*)source.Address == 0x41434D44) // ACMD
+                    {
+                        if (*(byte*)(source.Address + 0x04) == 0x02)
+                            Runtime.WorkingEndian = Endianness.Little;
+                        else if ((*(byte*)(source.Address + 0x04) == 0x00))
+                            Runtime.WorkingEndian = Endianness.Big;
+
+                        var f = new ACMDFile(source);
+                        ScriptFiles.Add(ofDlg.FileName, f);
+                        var node = new TreeNode("ACMD") { Name = "nACMD" };
+                        foreach (var keypair in f.Scripts)
+                            node.Nodes.Add(new ScriptNode(keypair.Key, $"{keypair.Key:X8}", keypair.Value));
+                        FileTree.Nodes.Add(node);
+                    }
+                }
+                else if (ofDlg.FileName.EndsWith(".mscsb")) // MSC
+                {
+                    var f = new MSCFile(ofDlg.FileName);
+                    ScriptFiles.Add(ofDlg.FileName, f);
+
+                    var node = new TreeNode("MSC") { Name = "nMSC" };
+                    for (int i = 0; i < f.Scripts.Count; i++)
+                        node.Nodes.Add(new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]));
+                    FileTree.Nodes.Add(node);
+                }
+                IDEMode = IDE_MODE.File;
+            }
+
+        }
+        private void fitOpen_Click(object sender, EventArgs e)
+        {
+            if (fsDlg.ShowDialog() == DialogResult.OK)
+            {
+                FileTree.Nodes.Clear(); ScriptFiles.Clear();
+                foreach (var p in Directory.EnumerateFiles(fsDlg.SelectedPath))
+                {
+                    if (p.EndsWith(".bin"))
+                    {
+                        var acmd = new ACMDFile(p);
+                        ScriptFiles.Add(p, acmd);
+                        Runtime.WorkingEndian = acmd.Endian;
+                    }
+                    else if (p.EndsWith(".mtable"))
+                        MotionTable = new MTable(p, Runtime.WorkingEndian);
+                }
+                var acmdnode = new TreeNode("ACMD") { Name = "nACMD" };
+
+                for (int i = 0; i < MotionTable.Count; i++)
+                {
+                    var node = new ScriptNode(MotionTable[i], $"{i:X} - [{MotionTable[i]:X8}]");
+                    foreach (var keypair in ScriptFiles)
+                    {
+                        if (keypair.Value.Scripts.Keys.Contains(MotionTable[i]))
+                            node.Scripts.Add(keypair.Key, keypair.Value.Scripts[MotionTable[i]]);
+                    }
+                    acmdnode.Nodes.Add(node);
+                }
+                FileTree.Nodes.Add(acmdnode);
+                IDEMode = IDE_MODE.Fighter;
+            }
+        }
+        private void projOpen_Click(object sender, EventArgs e)
+        {
+            ProjectWizard dlg = new ProjectWizard();
+            dlg.ShowDialog();
+            if (dlg.DialogResult == DialogResult.OK)
+            {
+                Manager.OpenProject(dlg.Project.ProjPath);
+                IDEMode = IDE_MODE.Project;
+            }
+        }
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (IDEMode == IDE_MODE.Project)
+            {
+                if (Manager.Projects.Count > 0)
+                    foreach (var proj in Manager.Projects.Values)
+                        proj.Save();
+            }
+            else if (IDEMode == IDE_MODE.Fighter)
+            {
+                foreach (var keypair in ScriptFiles)
+                {
+                    keypair.Value.Export(Path.GetFileName(keypair.Key));
+                }
+                MotionTable.Export(
+                    Path.Combine(Path.GetDirectoryName(ScriptFiles.Keys[0]), "motion.mtable"));
+            }
+            else if (IDEMode == IDE_MODE.File)
+            {
+                ScriptFiles.Values[0].Export(ScriptFiles.Keys[0]);
+            }
+        }
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (IDEMode == IDE_MODE.Project)
+            {
+                if (fsDlg.ShowDialog() == DialogResult.OK)
+                {
+                    throw new NotImplementedException("Saving workspaces not yet supported");
+
+                    //if (Manager.Projects.Count > 0)
+                    //    foreach (var proj in Manager.Projects.Values)
+                    //        proj.Save();
+                }
+            }
+            else if (IDEMode == IDE_MODE.Fighter)
+            {
+                if (fsDlg.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (var keypair in ScriptFiles)
+                    {
+                        keypair.Value.Export(Path.Combine(fsDlg.SelectedPath, keypair.Key));
+                    }
+                    MotionTable.Export(Path.Combine(fsDlg.SelectedPath, "motion.mtable"));
+                }
+            }
+            else if (IDEMode == IDE_MODE.File)
+            {
+                sfDlg.FileName = Path.GetFileNameWithoutExtension(ScriptFiles.Keys[0]);
+                if (sfDlg.ShowDialog() == DialogResult.OK)
+                    ScriptFiles.Values[0].Export(sfDlg.FileName);
 
             }
         }
@@ -175,21 +315,32 @@ namespace Sm4shCommand
                 }
             }
         }
-
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void parseAnimationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (var proj in Manager.Projects.Values)
-                proj.Save();
+            if (fsDlg.ShowDialog() == DialogResult.OK)
+            {
+                FileTree.BeginUpdate();
+
+                var dict = Runtime.ParseAnimations(fsDlg.SelectedPath);
+                TreeNode n;
+                if ((n = FileTree.Nodes.Find("nACMD", false).FirstOrDefault()) != null)
+                {
+                    foreach (ScriptNode node in n.Nodes)
+                    {
+                        if (dict.ContainsKey(node.Identifier))
+                            node.Text = dict[node.Identifier];
+                    }
+                }
+
+                FileTree.EndUpdate();
+            }
         }
 
-        private void projectToolStripMenuItem1_Click(object sender, EventArgs e)
+        public enum IDE_MODE
         {
-            ProjectWizard dlg = new ProjectWizard();
-            dlg.ShowDialog();
-            if (dlg.DialogResult == DialogResult.OK)
-            {
-                Manager.OpenProject(dlg.Project.ProjPath);
-            }
+            File,
+            Fighter,
+            Project
         }
     }
 }

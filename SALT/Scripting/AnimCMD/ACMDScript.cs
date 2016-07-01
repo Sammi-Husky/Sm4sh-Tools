@@ -365,7 +365,6 @@ namespace SALT.Scripting.AnimCMD
             }
         }
 
-
         #region IEnumerable Implemntation
         public int Count { get { return this._commands.Count; } }
 

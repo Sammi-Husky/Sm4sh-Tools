@@ -9,7 +9,7 @@ using System.IO;
 
 namespace SALT.Scripting.AnimCMD
 {
-    public unsafe class ACMDFile : IScriptCollection
+    public unsafe class ACMDFile : BaseFile, IScriptCollection
     {
         public ACMDFile()
         {
@@ -48,12 +48,12 @@ namespace SALT.Scripting.AnimCMD
         {
         }
 
-        private VoidPtr WorkingSource
+        private DataSource WorkingSource
         {
             get
             {
                 return this._replSource != DataSource.Empty ?
-                    this._replSource.Address : this._workingSource.Address;
+                    this._replSource : this._workingSource;
             }
         }
         private DataSource _workingSource, _replSource;
@@ -77,7 +77,10 @@ namespace SALT.Scripting.AnimCMD
         /// <summary>
         /// Total Size in bytes.
         /// </summary>
-        public int Size => 0x10 + (this.Scripts.Count * 8) + this.Scripts.Values.Sum(e => e.Size);
+        /// 
+        public override int CalcSize() =>
+            0x10 + (this.Scripts.Count * 8) + this.Scripts.Values.Sum(e => e.Size);
+
 
         /// <summary>
         /// True if the file has changes.
@@ -100,12 +103,16 @@ namespace SALT.Scripting.AnimCMD
             this._replSource = new DataSource(temp.Address, temp.Length) { Map = temp };
             // Set backing source's map to the temp map.
         }
-
+        public override byte[] GetBytes()
+        {
+            Rebuild();
+            return WorkingSource.ToArray();
+        }
         /// <summary>
         /// Applies changes and then exports data to file.
         /// </summary>
         /// <param name="path"></param>
-        public void Export(string path)
+        public override void Export(string path)
         {
             this.Rebuild();
 
@@ -135,7 +142,8 @@ namespace SALT.Scripting.AnimCMD
         /// <returns></returns>
         public byte[] GetBytes(Endianness endian)
         {
-            DataSource src = this._workingSource;
+            this.Rebuild();
+            DataSource src = this.WorkingSource;
             byte[] tmp = new byte[this.Size];
             for (int i = 0; i < tmp.Length; i++)
                 tmp[i] = *(byte*)(src.Address + i);
@@ -176,11 +184,6 @@ namespace SALT.Scripting.AnimCMD
 
         private void OnRebuild(VoidPtr address, int length)
         {
-            //  Remove empty event lists
-            //for (int i = 0; i < Scripts.Count; i++)
-            //    if (Scripts.Values[i].Empty)
-            //        Scripts.RemoveAt(i);
-
             VoidPtr addr = address; // Base address. (0x00)
             Util.SetWordUnsafe(address, 0x444D4341, Endianness.Little); // ACMD
 

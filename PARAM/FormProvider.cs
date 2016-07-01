@@ -12,9 +12,11 @@ namespace Parameters
         {
             get
             {
+                if (_inst == null)
+                    _inst = new Form1();
                 return _inst;
             }
         }
-        private static readonly Form1 _inst = new Form1();
+        private static Form1 _inst;
     }
 }

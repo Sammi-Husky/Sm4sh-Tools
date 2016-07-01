@@ -26,12 +26,39 @@ namespace System.IO
             this.Length = map.Length;
             this.Map = map;
         }
+        public DataSource(byte[] data)
+        {
+            fixed(byte* psrc = data)
+            {
+                this.Address = psrc;
+                this.Length = data.Length;
+                this.Map = null;
+            }
+        }
 
         public void Close()
         {
             if (this.Map != null) { this.Map.Dispose(); this.Map = null; }
             this.Address = null;
             this.Length = 0;
+        }
+
+        public byte[] ToArray()
+        {
+            var bytes = new byte[this.Length];
+            for (int i = 0; i < bytes.Length; i++)
+                bytes[i] = *(byte*)(Address + i);
+            return bytes;
+        }
+        public byte[] Slice(int start, int len)
+        {
+            if (start > this.Length | start < 0)
+                throw new IndexOutOfRangeException();
+
+            var bytes = new byte[len];
+            for (int i = 0; i < bytes.Length; i++)
+                bytes[i] = *(byte*)(Address + start + i);
+            return bytes;
         }
 
         public static bool operator ==(DataSource src1, DataSource src2) { return (src1.Address == src2.Address) && (src1.Length == src2.Length) && (src1.Map == src2.Map); }

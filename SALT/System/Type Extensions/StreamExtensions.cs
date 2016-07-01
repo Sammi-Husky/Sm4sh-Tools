@@ -6,6 +6,30 @@ namespace System.IO
 {
     public static class StreamExtensions
     {
+        public static int ReadInt32(this BinaryReader reader, Endianness endian)
+        {
+            if (endian == Endianness.Big)
+                return reader.ReadBint32();
+            else
+                return reader.ReadInt32();
+        }
+
+        public static uint ReadUInt16(this BinaryReader reader, Endianness endian)
+        {
+            if (endian == Endianness.Big)
+                return reader.ReadBuint16();
+            else
+                return reader.ReadUInt16();
+        }
+
+        public static uint ReadUInt32(this BinaryReader reader, Endianness endian)
+        {
+            if (endian == Endianness.Big)
+                return reader.ReadBuint32();
+            else
+                return reader.ReadUInt32();
+        }
+
         public static int ReadBint32(this BinaryReader reader)
         {
             return reader.ReadInt32().Reverse();
@@ -24,6 +48,14 @@ namespace System.IO
         public static uint ReadBuint32(this BinaryReader reader)
         {
             return reader.ReadUInt32().Reverse();
+        }
+        public static string ReadStringNT(this BinaryReader reader)
+        {
+            string str = "";
+            char ch;
+            while ((int)(ch = reader.ReadChar()) != 0)
+                str = str + ch;
+            return str;
         }
     }
 }

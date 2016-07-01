@@ -16,6 +16,7 @@ namespace Parameters
             _menu = new ContextMenuStrip();
             _menu.Items.Add(new ToolStripMenuItem("Apply Labels..", null, ApplyLablesAction));
             _menu.Items.Add(new ToolStripMenuItem("Global Change..", null, GlobalChangeAction));
+            _menu.Items.Add(new ToolStripMenuItem("Add New Struct", null, AddStructAction));
         }
         public GroupWrapper(int index) : base($"Group[{index}]")
         {
@@ -23,9 +24,15 @@ namespace Parameters
         }
 
         public int EntryCount { get; set; }
+        public List<ParameterType> types = new List<ParameterType>();
+
         public override void Wrap()
         {
             var groups = Parameters.Chunk(EntryCount);
+
+            foreach (ParamEntry ent in groups.ElementAt(0))
+                types.Add(ent.Type);
+
             Parameters.Clear();
             int i = 0;
             foreach (ParamEntry[] thing in groups)
@@ -47,6 +54,10 @@ namespace Parameters
                 }
             }
             return output.ToArray();
+        }
+        private static void AddStructAction(object sender, EventArgs e)
+        {
+            GetInstance<GroupWrapper>().AddStruct();
         }
         private static void ApplyLablesAction(object sender, EventArgs e)
         {
@@ -112,6 +123,42 @@ namespace Parameters
                         ((ValuesWrapper)Nodes[i]).Parameters[dlg.ParamIndex].Value = value;
                     }
                 }
+        }
+        public void AddStruct()
+        {
+            var entries = new List<ParamEntry>(types.Count);
+            foreach (var t in types)
+                switch (t)
+                {
+                    case ParameterType.u8:
+                        entries.Add(new ParamEntry((byte)0, t));
+                        break;
+                    case ParameterType.s8:
+                        entries.Add(new ParamEntry((byte)0, t));
+                        break;
+                    case ParameterType.u16:
+                        entries.Add(new ParamEntry((ushort)0, t));
+                        break;
+                    case ParameterType.s16:
+                        entries.Add(new ParamEntry((short)0, t));
+                        break;
+                    case ParameterType.u32:
+                        entries.Add(new ParamEntry((uint)0, t));
+                        break;
+                    case ParameterType.s32:
+                        entries.Add(new ParamEntry(0, t));
+                        break;
+                    case ParameterType.f32:
+                        entries.Add(new ParamEntry((float)0, t));
+                        break;
+                    case ParameterType.str:
+                        entries.Add(new ParamEntry("NewEntry", t));
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            EntryCount++;
+            Nodes.Add(new ValuesWrapper($"Entry[{EntryCount}]") { Parameters = entries });
         }
     }
 }

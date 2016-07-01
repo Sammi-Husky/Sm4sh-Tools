@@ -1,52 +1,54 @@
 CharID
 Walk Initial Velocity
 Walk Acceleration
-Walk Max Velocity
+Walk Maximum Velocity
 
 
 
 Ground Friction
 Dash Initial Velocity
-Dash & run Acceleration A
-Dash & run Acceleration B
+Dash & Run Acceleration A
+Dash & Run Acceleration B
 Grounded Max Horizontal Velocity
-JumpSquat
+Jump Startup Frames
+
+Ground to Air Jump H Momentum Multiplier
 
 
-
-
-Full hop power
-Short hop power
-Double jump Power
-Air Acceleration
-Air Deceleration
+Jump V Initial Velocity
+Hop V Initial Velocity
+Air Jump V Initial Velocity
+Air Accel A
+Air Accel B
 Air Speed
-
+Air Friction
 Gravity
 Max Fall Speed
 
 FastFall
-Nair Landing Lag
-Fair Landing Lag
-Bair Landing Lag
-Uair Landing Lag
-Dair Landing Lag
+Nair Landing Lag(IASA)
+Fair Landing Lag(IASA) 
+Bair Landing Lag(IASA) 
+Uair Landing Lag (IASA)
+Dair Landing Lag (IASA)
 Weight
 Number of Jumps
 
 
 
 
-Soft Landing Lag
-Hard Landing Lag
+Base Soft Landing Lag?
+Base Hard Landing Lag?
 
 
 
-
+Character's Size
 Shield Size
 Shield Break Velocity
 
 
+Star KO - Splash GFX1 size
+Star KO - Splash GFX2 size
 
 
 
@@ -56,14 +58,15 @@ Shield Break Velocity
 
 
 
+Item toss strength
 
-Item Toss Strengths
 
 
 
 
 
 
+Edge Jump V Velocity
 
 
 
@@ -76,6 +79,12 @@ Item Toss Strengths
 
 
 
+Jab2 window
+Jab3 window
+F-tilt2 window
+F-tilt3 window
+F-smash2 window
+Related to rapid jab
 
 
 
@@ -87,6 +96,7 @@ Item Toss Strengths
 
 
 
+Respawn Platform Size
 
 
 
@@ -101,7 +111,11 @@ Item Toss Strengths
 
 
 
+Tag Height Value
+Unknown
 
+Bitfield of Weight-Based Throw
+Unknown
 
 
 
@@ -247,7 +261,12 @@ Item Toss Strengths
 
 
 
+Jab
+Rapid jab
+F-tilt
+F-smash
 
+Multiple jumps
 
 
 
@@ -262,6 +281,11 @@ Item Toss Strengths
 
 
 
+Crawl
+Glide?
+Wall Jump
+Wall Cling
+Tether
 
 
 
@@ -281,8 +305,49 @@ Item Toss Strengths
 
 
 
-Can Crawl
 
-Can Walljump
-Can Wallcling
-Has Tether
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Costume color 0 for Find Mii stage
+Costume color 1 for Find Mii stage
+Costume color 2 for Find Mii stage
+Costume color 3 for Find Mii stage
+Costume color 4 for Find Mii stage
+Costume color 5 for Find Mii stage
+Costume color 6 for Find Mii stage
+Costume color 7 for Find Mii stage
+Costume color 8 for Find Mii stage
+Costume color 9 for Find Mii stage
+Costume color 10 for Find Mii stage
+Costume color 11 for Find Mii stage
+Costume color 12 for Find Mii stage
+Costume color 13 for Find Mii stage
+Costume color 14 for Find Mii stage
+Costume color 15 for Find Mii stage
+Costume color 16 for Find Mii stage
+
+
+
+
+
+
+
+

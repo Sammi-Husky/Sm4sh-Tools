@@ -65,12 +65,12 @@
             this.btnOkay = new System.Windows.Forms.Button();
             this.pnlFiles = new System.Windows.Forms.GroupBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.chk3ds = new System.Windows.Forms.RadioButton();
-            this.chkWiiu = new System.Windows.Forms.RadioButton();
-            this.chkAdvanced = new System.Windows.Forms.RadioButton();
-            this.chkSimple = new System.Windows.Forms.RadioButton();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.chkWiiu = new System.Windows.Forms.RadioButton();
+            this.chk3ds = new System.Windows.Forms.RadioButton();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.chkSimple = new System.Windows.Forms.RadioButton();
+            this.chkAdvanced = new System.Windows.Forms.RadioButton();
             this.pnlBasic.SuspendLayout();
             this.pnlAdvanced.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -78,8 +78,8 @@
             this.pnlButtons.SuspendLayout();
             this.pnlFiles.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlBasic
@@ -224,6 +224,7 @@
             this.btnSound.TabIndex = 1;
             this.btnSound.Text = "...";
             this.btnSound.UseVisualStyleBackColor = true;
+            this.btnSound.Click += new System.EventHandler(this.btnSound_Click);
             // 
             // btnMSC
             // 
@@ -233,6 +234,7 @@
             this.btnMSC.TabIndex = 1;
             this.btnMSC.Text = "...";
             this.btnMSC.UseVisualStyleBackColor = true;
+            this.btnMSC.Click += new System.EventHandler(this.btnMSC_Click);
             // 
             // txtACMD
             // 
@@ -249,6 +251,7 @@
             this.btnACMD.TabIndex = 1;
             this.btnACMD.Text = "...";
             this.btnACMD.UseVisualStyleBackColor = true;
+            this.btnACMD.Click += new System.EventHandler(this.btnACMD_Click);
             // 
             // label5
             // 
@@ -267,6 +270,7 @@
             this.btnMotionFolder.TabIndex = 1;
             this.btnMotionFolder.Text = "...";
             this.btnMotionFolder.UseVisualStyleBackColor = true;
+            this.btnMotionFolder.Click += new System.EventHandler(this.btnMotionFolder_Click);
             // 
             // txtMotionFolder
             // 
@@ -445,15 +449,16 @@
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             // 
-            // chk3ds
+            // groupBox3
             // 
-            this.chk3ds.AutoSize = true;
-            this.chk3ds.Location = new System.Drawing.Point(24, 35);
-            this.chk3ds.Name = "chk3ds";
-            this.chk3ds.Size = new System.Drawing.Size(46, 17);
-            this.chk3ds.TabIndex = 3;
-            this.chk3ds.Text = "3DS";
-            this.chk3ds.UseVisualStyleBackColor = true;
+            this.groupBox3.Controls.Add(this.chkWiiu);
+            this.groupBox3.Controls.Add(this.chk3ds);
+            this.groupBox3.Location = new System.Drawing.Point(371, 10);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(101, 58);
+            this.groupBox3.TabIndex = 5;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Platform";
             // 
             // chkWiiu
             // 
@@ -467,15 +472,26 @@
             this.chkWiiu.Text = "WII U";
             this.chkWiiu.UseVisualStyleBackColor = true;
             // 
-            // chkAdvanced
+            // chk3ds
             // 
-            this.chkAdvanced.AutoSize = true;
-            this.chkAdvanced.Location = new System.Drawing.Point(20, 35);
-            this.chkAdvanced.Name = "chkAdvanced";
-            this.chkAdvanced.Size = new System.Drawing.Size(74, 17);
-            this.chkAdvanced.TabIndex = 1;
-            this.chkAdvanced.Text = "Advanced";
-            this.chkAdvanced.UseVisualStyleBackColor = true;
+            this.chk3ds.AutoSize = true;
+            this.chk3ds.Location = new System.Drawing.Point(24, 35);
+            this.chk3ds.Name = "chk3ds";
+            this.chk3ds.Size = new System.Drawing.Size(46, 17);
+            this.chk3ds.TabIndex = 3;
+            this.chk3ds.Text = "3DS";
+            this.chk3ds.UseVisualStyleBackColor = true;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.chkSimple);
+            this.groupBox2.Controls.Add(this.chkAdvanced);
+            this.groupBox2.Location = new System.Drawing.Point(99, 10);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(101, 58);
+            this.groupBox2.TabIndex = 4;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Mode";
             // 
             // chkSimple
             // 
@@ -490,27 +506,15 @@
             this.chkSimple.UseVisualStyleBackColor = true;
             this.chkSimple.CheckedChanged += new System.EventHandler(this.chkSimple_CheckedChanged);
             // 
-            // groupBox2
+            // chkAdvanced
             // 
-            this.groupBox2.Controls.Add(this.chkSimple);
-            this.groupBox2.Controls.Add(this.chkAdvanced);
-            this.groupBox2.Location = new System.Drawing.Point(99, 10);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(101, 58);
-            this.groupBox2.TabIndex = 4;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Mode";
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.chkWiiu);
-            this.groupBox3.Controls.Add(this.chk3ds);
-            this.groupBox3.Location = new System.Drawing.Point(371, 10);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(101, 58);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Platform";
+            this.chkAdvanced.AutoSize = true;
+            this.chkAdvanced.Location = new System.Drawing.Point(20, 35);
+            this.chkAdvanced.Name = "chkAdvanced";
+            this.chkAdvanced.Size = new System.Drawing.Size(74, 17);
+            this.chkAdvanced.TabIndex = 1;
+            this.chkAdvanced.Text = "Advanced";
+            this.chkAdvanced.UseVisualStyleBackColor = true;
             // 
             // ProjectWizard
             // 
@@ -537,10 +541,10 @@
             this.pnlButtons.ResumeLayout(false);
             this.pnlFiles.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }

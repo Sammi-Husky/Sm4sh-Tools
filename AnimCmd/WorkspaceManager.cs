@@ -30,6 +30,35 @@ namespace Sm4shCommand
             Projects.Add(p.ProjName, p);
             Runtime.Instance.FileTree.Nodes.Add(p);
         }
+        public void OpenFile(string filepath)
+        {
+            if (filepath.EndsWith(".bin"))
+            {
+                DataSource source = new DataSource(FileMap.FromFile(filepath));
+                if (*(buint*)source.Address == 0x41434D44) // ACMD
+                {
+                    if (*(byte*)(source.Address + 0x04) == 0x02)
+                        Runtime.WorkingEndian = Endianness.Little;
+                    else if ((*(byte*)(source.Address + 0x04) == 0x00))
+                        Runtime.WorkingEndian = Endianness.Big;
+
+                    var f = new ACMDFile(source);
+                    var node = new TreeNode("ACMD");
+                    foreach (var keypair in f.Scripts)
+                        node.Nodes.Add(new ScriptNode(keypair.Key, $"{keypair.Key:X8}", keypair.Value));
+                    Runtime.Instance.FileTree.Nodes.Add(node);
+                }
+            }
+            else if (filepath.EndsWith(".mscsb")) // MSC
+            {
+                var f = new MSCFile(filepath);
+                var node = new TreeNode("MSC");
+
+                for (int i = 0; i < f.Scripts.Count; i++)
+                    node.Nodes.Add(new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]));
+                Runtime.Instance.FileTree.Nodes.Add(node);
+            }
+        }
         public void ImportProject(string filepath)
         {
             var p = new Project(filepath);
@@ -96,76 +125,12 @@ namespace Sm4shCommand
         public string MotionFolder { get; set; }
         public MTable MotionTable { get; set; }
 
-        public Dictionary<uint, string> AnimationHashes { get; set; }
+        public Dictionary<uint, string> AnimationHashes { get { return _animHashes; } set { _animHashes = value; } }
+        private Dictionary<uint, string> _animHashes;
 
         public ParamFile Attributes { get; set; }
         public ParamFile Fighter_Param_vl { get; set; }
 
-        private void ParseAnim(string path)
-        {
-            if (path.EndsWith(".pac"))
-            {
-                byte[] filebytes = File.ReadAllBytes(path);
-                int count = (int)Util.GetWord(filebytes, 8, Endianness.Big);
-
-                for (int i = 0; i < count; i++)
-                {
-                    uint off = (uint)Util.GetWord(filebytes, 0x10 + (i * 4), Endianness.Big);
-                    string FileName = Util.GetString(filebytes, off, Endianness.Big);
-                    string AnimName = Regex.Match(FileName, @"(.*)([A-Z])([0-9][0-9])(.*)\.omo").Groups[4].ToString();
-                    if (string.IsNullOrEmpty(AnimName))
-                        continue;
-
-                    AddAnimHash(AnimName);
-                    AddAnimHash(AnimName + "_C2");
-                    AddAnimHash(AnimName + "_C3");
-                    AddAnimHash(AnimName + "L");
-                    AddAnimHash(AnimName + "R");
-
-
-                    if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
-                       AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
-                        AddAnimHash(AnimName.Substring(0, AnimName.Length - 1));
-                }
-            }
-            else if (path.EndsWith(".bch"))
-            {
-                DataSource src = new DataSource(FileMap.FromFile(path));
-                int off = *(int*)(src.Address + 0x0C);
-                VoidPtr addr = src.Address + off;
-                while (*(byte*)addr != 0)
-                {
-                    var tmp = new string((sbyte*)addr);
-                    string AnimName = Regex.Match(tmp, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
-                    if (string.IsNullOrEmpty(AnimName))
-                    {
-                        addr += tmp.Length + 1;
-                        continue;
-                    }
-
-                    AddAnimHash(AnimName);
-                    AddAnimHash(AnimName + "_C2");
-                    AddAnimHash(AnimName + "_C3");
-                    AddAnimHash(AnimName + "L");
-                    AddAnimHash(AnimName + "R");
-
-
-                    if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
-                       AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
-                        AddAnimHash(AnimName.Substring(0, AnimName.Length - 1));
-
-                    addr += tmp.Length + 1;
-                }
-            }
-        }
-        private void AddAnimHash(string name)
-        {
-            uint crc = Crc32.Compute(name.ToLower());
-            if (AnimationHashes.ContainsValue(name) || AnimationHashes.ContainsKey(crc))
-                return;
-
-            AnimationHashes.Add(crc, name);
-        }
         private bool OpenFile(string Filepath)
         {
             bool handled = false;
@@ -229,7 +194,7 @@ namespace Sm4shCommand
             foreach (XmlNode child in node.ChildNodes)
             {
                 ANIM_FILES.Add(child.Attributes["include"].Value);
-                ParseAnim($"{MotionFolder}/{child.Attributes["include"].Value.Substring(5)}");
+                Runtime.ParseAnim($"{MotionFolder}/{child.Attributes["include"].Value.Substring(5)}", ref _animHashes);
             }
             return proj;
         }
@@ -326,13 +291,14 @@ namespace Sm4shCommand
             Attributes.Export(Path.Combine(path, "fighter_param.bin"));
 
             path = Path.Combine(rootpath, "ANIM");
-            foreach (string s in ANIM_FILES)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(path, s)));
-                var tmp1 = Path.Combine(rootpath, s);
-                var tmp2 = Path.Combine(path, s);
-                File.Copy(tmp1, tmp2, true);
-            }
+            DirectoryX.Copy(MotionFolder, path);
+            //foreach (string s in ANIM_FILES)
+            //{
+            //    Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(path, s)));
+            //    var tmp1 = Path.Combine(rootpath, s);
+            //    var tmp2 = Path.Combine(path, s);
+            //    File.Copy(tmp1, tmp2, true);
+            //}
             ProjPath = Path.Combine(rootpath, $"{ProjName}.fitproj");
             ProjFile = WriteFitproj(ProjPath);
         }
@@ -342,7 +308,7 @@ namespace Sm4shCommand
             ACMDNode.Nodes.Clear();
             foreach (uint u in MotionTable)
             {
-                ScriptNode snode = new ScriptNode($"{MotionTable.IndexOf(u)} - {u.ToString("X8")}");
+                ScriptNode snode = new ScriptNode(u, $"{MotionTable.IndexOf(u)} - {u.ToString("X8")}");
 
                 if (AnimationHashes.ContainsKey(u))
                     snode.Text = $"{MotionTable.IndexOf(u)} - {AnimationHashes[u]}";
@@ -369,7 +335,8 @@ namespace Sm4shCommand
             var file = MSC_FILES.ElementAt(0).Value;
             foreach (var scr in file.Scripts)
             {
-                var snode = new ScriptNode($"Script_{file.Scripts.IndexOfValue(scr.Value)}");
+                int index = file.Scripts.IndexOfValue(scr.Value);
+                var snode = new ScriptNode((uint)index, $"Script_{index}");
                 snode.Scripts.Add("Script", scr.Value);
                 MSCNode.Nodes.Add(snode);
             }

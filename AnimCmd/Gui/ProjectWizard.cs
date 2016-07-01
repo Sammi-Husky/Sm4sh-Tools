@@ -46,7 +46,7 @@ namespace Sm4shCommand.GUI
                 if (dlg.ShowDialog() == DialogResult.OK)
                     txtFighterFolder.Text = dlg.SelectedPath;
 
-                var path = Path.Combine(dlg.SelectedPath, "script", "animcmd");
+                var path = Path.Combine(dlg.SelectedPath, "script", "animcmd", "body");
                 if (Directory.Exists(path))
                     txtACMD.Text = path;
 
@@ -65,18 +65,19 @@ namespace Sm4shCommand.GUI
         }
         private void button9_Click(object sender, EventArgs e)
         {
-            if (!Directory.Exists(Path.GetDirectoryName(txtDirectory.Text)))
-                Directory.CreateDirectory(Path.GetDirectoryName(txtDirectory.Text));
+
+            Directory.CreateDirectory(Path.GetDirectoryName(txtDirectory.Text));
             Project.ProjName = txtName.Text;
 
             Project.Fighter_Param_vl = new ParamFile(txtParam_vl.Text);
             Project.Attributes = new ParamFile(txtFighter_Param.Text);
-
-            foreach (var path in Directory.EnumerateFiles(txtACMD.Text + "/body"))
+            foreach (var path in Directory.EnumerateFiles(txtACMD.Text))
+            {
                 if (path.EndsWith(".bin", StringComparison.InvariantCultureIgnoreCase))
                     Project.ACMD_FILES.Add(Path.GetFileNameWithoutExtension(path), new ACMDFile(path));
                 else if (path.EndsWith(".mtable", StringComparison.InvariantCultureIgnoreCase))
-                    Project.MotionTable = new SALT.Scripting.AnimCMD.MTable(path, Platform);
+                    Project.MotionTable = new MTable(path, Platform);
+            }
 
             var msc = Directory.EnumerateFiles(txtMSC.Text, "*.mscsb").First();
             Project.MSC_FILES.Add(Path.GetFileNameWithoutExtension(msc), new MSCFile(msc));
@@ -124,6 +125,34 @@ namespace Sm4shCommand.GUI
         private void chkSimple_CheckedChanged(object sender, EventArgs e)
         {
             pnlAdvanced.Enabled = !chkSimple.Checked;
+            txtFighterFolder.Enabled =
+            btnFighterFolder.Enabled =
+                chkSimple.Checked;
+        }
+
+        private void btnMotionFolder_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderSelectDialog())
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    txtMotionFolder.Text = dlg.SelectedPath;
+        }
+        private void btnACMD_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderSelectDialog())
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    txtACMD.Text = dlg.SelectedPath;
+        }
+        private void btnSound_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderSelectDialog())
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    txtSound.Text = dlg.SelectedPath;
+        }
+        private void btnMSC_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    txtMSC.Text = dlg.FileName;
         }
     }
 }

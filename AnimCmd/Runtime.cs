@@ -122,7 +122,5 @@ namespace Sm4shCommand
                 new MethodInvoker(
                     delegate { Instance.richTextBox1.AppendText($">   {message}\n"); }));
         }
-
-        public static bool isRoot = false;
     }
 }

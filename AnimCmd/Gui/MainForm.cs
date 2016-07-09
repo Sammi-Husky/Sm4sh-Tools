@@ -20,6 +20,7 @@ namespace Sm4shCommand
         public AcmdMain()
         {
             InitializeComponent();
+            this.Text = $"{Program.AssemblyTitle} {Program.Version} - ";
             Manager = new WorkspaceManager();
             ScriptFiles = new SortedList<string, IScriptCollection>();
         }
@@ -85,10 +86,10 @@ namespace Sm4shCommand
         }
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
-            if (e.Index > tabControl1.TabPages.Count - 1)
+            if (e.Index > Viewport.TabPages.Count - 1)
                 return;
 
-            if (e.Index == tabControl1.SelectedIndex)
+            if (e.Index == Viewport.SelectedIndex)
                 e.Graphics.FillRectangle(Brushes.ForestGreen, e.Bounds);
             else
                 e.Graphics.FillRectangle(SystemBrushes.ActiveBorder, e.Bounds);
@@ -96,7 +97,7 @@ namespace Sm4shCommand
             e.Graphics.FillEllipse(new SolidBrush(Color.IndianRed), e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("x", Font).Width + 4, Font.Height);
             e.Graphics.DrawEllipse(Pens.Black, e.Bounds.Right - 18, e.Bounds.Top + 3, e.Graphics.MeasureString("X", Font).Width + 3, Font.Height);
             e.Graphics.DrawString("X", new Font(e.Font, FontStyle.Bold), Brushes.Black, e.Bounds.Right - 17, e.Bounds.Top + 3);
-            e.Graphics.DrawString(tabControl1.TabPages[e.Index].Text, e.Font, Brushes.Black, e.Bounds.Left + 17, e.Bounds.Top + 3);
+            e.Graphics.DrawString(Viewport.TabPages[e.Index].Text, e.Font, Brushes.Black, e.Bounds.Left + 17, e.Bounds.Top + 3);
             e.DrawFocusRectangle();
         }
 
@@ -114,7 +115,7 @@ namespace Sm4shCommand
         {
             if (ofDlg.ShowDialog() == DialogResult.OK)
             {
-                FileTree.Nodes.Clear(); ScriptFiles.Clear();
+                this.Reset();
                 if (ofDlg.FileName.EndsWith(".bin"))
                 {
                     DataSource source = new DataSource(FileMap.FromFile(ofDlg.FileName));
@@ -160,13 +161,14 @@ namespace Sm4shCommand
                     FileTree.Nodes.Add(node);
                 }
                 IDEMode = IDE_MODE.File;
+                this.Text += ofDlg.FileName;
             }
         }
         private void fitOpen_Click(object sender, EventArgs e)
         {
             if (fsDlg.ShowDialog() == DialogResult.OK)
             {
-                FileTree.Nodes.Clear(); ScriptFiles.Clear();
+                this.Reset();
                 foreach (var p in Directory.EnumerateFiles(fsDlg.SelectedPath))
                 {
                     if (p.EndsWith(".bin"))
@@ -192,6 +194,7 @@ namespace Sm4shCommand
                 }
                 FileTree.Nodes.Add(acmdnode);
                 IDEMode = IDE_MODE.Fighter;
+                this.Text += fsDlg.SelectedPath;
             }
         }
         private void projOpen_Click(object sender, EventArgs e)
@@ -306,15 +309,15 @@ namespace Sm4shCommand
             {
                 p.Name = e.Node.Text + e.Node.Index;
                 p.Text = e.Node.Text;
-                if (tabControl1.TabPages.ContainsKey(p.Name))
+                if (Viewport.TabPages.ContainsKey(p.Name))
                 {
-                    tabControl1.SelectTab(p.Name);
+                    Viewport.SelectTab(p.Name);
                     return;
                 }
                 else
                 {
-                    tabControl1.TabPages.Insert(0, p);
-                    tabControl1.SelectTab(0);
+                    Viewport.TabPages.Insert(0, p);
+                    Viewport.SelectTab(0);
                 }
             }
         }
@@ -325,16 +328,16 @@ namespace Sm4shCommand
 
         private void tabControl1_MouseClick(object sender, MouseEventArgs e)
         {
-            for (int i = 0; i < tabControl1.TabCount; i++)
+            for (int i = 0; i < Viewport.TabCount; i++)
             {
-                Rectangle r = tabControl1.GetTabRect(i);
+                Rectangle r = Viewport.GetTabRect(i);
                 Rectangle closeButton = new Rectangle(r.Right - 18, r.Top + 3, 13, Font.Height);
                 if (closeButton.Contains(e.Location))
                 {
                     TabPage p = null;
-                    if (tabControl1.TabPages[i] is CodeEditor)
+                    if (Viewport.TabPages[i] is CodeEditor)
                     {
-                        p = tabControl1.TabPages[i] as CodeEditor;
+                        p = Viewport.TabPages[i] as CodeEditor;
                         TabControl tmp = (TabControl)p.Controls[0];
                         for (int x = 0; x < tmp.TabCount; x++)
                         {
@@ -342,9 +345,9 @@ namespace Sm4shCommand
                             box.ApplyChanges();
                         }
                     }
-                    else if (tabControl1.TabPages[i] is ParamEditor)
+                    else if (Viewport.TabPages[i] is ParamEditor)
                     {
-                        var tmp = tabControl1.TabPages[i] as ParamEditor;
+                        var tmp = Viewport.TabPages[i] as ParamEditor;
                         p = tmp;
                         var node = tmp.Node;
 
@@ -357,7 +360,7 @@ namespace Sm4shCommand
                         ((ParamGroup)file.Groups[node.Group]).Chunks[node.Entry] = node.Parameters.ToArray();
                     }
                     if (p != null)
-                        tabControl1.TabPages.Remove(p);
+                        Viewport.TabPages.Remove(p);
                     return;
                 }
             }
@@ -416,12 +419,30 @@ namespace Sm4shCommand
                 group++;
             }
         }
+        public void Reset()
+        {
+            this.Text = $"{Program.AssemblyTitle} {Program.Version} - ";
+            FileTree.Nodes.Clear();
+            ScriptFiles.Clear();
+            Viewport.TabPages.Clear();
+            ParamFile = null;
+            Manager = new WorkspaceManager();
+            MotionTable = null;
+            IDEMode = IDE_MODE.NONE;
+ 
+        }
 
         public enum IDE_MODE
         {
             File,
             Fighter,
-            Project
+            Project,
+            NONE
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Reset();
         }
     }
 }

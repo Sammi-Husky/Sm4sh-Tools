@@ -62,7 +62,7 @@
             this.pnlRight = new System.Windows.Forms.Panel();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.Viewport = new System.Windows.Forms.TabControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.newToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.openToolStripButton = new System.Windows.Forms.ToolStripButton();
@@ -71,6 +71,8 @@
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.cboMode = new System.Windows.Forms.ToolStripComboBox();
             this.splitter2 = new System.Windows.Forms.Splitter();
+            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.pnlRight.SuspendLayout();
@@ -98,6 +100,8 @@
             this.newToolStripMenuItem,
             this.openToolStripMenuItem,
             this.toolStripSeparator1,
+            this.closeToolStripMenuItem,
+            this.toolStripSeparator5,
             this.saveToolStripMenuItem,
             this.saveAsToolStripMenuItem,
             this.toolStripSeparator2,
@@ -355,19 +359,19 @@
             this.richTextBox1.TabIndex = 13;
             this.richTextBox1.Text = "";
             // 
-            // tabControl1
+            // Viewport
             // 
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.tabControl1.ItemSize = new System.Drawing.Size(150, 18);
-            this.tabControl1.Location = new System.Drawing.Point(0, 49);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(599, 412);
-            this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
-            this.tabControl1.TabIndex = 9;
-            this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
-            this.tabControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseClick);
+            this.Viewport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Viewport.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.Viewport.ItemSize = new System.Drawing.Size(150, 18);
+            this.Viewport.Location = new System.Drawing.Point(0, 49);
+            this.Viewport.Name = "Viewport";
+            this.Viewport.SelectedIndex = 0;
+            this.Viewport.Size = new System.Drawing.Size(599, 412);
+            this.Viewport.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.Viewport.TabIndex = 9;
+            this.Viewport.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
+            this.Viewport.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseClick);
             // 
             // toolStrip1
             // 
@@ -446,6 +450,18 @@
             this.splitter2.TabIndex = 15;
             this.splitter2.TabStop = false;
             // 
+            // closeToolStripMenuItem
+            // 
+            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.closeToolStripMenuItem.Text = "Close";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(187, 6);
+            // 
             // AcmdMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -453,7 +469,7 @@
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(844, 628);
             this.Controls.Add(this.splitter2);
-            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.Viewport);
             this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.splitter1);
             this.Controls.Add(this.toolStrip1);
@@ -462,7 +478,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "AcmdMain";
-            this.Text = "AnimCmd";
+            this.Text = "SM4SHCommand v1.3 -";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.ACMDMain_Load);
             this.menuStrip1.ResumeLayout(false);
@@ -501,7 +517,7 @@
         private System.Windows.Forms.ToolStripMenuItem mSCSBToolStripMenuItem;
         private System.Windows.Forms.Panel pnlRight;
         private System.Windows.Forms.Splitter splitter1;
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl Viewport;
         private System.Windows.Forms.ToolStripMenuItem projectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFighterToolStripMenuItem;
@@ -524,6 +540,8 @@
         public System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Splitter splitter2;
         private System.Windows.Forms.ToolStripMenuItem fighterToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
     }
 }
 

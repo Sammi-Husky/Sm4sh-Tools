@@ -131,6 +131,10 @@ namespace Sm4shCommand
                             node.Nodes.Add(new ScriptNode(keypair.Key, $"{keypair.Key:X8}", keypair.Value));
                         FileTree.Nodes.Add(node);
                     }
+                    else if (*(buint*)source.Address == 0xFFFF0000)
+                    {
+
+                    }
                 }
                 else if (ofDlg.FileName.EndsWith(".mscsb")) // MSC
                 {
@@ -139,12 +143,19 @@ namespace Sm4shCommand
 
                     var node = new TreeNode("MSC") { Name = "nMSC" };
                     for (int i = 0; i < f.Scripts.Count; i++)
-                        node.Nodes.Add(new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]));
+                    {
+                        var sn = new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]);
+                        if (((MSCScript)f.Scripts.Values[i]).IsEntrypoint)
+                            sn.Text = "Entrypoint";
+                        else if (i == 0)
+                            sn.Text = "Init";
+
+                        node.Nodes.Add(sn);
+                    }
                     FileTree.Nodes.Add(node);
                 }
                 IDEMode = IDE_MODE.File;
             }
-
         }
         private void fitOpen_Click(object sender, EventArgs e)
         {

@@ -11,39 +11,46 @@ namespace SALT.Scripting.MSC
 {
     public class MSCScript : IEnumerable<ICommand>, IScript
     {
+        public MSCScript()
+        {
+            Strings = new List<string>();
+            Commands = new List<ICommand>();
+        }
+
+        public MSCFile File { get; set; }
         public int Size
         {
             get
             {
                 int total = 0;
-                foreach (var cmd in this._commands)
+                foreach (var cmd in this.Commands)
                     total += cmd.Size;
                 return total;
             }
         }
+        public bool IsEntrypoint { get; internal set; }
 
-        public ICommand this[int i]
-        {
-            get { return this._commands[i]; }
-            set { this._commands[i] = value; }
-        }
-
-        public List<ICommand> Commands { get { return this._commands; } set { this._commands = value; } }
-        private List<ICommand> _commands = new List<ICommand>();
+        public List<ICommand> Commands { get; set; }
+        public List<string> Strings { get; set; }
 
         public byte[] GetBytes(System.IO.Endianness endian)
         {
             List<byte> data = new List<byte>();
-            foreach (var cmd in this._commands)
+            foreach (var cmd in this.Commands)
                 data.AddRange(cmd.GetBytes(endian));
             return data.ToArray();
         }
 
         public string Deserialize()
         {
+            //MSCDecompiler d = new MSCDecompiler(File);
+            //return d.DecompileScript(this);
             StringBuilder sb = new StringBuilder();
-            foreach (ICommand cmd in this._commands)
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                var cmd = Commands[i];
                 sb.Append(cmd.ToString() + Environment.NewLine);
+            }
             return sb.ToString();
         }
 
@@ -63,7 +70,16 @@ namespace SALT.Scripting.MSC
                 this.Add(cmd);
             }
         }
-
+        private bool IsCMDHandled(uint ID)
+        {
+            switch (ID)
+            {
+                case 0x2C:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         private MSCCommand ParseCMD(string line)
         {
             string s = line.TrimStart();
@@ -93,48 +109,55 @@ namespace SALT.Scripting.MSC
 
             return cmd;
         }
+
+        public ICommand this[int i]
+        {
+            get { return this.Commands[i]; }
+            set { this.Commands[i] = value; }
+        }
         #region IEnumerable Implemntation
-        public int Count { get { return this._commands.Count; } }
+        public int Count { get { return this.Commands.Count; } }
 
         public bool IsReadOnly { get { return false; } }
+
         public void Clear()
         {
-            this._commands.Clear();
+            this.Commands.Clear();
         }
 
         public void Insert(int index, MSCCommand var)
         {
-            this._commands.Insert(index, var);
+            this.Commands.Insert(index, var);
         }
 
         public void InsertAfter(int index, MSCCommand var)
         {
-            this._commands.Insert(index + 1, var);
+            this.Commands.Insert(index + 1, var);
         }
 
         public void Add(MSCCommand var)
         {
-            this._commands.Add(var);
+            this.Commands.Add(var);
         }
 
         public bool Remove(MSCCommand var)
         {
-            return this._commands.Remove(var);
+            return this.Commands.Remove(var);
         }
 
         public void RemoveAt(int index) { }
         public void Remove(int index)
         {
-            this._commands.RemoveAt(index);
+            this.Commands.RemoveAt(index);
         }
 
-        public bool Contains(MSCCommand var) { return this._commands.Contains(var); }
+        public bool Contains(MSCCommand var) { return this.Commands.Contains(var); }
         public int IndexOf(MSCCommand var)
         {
-            return this._commands.IndexOf(var);
+            return this.Commands.IndexOf(var);
         }
 
-        public void CopyTo(MSCCommand[] var, int index) { this._commands.CopyTo(var, index); }
+        public void CopyTo(MSCCommand[] var, int index) { this.Commands.CopyTo(var, index); }
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
@@ -142,8 +165,8 @@ namespace SALT.Scripting.MSC
 
         public IEnumerator<ICommand> GetEnumerator()
         {
-            for (int i = 0; i < this._commands.Count; i++)
-                yield return (MSCCommand)this._commands[i];
+            for (int i = 0; i < this.Commands.Count; i++)
+                yield return (MSCCommand)this.Commands[i];
         }
         #endregion
     }

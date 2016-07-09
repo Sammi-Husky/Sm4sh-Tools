@@ -56,6 +56,7 @@
     <Compile Include="Scripting\IScript.cs" />
     <Compile Include="Scripting\IScriptCollection.cs" />
     <Compile Include="Scripting\MSC\MSCCommand.cs" />
+    <Compile Include="Scripting\MSC\MSCDecompiler.cs" />
     <Compile Include="Scripting\MSC\MSCFile.cs" />
     <Compile Include="Scripting\MSC\MSCScript.cs" />
     <Compile Include="Scripting\MSC\MSC_INFO.cs" />

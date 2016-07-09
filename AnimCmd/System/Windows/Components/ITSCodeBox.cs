@@ -14,6 +14,8 @@ namespace Sm4shCommand
         TextStyle keywordStyle = new TextStyle(Brushes.Blue, null, FontStyle.Regular);
         TextStyle HexStyle = new TextStyle(Brushes.DarkCyan, null, FontStyle.Regular);
         TextStyle DecStyle = new TextStyle(Brushes.Red, null, FontStyle.Regular);
+        TextStyle StrStyle = new TextStyle(Brushes.Chocolate, null, FontStyle.Regular);
+
         public AutocompleteMenu AutocompleteMenu { get; set; }
 
         public ITS_EDITOR()
@@ -56,6 +58,7 @@ namespace Sm4shCommand
             e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\),]+\b");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
+            e.ChangedRange.SetStyle(StrStyle, "\"(\\.|[^\"])*\"");
         }
     }
 }

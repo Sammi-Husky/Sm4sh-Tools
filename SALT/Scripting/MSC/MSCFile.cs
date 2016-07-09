@@ -101,13 +101,17 @@ namespace SALT.Scripting.MSC
 
         public MSCScript ParseScript(BinaryReader reader, uint offset, int size)
         {
-            MSCScript script = new MSCScript();
+            MSCScript script = new MSCScript() { File = this };
+            if (offset - HEADER_SIZE == EntryPoint)
+                script.IsEntrypoint = true;
+
             reader.BaseStream.Seek(offset, SeekOrigin.Begin);
             uint ident;
             while (reader.BaseStream.Position != offset + size)
             {
                 ident = reader.ReadByte();
                 var cmd = new MSCCommand(ident);
+                cmd.FileOffset = (int)reader.BaseStream.Position - 1;
                 for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
                 {
                     switch (cmd.ParamSpecifiers[i])
@@ -116,11 +120,13 @@ namespace SALT.Scripting.MSC
                             cmd.Parameters.Add(reader.ReadByte());
                             break;
                         case "I":
-                            cmd.Parameters.Add(reader.ReadInt32());
+                            cmd.Parameters.Add(reader.ReadBint32());
+                            break;
+                        case "H":
+                            cmd.Parameters.Add(reader.ReadBint16());
                             break;
                     }
                 }
-
                 script.Add(cmd);
             }
 

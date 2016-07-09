@@ -16,6 +16,7 @@ namespace SALT.Scripting.MSC
         }
 
         public uint Ident { get; set; }
+        public int FileOffset { get; set; }
         public string Name { get { return MSC_INFO.NAMES[this.Ident]; } }
         public int Size { get { return MSC_INFO.Sizes[this.Ident]; } }
         public List<object> Parameters { get; set; }
@@ -35,7 +36,10 @@ namespace SALT.Scripting.MSC
                         data.Add((byte)this.Parameters[i]);
                         break;
                     case "I":
-                        data.AddRange(BitConverter.GetBytes((int)this.Parameters[i]));
+                        data.AddRange(BitConverter.GetBytes((int)this.Parameters[i]).Reverse());
+                        break;
+                    case "H":
+                        data.AddRange(BitConverter.GetBytes((int)this.Parameters[i]).Reverse());
                         break;
                 }
             }
@@ -61,6 +65,8 @@ namespace SALT.Scripting.MSC
                     tmp.Add("0x" + ((byte)this.Parameters[i]).ToString("X"));
                 else if (this.ParamSpecifiers[i] == "I")
                     tmp.Add("0x" + ((int)this.Parameters[i]).ToString("X"));
+                else if (this.ParamSpecifiers[i] == "H")
+                    tmp.Add("0x" + ((short)this.Parameters[i]).ToString("X"));
             }
 
             str += $"({string.Join(",", tmp)})";

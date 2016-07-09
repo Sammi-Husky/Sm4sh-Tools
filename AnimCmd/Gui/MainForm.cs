@@ -240,7 +240,7 @@ namespace Sm4shCommand
                 {
                     foreach (var keypair in ScriptFiles)
                     {
-                        keypair.Value.Export(Path.Combine(fsDlg.SelectedPath, keypair.Key));
+                        keypair.Value.Export(Path.Combine(fsDlg.SelectedPath, Path.GetFileName(keypair.Key)));
                     }
                     MotionTable.Export(Path.Combine(fsDlg.SelectedPath, "motion.mtable"));
                 }

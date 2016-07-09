@@ -24,16 +24,26 @@ namespace Parameters
             dataGridView1.DataSource = tbl;
         }
 
+        private string fileLoaded = string.Empty;
         List<object[]> items;
         DataTable tbl;
+        public void LoadFile(string file)
+        {
+            if (File.Exists(file))
+            {
+                fileLoaded = file;
+                treeView1.Nodes.Clear();
+                ParseParams(file);
+                tbl.Rows.Clear();
+            }
+        }
+
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog();
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                treeView1.Nodes.Clear();
-                ParseParams(dlg.FileName);
-                tbl.Rows.Clear();
+                LoadFile(dlg.FileName);
             }
         }
         private void ParseParams(string filepath)
@@ -95,7 +105,7 @@ namespace Parameters
             }
         }
 
-        private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var node = e.Node as ValuesWrapper;
             if (node is GroupWrapper)
@@ -148,6 +158,13 @@ namespace Parameters
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (SaveFileDialog dlg = new SaveFileDialog())
+            {
+                if (!string.IsNullOrEmpty(fileLoaded))
+                {
+                    dlg.InitialDirectory = Path.GetDirectoryName(fileLoaded);
+                    dlg.FileName = Path.GetFileName(fileLoaded);
+                }
+
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     using (FileStream stream = new FileStream(dlg.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -171,6 +188,7 @@ namespace Parameters
                         }
                     }
                 }
+            }
         }
 
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)

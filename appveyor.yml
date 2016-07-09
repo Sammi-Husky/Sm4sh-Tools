@@ -24,7 +24,7 @@ deploy:
 
   
 after_build:
-  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\SM4SHCommand.exe
   - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\Events.cfg
   - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.dll
   - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.txt

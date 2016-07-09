@@ -1,26 +1,31 @@
 configuration: Release
 
-version: "0.52-[{build}]-dev"
+version: "AnimCMD-Nightly"
 
 branches:
   only:
     - master
-    - Stable
 
 build:
   verbosity: minimal
 
-#deploy:
-#  - provider: FTP
-#    host: animcmd.net16.net
-#    protocol: ftp
-#    username: a2743571
-#    password:
-#      secure: XDMi7RoQ6O8Mx+fPKLafCQ==
-#    folder: public_html/Downloads/dev
-#    artifact: "AnimCmd-v$(APPVEYOR_BUILD_VERSION).zip"
+deploy:
+  release: SM4SHCommand [Nightly Build]
+  description: 'These builds are updated every night and may be unstable.'
+  provider: GitHub
+  auth_token:
+    secure: Usl5KltypyyBnD314CjEavJ7QqWGzchKPCSXuSxoUlN8ubJyTUSuntv1JhbGFfk9
+  artifact: AnimCMD-Nightly.zip
+  draft: true
+  prerelease: false
+  force_update: true
+  on:
+    branch: master
+
   
-#after_build:
-#  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\AnimCmd.exe
-#  - 7z a AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip AnimCmd\bin\Release\Events.cfg
-#  - appveyor PushArtifact AnimCmd-v%APPVEYOR_BUILD_VERSION%.zip
+after_build:
+  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\AnimCmd.exe
+  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\Events.cfg
+  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.dll
+  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.txt
+  - appveyor PushArtifact AnimCMD-Nightly.zip

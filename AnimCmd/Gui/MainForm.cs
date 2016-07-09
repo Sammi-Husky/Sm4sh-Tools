@@ -54,6 +54,7 @@ namespace Sm4shCommand
         }
 
         public SortedList<string, IScriptCollection> ScriptFiles { get; set; }
+        public ParamFile ParamFile { get; set; }
         public MTable MotionTable { get; set; }
         public IDE_MODE IDEMode { get; private set; }
 
@@ -133,7 +134,11 @@ namespace Sm4shCommand
                     }
                     else if (*(buint*)source.Address == 0xFFFF0000)
                     {
-
+                        source.Close();
+                        ParamFile = new ParamFile(ofDlg.FileName);
+                        var node = new TreeNode("PARAMS") { Name = "nPARAMS" };
+                        FileTree.Nodes.Add(node);
+                        PopulateParams();
                     }
                 }
                 else if (ofDlg.FileName.EndsWith(".mscsb")) // MSC
@@ -218,7 +223,12 @@ namespace Sm4shCommand
             }
             else if (IDEMode == IDE_MODE.File)
             {
-                ScriptFiles.Values[0].Export(ScriptFiles.Keys[0]);
+                if (ScriptFiles.Count > 0)
+                    ScriptFiles.Values[0].Export(ScriptFiles.Keys[0]);
+                else if (ParamFile != null)
+                {
+                    ParamFile.Export(ParamFile.Filepath);
+                }
             }
         }
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -247,10 +257,18 @@ namespace Sm4shCommand
             }
             else if (IDEMode == IDE_MODE.File)
             {
-                sfDlg.FileName = Path.GetFileNameWithoutExtension(ScriptFiles.Keys[0]);
-                if (sfDlg.ShowDialog() == DialogResult.OK)
-                    ScriptFiles.Values[0].Export(sfDlg.FileName);
-
+                if (ScriptFiles.Count > 0)
+                {
+                    sfDlg.FileName = Path.GetFileNameWithoutExtension(ScriptFiles.Keys[0]);
+                    if (sfDlg.ShowDialog() == DialogResult.OK)
+                        ScriptFiles.Values[0].Export(sfDlg.FileName);
+                }
+                else if (ParamFile != null)
+                {
+                    sfDlg.FileName = Path.GetFileNameWithoutExtension(ParamFile.Filepath);
+                    if (sfDlg.ShowDialog() == DialogResult.OK)
+                        ParamFile.Export(sfDlg.FileName);
+                }
             }
         }
 
@@ -329,7 +347,13 @@ namespace Sm4shCommand
                         var tmp = tabControl1.TabPages[i] as ParamEditor;
                         p = tmp;
                         var node = tmp.Node;
-                        var file = Manager.Projects.Values[0].Fighter_Param_vl;
+
+                        ParamFile file;
+                        if (IDEMode == IDE_MODE.Project)
+                            file = ActiveProject.Fighter_Param_vl;
+                        else
+                            file = ParamFile;
+
                         ((ParamGroup)file.Groups[node.Group]).Chunks[node.Entry] = node.Parameters.ToArray();
                     }
                     if (p != null)
@@ -356,6 +380,40 @@ namespace Sm4shCommand
                 }
 
                 FileTree.EndUpdate();
+            }
+        }
+
+        public void PopulateParams()
+        {
+            int group = 0;
+            foreach (var grp in ParamFile.Groups)
+            {
+                var groupnode = new TreeNode($"Group[{group}]");
+                if (grp is ParamGroup)
+                {
+                    int entry = 0;
+                    foreach (var chunk in ((ParamGroup)grp).Chunks)
+                    {
+                        var node = new ParamListNode(group, entry) { Text = $"Entry[{entry}]" };
+                        foreach (var val in chunk)
+                            node.Parameters.Add(val);
+                        groupnode.Nodes.Add(node);
+                        entry++;
+                    }
+                }
+                else
+                {
+                    var node = new ParamListNode(group, 0) { Text = $"Values[{group}]" };
+                    foreach (var col in grp.Values)
+                    {
+                        node.Parameters.Add(new ParamEntry(col.Value, col.Type));
+                    }
+                    groupnode.Nodes.Add(node);
+                }
+
+                var paramnode = FileTree.Nodes.Find("nPARAMS", false)[0];
+                paramnode?.Nodes.Add(groupnode);
+                group++;
             }
         }
 

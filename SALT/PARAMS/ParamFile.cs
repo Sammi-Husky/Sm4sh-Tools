@@ -13,10 +13,13 @@ namespace SALT.PARAMS
         public ParamFile(string filepath)
         {
             this.Groups = new List<IParamCollection>();
+            Filepath = filepath;
+
             this.DoParse(filepath);
         }
 
         public List<IParamCollection> Groups { get; set; }
+        public string Filepath { get; set; }
 
         private void DoParse(string path)
         {

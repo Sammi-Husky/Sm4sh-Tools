@@ -8,6 +8,7 @@ build:
   verbosity: minimal
 
 deploy:
+  tag: SM4SHCommand_Nightly
   release: SM4SHCommand [Nightly Build]
   description: 'This build is updated every time a commit is pushed, or each night at 2:00am PST, and may be unstable.'
   provider: GitHub

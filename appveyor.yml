@@ -22,8 +22,8 @@ deploy:
 
   
 after_build:
-  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\SM4SHCommand.exe
-  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\Events.cfg
-  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.dll
-  - 7z a AnimCMD-Nightly.zip AnimCmd\bin\Release\*.txt
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\SM4SHCommand.exe
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\Events.cfg
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\*.dll
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\*.txt
   - appveyor PushArtifact AnimCMD-Nightly.zip

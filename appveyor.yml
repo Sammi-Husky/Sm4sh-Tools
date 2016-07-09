@@ -1,7 +1,5 @@
 configuration: Release
 
-version: "AnimCMD-Nightly"
-
 branches:
   only:
     - master

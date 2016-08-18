@@ -57,5 +57,9 @@ namespace System.IO
                 str = str + ch;
             return str;
         }
+        public static float ReadBfloat(this BinaryReader reader)
+        {
+            return reader.ReadSingle().Reverse();
+        }
     }
 }

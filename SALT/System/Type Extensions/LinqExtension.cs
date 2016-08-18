@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace System
 {
-    static class LinqExtension
+    public static class LinqExtension
     {
         public static IEnumerable<IEnumerable<T>> Chunk<T>(this IEnumerable<T> source, int chunks)
         {

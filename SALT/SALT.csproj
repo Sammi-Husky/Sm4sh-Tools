@@ -38,6 +38,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\PACFile.cs" />
@@ -48,10 +49,10 @@
     <Compile Include="PARAMS\ParamType.cs" />
     <Compile Include="PARAMS\ParamFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDCommand.cs" />
-    <Compile Include="Scripting\AnimCMD\ACMDCompiler.cs" />
+    <Compile Include="Scripting\AnimCMD\Compiler.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDFile.cs" />
     <Compile Include="Scripting\AnimCMD\ACMDScript.cs" />
-    <Compile Include="Scripting\AnimCMD\ACMD_INFO.cs" />
+    <Compile Include="Scripting\AnimCMD\CMD_INFO.cs" />
     <Compile Include="Scripting\ICommand.cs" />
     <Compile Include="Scripting\IScript.cs" />
     <Compile Include="Scripting\IScriptCollection.cs" />

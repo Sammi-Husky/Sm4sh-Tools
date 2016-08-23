@@ -22,7 +22,7 @@ namespace SALT.Scripting.AnimCMD
         /// </summary>
         /// <param name="lines">Array of plaintext code lines.</param>
         /// <returns></returns>
-        public static ACMDCommand[] Compile(string[] lines)
+        public static ACMDCommand[] CompileCommands(string[] lines)
         {
             var tmpList = lines.ToList();
             tmpList.RemoveAll(x => string.IsNullOrWhiteSpace(x));
@@ -64,15 +64,85 @@ namespace SALT.Scripting.AnimCMD
             }
             return Commands.ToArray();
         }
+
         /// <summary>
         /// Opens and compiles the contents of a plaintext script file.
         /// </summary>
         /// <param name="filepath">The path to the file to compile</param>
         /// <returns></returns>
-        public static ACMDCommand[] CompileFile(string filepath)
+        public static List<MoveDef> CompileFile(string filepath)
         {
-            var text = File.ReadAllLines(filepath);
-            return Compile(text.ToArray());
+            return Compile(File.ReadAllText(filepath));
+        }
+
+        private static List<MoveDef> Compile(string input)
+        {
+            MoveDef move = null;
+            StringToken lastToken = new StringToken();
+            string curLine = "", codeRegion = "";
+
+            List<string> lines = new List<string>();
+            List<MoveDef> movedefs = new List<MoveDef>();
+            bool CodeBlock = false;
+
+            foreach (var tok in Tokenizer.Tokenize(input))
+            {
+                if (tok.Token == "MoveDef")
+                {
+                    if (move != null)
+                        movedefs.Add(move);
+
+                    move = new MoveDef();
+                }
+                if (lastToken.Token == "MoveDef")
+                {
+                    move.AnimName = tok.Token;
+                    goto end;
+                }
+                else if (tok.TokType == TokenType.Bracket)
+                {
+                    // End of a code block, try and compile
+                    if (CodeBlock && tok.TokType == TokenType.Bracket)
+                    {
+                        move[codeRegion] = ACMDCompiler.CompileCommands(lines.ToArray()).ToList();
+                        CodeBlock = false;
+                        codeRegion = string.Empty;
+                        lines.Clear();
+                        goto end;
+                    }
+
+                    // Marks the beginning of a code block, indicates that we should start
+                    // adding tokens together to form a command string.
+                    if (lastToken.Token == "Main" || lastToken.Token == "Effect" ||
+                        lastToken.Token == "Expression" || lastToken.Token == "Sound")
+                    {
+                        CodeBlock = true;
+                        codeRegion = lastToken.Token;
+                    }
+                }
+                else if (CodeBlock && tok.Token != "\n" && tok.Token != "\r") // if this isn't a newline, add the token to the code line.
+                {
+                    curLine += tok.Token;
+                    goto end;
+                }
+                else if (CodeBlock && tok.Token == "\n") // Add the completed code line to the list of lines for compilation
+                {
+                    if (string.IsNullOrEmpty(curLine))
+                        goto end;
+
+                    curLine += tok.Token;
+                    lines.Add(curLine);
+                    curLine = string.Empty;
+                }
+
+                end:
+                if (tok.TokType != TokenType.Seperator)
+                    lastToken = tok;
+            }
+            if (move != null)
+                movedefs.Add(move);
+
+            return movedefs;
         }
         /// <summary>
         /// Compile a single ACMD command from plaintext.
@@ -241,69 +311,43 @@ namespace SALT.Scripting.AnimCMD
                 }
             }
         }
-    }
-
-    public class ACMDParser
-    {
-        public void Parse(string input)
+        public List<ACMDCommand> this[int index]
         {
-            MoveDef move = null;
-            StringToken lastToken = new StringToken();
-            string curLine = "";
-            List<string> lines = new List<string>();
-            bool CodeBlock = false;
-            string codeRegion = "";
-
-            foreach (var tok in Tokenizer.Tokenize(input))
+            get
             {
-                if (tok.Token == "MoveDef")
+                switch (index)
                 {
-                    move = new MoveDef();
+                    case 0:
+                        return Game;
+                    case 1:
+                        return Effect;
+                    case 2:
+                        return Sound;
+                    case 3:
+                        return Expression;
+                    default:
+                        throw new Exception($"Could not get event list with index of {index}");
                 }
-                if (lastToken.Token == "MoveDef")
+            }
+            set
+            {
+                switch (index)
                 {
-                    move.AnimName = tok.Token;
-                    goto end;
+                    case 0:
+                        Game = value;
+                        break;
+                    case 1:
+                        Effect = value;
+                        break;
+                    case 2:
+                        Sound = value;
+                        break;
+                    case 3:
+                        Expression = value;
+                        break;
+                    default:
+                        throw new Exception($"Could not set event list with index of {index}");
                 }
-                else if (tok.TokType == TokenType.Bracket)
-                {
-                    // End of a code block, try and compile
-                    if (CodeBlock && tok.TokType == TokenType.Bracket)
-                    {
-                        move[codeRegion] = ACMDCompiler.Compile(lines.ToArray()).ToList();
-                        CodeBlock = false;
-                        codeRegion = string.Empty;
-                        lines.Clear();
-                        goto end;
-                    }
-
-                    // Marks the beginning of a code block, indicates that we should start
-                    // adding tokens together to form a command string.
-                    if (lastToken.Token == "Main" || lastToken.Token == "Effect" ||
-                        lastToken.Token == "Expression" || lastToken.Token == "Sound")
-                    {
-                        CodeBlock = true;
-                        codeRegion = lastToken.Token;
-                    }
-                }
-                else if (CodeBlock && tok.Token != "\n" && tok.Token != "\r") // if this isn't a newline, add the token to the code line.
-                {
-                    curLine += tok.Token;
-                    goto end;
-                }
-                else if (CodeBlock && tok.Token == "\n") // Add the completed code line to the list of lines for compilation
-                {
-                    if (string.IsNullOrEmpty(curLine))
-                        goto end;
-
-                    curLine += tok.Token;
-                    lines.Add(curLine);
-                    curLine = string.Empty;
-                }
-
-                end:
-                if (tok.TokType != TokenType.Seperator)
-                    lastToken = tok;
             }
         }
     }

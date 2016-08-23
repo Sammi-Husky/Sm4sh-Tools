@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4shCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PARAM", "PARAM\PARAM.csproj", "{22D571D7-D327-46C0-8BA7-663F5EC0BA28}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SALT", "SALT\SALT.csproj", "{90CBD9AB-41E3-4868-9632-F894F5BF5B26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S4FC", "FitCompiler\S4FC.csproj", "{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90CBD9AB-41E3-4868-9632-F894F5BF5B26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

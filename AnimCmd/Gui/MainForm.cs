@@ -188,7 +188,7 @@ namespace Sm4shCommand
                     foreach (var keypair in ScriptFiles)
                     {
                         if (keypair.Value.Scripts.Keys.Contains(MotionTable[i]))
-                            node.Scripts.Add(keypair.Key, keypair.Value.Scripts[MotionTable[i]]);
+                            node.Scripts.Add(Path.GetFileNameWithoutExtension(keypair.Key), keypair.Value.Scripts[MotionTable[i]]);
                     }
                     acmdnode.Nodes.Add(node);
                 }

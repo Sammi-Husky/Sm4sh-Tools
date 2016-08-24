@@ -20,12 +20,13 @@ namespace SALT.Scripting.AnimCMD
         }
         public MTable(string path, Endianness endian)
         {
+            _endian = endian;
             using (var stream = File.Open(path, FileMode.Open))
             {
                 using (var reader = new BinaryReader(stream))
                 {
                     while (stream.Position != stream.Length)
-                        this.Add(reader.ReadBuint32());
+                        this.Add(reader.ReadUInt32(endian));
                 }
             }
         }

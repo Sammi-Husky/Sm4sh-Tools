@@ -84,6 +84,7 @@ namespace SALT.Scripting.AnimCMD
             List<string> lines = new List<string>();
             List<MoveDef> movedefs = new List<MoveDef>();
             bool CodeBlock = false;
+            int bracketScope = 0;
 
             foreach (var tok in Tokenizer.Tokenize(input))
             {
@@ -101,15 +102,25 @@ namespace SALT.Scripting.AnimCMD
                 }
                 else if (tok.TokType == TokenType.Bracket)
                 {
+                    if (tok.Token == "{")
+                        bracketScope++;
+
                     // End of a code block, try and compile
-                    if (CodeBlock && tok.TokType == TokenType.Bracket)
+                    if (CodeBlock && tok.TokType == TokenType.Bracket && bracketScope == 2)
                     {
-                        move[codeRegion] = ACMDCompiler.CompileCommands(lines.ToArray()).ToList();
+                        var commands = ACMDCompiler.CompileCommands(lines.ToArray()).ToList();
+                        if (commands.Count > 0)
+                        {
+                            move[codeRegion] = commands;
+                        }
+
                         CodeBlock = false;
                         codeRegion = string.Empty;
                         lines.Clear();
-                        goto end;
+
                     }
+                    else if (bracketScope > 2)
+                        curLine += tok.Token;
 
                     // Marks the beginning of a code block, indicates that we should start
                     // adding tokens together to form a command string.
@@ -119,6 +130,9 @@ namespace SALT.Scripting.AnimCMD
                         CodeBlock = true;
                         codeRegion = lastToken.Token;
                     }
+
+                    if (tok.Token == "}")
+                        bracketScope--;
                 }
                 else if (CodeBlock && tok.Token != "\n" && tok.Token != "\r") // if this isn't a newline, add the token to the code line.
                 {
@@ -144,6 +158,7 @@ namespace SALT.Scripting.AnimCMD
 
             return movedefs;
         }
+
         /// <summary>
         /// Compile a single ACMD command from plaintext.
         /// </summary>
@@ -251,6 +266,101 @@ namespace SALT.Scripting.AnimCMD
         }
     }
 
+    public static class ACMDDecompiler
+    {
+        public static List<string> lines = new List<string>();
+        private static int Scope = 0;
+        private static ACMDScript Script;
+
+        public static string Decompile(ACMDScript script)
+        {
+            Script = script;
+            for (int i = 0; i < Script.Count; i++)
+            {
+                var cmd = Script.Commands[i];
+                var cmdIdent = cmd.Ident;
+                var cmdline = cmd.ToString();
+
+                if (HandleCommand(cmdIdent, i) == 0)
+                {
+                    lines.Add(cmd.ToString() + '\n');
+                }
+            }
+            return string.Join("", lines);
+        }
+        private static int HandleCommand(uint ident, int index)
+        {
+            switch (ident)
+            {
+                case 0xA5BD4F32:
+                case 0x895B9275:
+                case 0x870CF021:
+                    //return HandleConditional(index);
+                    return 0;
+                case 0x0EB375E3:
+                    return Handleloop(index);
+            }
+            return 0;
+        }
+        private static int Handleloop(int index)
+        {
+            int handledCommands = 0;
+            var cmd = Script[index];
+
+            string tabs = "";
+            for (int i = 0; i < Scope; i++)
+                tabs = tabs.Insert(0, "\t");
+
+            lines.Add($"{tabs}{cmd.ToString()}\n");
+            lines.Add($"{tabs}{{\n");
+            tabs = tabs.Insert(0, "\t");
+            Scope++;
+            while ((cmd = Script.Commands[++index]).Ident != 0x38A3EC78)
+            {
+                int amt = HandleCommand(Script[index].Ident, index);
+                handledCommands += amt;
+                if (amt == 0)
+                {
+                    lines.Add($"{tabs}{cmd.ToString()}\n");
+                }
+            }
+            Scope--;
+            lines.Add($"{tabs}{cmd.ToString()}\n");
+            tabs = tabs.Remove(0, 1);
+            lines.Add($"{tabs}}}\n");
+            return handledCommands + 2;
+        }
+        //private static int HandleConditional(int index)
+        //{
+        //    int handledCommands = 0;
+        //    var cmd = Script[index];
+        //    int size = 2;
+        //    int blocksize = (int)cmd.Parameters[0];
+
+        //    string tabs = "";
+        //    for (int i = 0; i < Scope; i++)
+        //        tabs = tabs.Insert(0, "\t");
+        //    lines.Add($"{tabs}{cmd.ToString()}\n");
+        //    lines.Add($"{tabs}{{\n");
+        //    tabs = tabs.Insert(0, "\t");
+        //    Scope++;
+        //    while ((size += Script[++index].Size) != blocksize)
+        //    {
+        //        int amt = HandleCommand(Script[index].Ident, index);
+        //        size += amt;
+        //        handledCommands += amt;
+        //        if (amt == 0)
+        //        {
+        //            lines.Add($"{tabs}{cmd.ToString()}\n");
+        //        }
+        //    }
+        //    Scope--;
+        //    tabs = tabs.Remove(0, 1);
+        //    lines.Add($"{tabs}}}\n");
+        //    return handledCommands + 1;
+        ////}
+    }
+
     public class MoveDef
     {
         public string AnimName { get; set; }
@@ -260,7 +370,7 @@ namespace SALT.Scripting.AnimCMD
             {
                 uint hash = 0;
                 if (AnimName.StartsWith("0x"))
-                    hash = uint.Parse(AnimName, System.Globalization.NumberStyles.HexNumber);
+                    hash = UInt32.Parse(AnimName.Substring(2), System.Globalization.NumberStyles.HexNumber);
                 else
                     hash = System.Security.Cryptography.Crc32.Compute(AnimName.ToLower());
                 return hash;
@@ -354,7 +464,7 @@ namespace SALT.Scripting.AnimCMD
 
     public static class Tokenizer
     {
-        static char[] seps = { '=', ',', '(', ')', ' ', '\n', '\r' };
+        static char[] seps = { '=', ',', '(', ')', ' ', '\n', '\r', '\t' };
         static char newline = '\n';
         static char[] integers = { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 

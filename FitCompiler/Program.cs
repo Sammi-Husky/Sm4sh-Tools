@@ -11,10 +11,13 @@ namespace FitCompiler
 {
     class Program
     {
-        static string outputDir = "";
-        static string ACMDDir { get { return Path.Combine(outputDir, "bin", "ACMD"); } }
-        static List<string> acmdfiles = new List<string>();
-        static Endianness endian = Endianness.Big;
+        static string targetDir = "bin";
+        static List<string> acmd_sources = new List<string>();
+        static List<CLI_OPTION> options = new List<CLI_OPTION>();
+
+        static Endianness Endian = Endianness.Big;
+        static bool decompile = false;
+
         //static List<string> mscfiles = new List<string>();
 
         static void Main(string[] args)
@@ -22,10 +25,10 @@ namespace FitCompiler
             List<string> options = new List<string>();
             bool dispHelp = false;
 
+            var test = args.TakeWhile(x => x.StartsWith("-"));
             for (int i = 0; i < args.Length; i++)
             {
                 string s = args[i];
-
                 // options
                 if (s.StartsWith("-"))
                 {
@@ -33,45 +36,53 @@ namespace FitCompiler
                     switch (s)
                     {
                         case "-le":
-                            endian = Endianness.Little;
+                            Endian = Endianness.Little;
                             break;
                         case "-be":
-                            endian = Endianness.Big;
+                            Endian = Endianness.Big;
                             break;
                         case "-o":
                         case "--outdir":
                             if (i + 1 < args.Length)
                             {
-                                outputDir = args[++i];
+                                targetDir = args[++i];
                             }
                             break;
                         case "-h":
                         case "--help":
                             dispHelp = true;
                             break;
-                        case "--acmddir":
+                        case "-dec":
+                        case "--decompile":
                             if (i + 1 < args.Length)
                             {
-                                enumerate_acmd(args[++i]);
+                                decompile = true;
+                                decompile_acmd(args[++i], "");
+                                return;
                             }
                             break;
                     }
                 }
                 else if (s.EndsWith(".acmd"))
                 {
-                    acmdfiles.Add(s);
+                    acmd_sources.Add(s);
                 }
                 //else if (s.EndsWith(".mscript"))
                 //{
                 //    mscfiles.Add(s);
                 //}
+                else if (!s.Contains(".") && Directory.Exists(s))
+                {
+                    enumerate_acmd(s);
+                }
             }
+
             if (args.Length == 0 | dispHelp)
             {
                 print_help();
             }
 
-            if (acmdfiles.Count > 0 && !dispHelp)
+            if (acmd_sources.Count > 0 && !dispHelp)
             {
                 compile_acmd();
             }
@@ -87,11 +98,11 @@ namespace FitCompiler
                               "Licensed under the MIT License\n" +
                               "Copyright(c) 2016 Sammi Husky\n");
 
-            Console.WriteLine("S4FC [options] [files]");
+            Console.WriteLine("S4FC [options] [files/directory]");
             Console.WriteLine("Options:\n" +
                               "\t-be: Sets the output mode to big endian (default)\n" +
                               "\t-le: Sets the output mode to little endian\n" +
-                              "\t-o --output: sets the aplication output directory\n" +
+                              "\t-o --outdir: sets the aplication output directory\n" +
                               "\t-h --help: Displays this help message");
 
         }
@@ -99,57 +110,151 @@ namespace FitCompiler
         {
             foreach (var path in Directory.EnumerateFiles(dir, "*.acmd", SearchOption.AllDirectories))
             {
-                acmdfiles.Add(path);
+                acmd_sources.Add(path);
             }
         }
         public static void compile_acmd()
         {
-            foreach (var path in acmdfiles)
+            ACMDFile game = new ACMDFile(),
+                     effect = new ACMDFile(),
+                     sound = new ACMDFile(),
+                     expression = new ACMDFile();
+
+            List<uint> hashes = new List<uint>();
+
+            Directory.CreateDirectory(targetDir);
+            foreach (var path in acmd_sources)
             {
-                Directory.CreateDirectory(ACMDDir);
+                Console.WriteLine($"Compiling {Path.GetFileNameWithoutExtension(path)}..");
 
                 var defs = ACMDCompiler.CompileFile(path);
-                List<uint> hashes = new List<uint>();
 
                 foreach (var move in defs)
                 {
                     hashes.Add(move.CRC);
                     if (move["Main"] != null)
                     {
-                        ACMDFile file = new ACMDFile();
                         ACMDScript script = new ACMDScript(move.CRC);
                         script.Commands = move["Main"].Cast<ICommand>().ToList();
-                        file.Scripts.Add(move.CRC, script);
-                        file.Export(Path.Combine(ACMDDir, "game.bin"), endian);
+                        game.Scripts.Add(move.CRC, script);
                     }
                     if (move["Sound"] != null)
                     {
-                        ACMDFile file = new ACMDFile();
                         ACMDScript script = new ACMDScript(move.CRC);
                         script.Commands = move["Sound"].Cast<ICommand>().ToList();
-                        file.Scripts.Add(move.CRC, script);
-                        file.Export(Path.Combine(ACMDDir, "sound.bin"), endian);
+                        sound.Scripts.Add(move.CRC, script);
                     }
                     if (move["Effect"] != null)
                     {
-                        ACMDFile file = new ACMDFile();
                         ACMDScript script = new ACMDScript(move.CRC);
                         script.Commands = move["Effect"].Cast<ICommand>().ToList();
-                        file.Scripts.Add(move.CRC, script);
-                        file.Export(Path.Combine(ACMDDir, "effect.bin"), endian);
+                        effect.Scripts.Add(move.CRC, script);
                     }
                     if (move["Expression"] != null)
                     {
-                        ACMDFile file = new ACMDFile();
                         ACMDScript script = new ACMDScript(move.CRC);
                         script.Commands = move["Expression"].Cast<ICommand>().ToList();
-                        file.Scripts.Add(move.CRC, script);
-                        file.Export(Path.Combine(ACMDDir, "expression.bin"), endian);
+                        expression.Scripts.Add(move.CRC, script);
                     }
                 }
-                var table = new MTable(hashes, endian);
-                table.Export(Path.Combine(ACMDDir, "motion.mtable"));
             }
+            var table = new MTable(hashes, Endian);
+            table.Export(Path.Combine(targetDir, "motion.mtable"));
+            game.Export(Path.Combine(targetDir, "game.bin"), Endian);
+            sound.Export(Path.Combine(targetDir, "sound.bin"), Endian);
+            effect.Export(Path.Combine(targetDir, "effect.bin"), Endian);
+            expression.Export(Path.Combine(targetDir, "expression.bin"), Endian);
+        }
+
+        public static void decompile_acmd(string acmddir, string animfile)
+        {
+            Endianness endian = Endianness.Big;
+            SortedList<string, ACMDFile> files = new SortedList<string, ACMDFile>();
+
+            foreach (string path in Directory.EnumerateFiles(acmddir, "*.bin"))
+            {
+                var file = new ACMDFile(path);
+                files.Add(Path.GetFileNameWithoutExtension(path), file);
+                endian = file.Endian;
+            }
+            var table = new MTable(Path.Combine(acmddir, "Motion.mtable"), endian);
+
+            foreach (uint u in table)
+            {
+                ACMDScript game = null, effect = null, sound = null, expression = null;
+                if (files.ContainsKey("game") && files["game"].Scripts.ContainsKey(u))
+                {
+                    game = (ACMDScript)files["game"].Scripts[u];
+                }
+                if (files.ContainsKey("effect") && files["effect"].Scripts.ContainsKey(u))
+                {
+                    effect = (ACMDScript)files["effect"].Scripts[u];
+                }
+                if (files.ContainsKey("sound") && files["sound"].Scripts.ContainsKey(u))
+                {
+                    sound = (ACMDScript)files["sound"].Scripts[u];
+                }
+                if (files.ContainsKey("expression") && files["expression"].Scripts.ContainsKey(u))
+                {
+                    expression = (ACMDScript)files["expression"].Scripts[u];
+                }
+
+                Directory.CreateDirectory("source");
+                write_movedef(game, effect, sound, expression, Path.Combine("source", $"{u.ToString("X8")}.acmd"), u.ToString("X8"));
+            }
+        }
+
+        private static void write_movedef(ACMDScript game, ACMDScript effect, ACMDScript sound, ACMDScript expression, string path, string animname)
+        {
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                uint num = 0;
+                if (uint.TryParse(animname, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out num))
+                    animname = $"0x{num:X8}";
+
+                writer.WriteLine($"MoveDef {animname}");
+                writer.WriteLine("{");
+
+                writer.WriteLine("\tMain()\n\t{");
+                if (game != null)
+                {
+                    var commands = game.Deserialize().Split('\n');
+                    foreach (string cmd in commands)
+                        writer.WriteLine("\t\t" + cmd.Trim());
+                }
+                writer.WriteLine("\t}\n");
+                writer.WriteLine("\tEffect()\n\t{");
+                if (effect != null)
+                {
+                    var commands = effect.Deserialize().Split('\n');
+                    foreach (string cmd in commands)
+                        writer.WriteLine("\t\t" + cmd.Trim());
+                }
+                writer.WriteLine("\t}\n");
+                writer.WriteLine("\tSound()\n\t{");
+                if (sound != null)
+                {
+                    var commands = sound.Deserialize().Split('\n');
+                    foreach (string cmd in commands)
+                        writer.WriteLine("\t\t" + cmd.Trim());
+                }
+                writer.WriteLine("\t}\n");
+                writer.WriteLine("\tExpression()\n\t{");
+                if (expression != null)
+                {
+                    var commands = expression.Deserialize().Split('\n');
+                    foreach (string cmd in commands)
+                        writer.WriteLine("\t\t" + cmd.Trim());
+                }
+                writer.WriteLine("\t}\n");
+                writer.WriteLine("}");
+            }
+        }
+
+        public struct CLI_OPTION
+        {
+            public string Option;
+            public string value;
         }
     }
 }

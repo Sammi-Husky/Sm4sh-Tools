@@ -38,7 +38,7 @@ namespace Sm4shCommand
                 }
             }
         }
-        public static Dictionary<uint,string> ParseAnimations(string motionFolder)
+        public static Dictionary<uint, string> ParseAnimations(string motionFolder)
         {
             var dict = new Dictionary<uint, string>();
             var files = Directory.EnumerateFiles(motionFolder, "*.*", SearchOption.AllDirectories).
@@ -77,31 +77,33 @@ namespace Sm4shCommand
             }
             else if (path.EndsWith(".bch"))
             {
-                DataSource src = new DataSource(FileMap.FromFile(path));
-                int off = *(int*)(src.Address + 0x0C);
-                VoidPtr addr = src.Address + off;
-                while (*(byte*)addr != 0)
+                using (var stream = File.Open(path, FileMode.Open, FileAccess.Read))
+                using (var reader = new BinaryReader(stream))
                 {
-                    var tmp = new string((sbyte*)addr);
-                    string AnimName = Regex.Match(tmp, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
-                    if (string.IsNullOrEmpty(AnimName))
+                    stream.Seek(0xC, SeekOrigin.Begin);
+                    int off = reader.ReadInt32();
+                    stream.Seek(off, SeekOrigin.Begin);
+
+                    while (reader.PeekChar() != '\0')
                     {
-                        addr += tmp.Length + 1;
-                        continue;
+                        var tmp = reader.ReadStringNT();
+                        string AnimName = Regex.Match(tmp, @"(.*)([A-Z])([0-9][0-9])(.*)").Groups[4].ToString();
+                        if (string.IsNullOrEmpty(AnimName))
+                        {
+                            continue;
+                        }
+
+                        AddAnimHash(AnimName, ref dict);
+                        AddAnimHash(AnimName + "_C2", ref dict);
+                        AddAnimHash(AnimName + "_C3", ref dict);
+                        AddAnimHash(AnimName + "L", ref dict);
+                        AddAnimHash(AnimName + "R", ref dict);
+
+
+                        if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
+                           AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
+                            AddAnimHash(AnimName.Substring(0, AnimName.Length - 1), ref dict);
                     }
-
-                    AddAnimHash(AnimName, ref dict);
-                    AddAnimHash(AnimName + "_C2", ref dict);
-                    AddAnimHash(AnimName + "_C3", ref dict);
-                    AddAnimHash(AnimName + "L", ref dict);
-                    AddAnimHash(AnimName + "R", ref dict);
-
-
-                    if (AnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
-                       AnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
-                        AddAnimHash(AnimName.Substring(0, AnimName.Length - 1), ref dict);
-
-                    addr += tmp.Length + 1;
                 }
             }
         }

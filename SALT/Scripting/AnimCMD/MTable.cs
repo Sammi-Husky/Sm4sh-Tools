@@ -41,6 +41,15 @@ namespace SALT.Scripting.AnimCMD
 
         public int Count { get { return this._baseList.Count; } }
 
+        public List<uint> ToList()
+        {
+            return _baseList;
+        }
+        public uint[] ToArray()
+        {
+            return _baseList.ToArray();
+        }
+
         public void Export(string path)
         {
             byte[] mtable = new byte[this._baseList.Count * 4];
@@ -59,6 +68,7 @@ namespace SALT.Scripting.AnimCMD
             File.WriteAllBytes(path, mtable);
         }
 
+        #region IEnumerable implementation
         public void Clear()
         {
             this._baseList = new List<uint>();
@@ -142,5 +152,6 @@ namespace SALT.Scripting.AnimCMD
                 this.position = -1;
             }
         }
+        #endregion
     }
 }

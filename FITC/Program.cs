@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SALT.Scripting.AnimCMD;
 using System.IO;
 using SALT.Scripting;
@@ -111,11 +109,12 @@ namespace FitCompiler
                      sound = new ACMDFile(),
                      expression = new ACMDFile();
 
-            List<uint> hashes = new List<uint>();
+
 
             targetDir = string.IsNullOrEmpty(targetDir) ? "bin" : targetDir;
             Directory.CreateDirectory(targetDir);
 
+            List<uint> hashes = new List<uint>();
             foreach (var line in File.ReadAllLines(mlist))
             {
                 if (line.StartsWith("0x"))
@@ -123,7 +122,8 @@ namespace FitCompiler
                 else
                     hashes.Add(Crc32.Compute(line.ToLower()));
             }
-            foreach (var path in Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(mlist), "acmd")))
+
+            foreach (var path in Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(mlist), "acmd"), "*", SearchOption.AllDirectories))
             {
                 var defs = ACMDCompiler.CompileFile(path);
                 foreach (var move in defs)
@@ -182,7 +182,7 @@ namespace FitCompiler
                 files.Add(Path.GetFileNameWithoutExtension(path), file);
                 endian = file.Endian;
             }
-            var table = new MTable(Path.Combine(acmddir, "Motion.mtable"), endian);
+            var table = new MTable(Path.Combine(acmddir, "motion.mtable"), endian);
             var hashes = new List<uint>(table.ToList());
 
             write_mlist(table, animations, Path.Combine(targetDir, "fighter.mlist"));

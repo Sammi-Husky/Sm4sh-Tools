@@ -9,13 +9,16 @@ namespace SALT.Scripting.MSC
 {
     public class MSCCommand : ICommand
     {
-        public MSCCommand(uint ident)
+        public MSCCommand(uint raw)
         {
-            this.Ident = ident;
+            this.Ident = raw;
             this.Parameters = new List<object>();
         }
 
-        public uint Ident { get; set; }
+        private uint Raw { get; set; }
+
+        public uint Ident { get { return Raw & 0x7F; } set { Raw ^= value; } }
+        public bool Returns { get { return (Raw & 0x80) > 0; } set { Raw ^= (uint)(value ? 0x80 : 0); } }
         public int FileOffset { get; set; }
         public string Name { get { return MSC_INFO.NAMES[this.Ident]; } }
         public int Size { get { return MSC_INFO.Sizes[this.Ident]; } }
@@ -49,8 +52,11 @@ namespace SALT.Scripting.MSC
             else
                 return data.ToArray();
         }
-
         public override string ToString()
+        {
+            return ToString(false);
+        }
+        public string ToString(bool declaration)
         {
             string str = string.Empty;
             if (this.Name == "unk")
@@ -69,7 +75,10 @@ namespace SALT.Scripting.MSC
                     tmp.Add("0x" + ((short)this.Parameters[i]).ToString("X"));
             }
 
-            str += $"({string.Join(",", tmp)})";
+            if (declaration)
+                str += " = ";
+            else
+                str += $"({string.Join(",", tmp)})";
             return str;
         }
     }

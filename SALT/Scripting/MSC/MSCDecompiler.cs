@@ -11,89 +11,162 @@ namespace SALT.Scripting.MSC
         {
             File = file;
             STACK = new Stack<StackParam>();
-            INDENT_STACK = new Stack<int>();
+            INDENT_STACK = new List<int>();
+            ASSIGNMENTS = new Stack<MSCCommand>();
         }
 
         public MSCFile File { get; set; }
 
         public Stack<StackParam> STACK { get; set; }
-        public Stack<int> INDENT_STACK { get; set; }
+        public List<int> INDENT_STACK { get; set; }
+
+        public Stack<MSCCommand> ASSIGNMENTS = null;
+
+        //public string DecompileScript(MSCScript script)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    foreach (MSCCommand cmd in script.Commands)
+        //    {
+
+        //        while (INDENT_STACK.Contains(cmd.FileOffset - 0x30))
+        //        {
+        //            INDENT_STACK.Remove(cmd.FileOffset - 0x30);
+        //            foreach (int i in INDENT_STACK)
+        //                sb.Append("   ");
+        //            sb.Append("}\n");
+        //        }
+
+
+        //        switch (cmd.Ident)
+        //        {
+        //            // Handle any commands that push onto the stack
+        //            case 0x0A:
+        //                STACK.Push(new StackParam(SPType.Integer, cmd.Parameters[0]));
+        //                break;
+        //            case 0x0B:
+        //                var variable = new spVariable((byte)cmd.Parameters[0] > 0, (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+        //                STACK.Push(new StackParam(SPType.Variable, variable));
+        //                break;
+        //            case 0x0D:
+        //                STACK.Push(new StackParam(SPType.Short, (short)cmd.Parameters[0]));
+        //                break;
+        //            case 0x26:
+        //                STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Not_equal));
+        //                break;
+        //            case 0x27:
+        //                STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Equal));
+        //                break;
+        //            case 0x2A:
+        //                STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Greater_or_equal));
+        //                break;
+        //            case 0x2B:
+        //                STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.TrueFalse));
+        //                break;
+        //            case 0x2D:
+        //                STACK.Push(new StackParam(SPType.Function, (byte)cmd.Parameters[1]));
+        //                goto default;
+        //            default:
+        //                // If the command is passed to the next add it to the assignment stack
+        //                if (cmd.Returns)
+        //                {
+        //                    ASSIGNMENTS.Push(cmd);
+        //                    continue;
+        //                }
+        //                else
+        //                {
+        //                    sb.Append(DecompileCMD(cmd)/*.TrimEnd() + $" \t// 0x{cmd.FileOffset-0x30:X}\n"*/);
+        //                }
+        //                break;
+        //        }
+        //    }
+        //    return sb.ToString();
+        //}
 
         public string DecompileScript(MSCScript script)
         {
             StringBuilder sb = new StringBuilder();
             foreach (MSCCommand cmd in script.Commands)
             {
-                switch (cmd.Ident)
+
+                while (INDENT_STACK.Contains(cmd.FileOffset - 0x30))
                 {
-                    case 0x0A:
-                    case 0x8A:
-                        STACK.Push(new StackParam(SPType.Integer, cmd.Parameters[0]));
-                        break;
-                    case 0x0B:
-                    case 0x8B:
-                        var variable = new spVariable((byte)cmd.Parameters[0] > 0, (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
-                        STACK.Push(new StackParam(SPType.Variable, variable));
-                        break;
-                    case 0x0D:
-                    case 0x8D:
-                        STACK.Push(new StackParam(SPType.Short, (short)cmd.Parameters[0]));
-                        break;
-                    case 0x26:
-                    case 0xA6:
-                        STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Not_equal));
-                        break;
-                    case 0x27:
-                    case 0xA7:
-                        STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Equal));
-                        break;
-                    case 0x2A:
-                    case 0xAA:
-                        STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.Greater_or_equal));
-                        break;
-                    case 0x2B:
-                    case 0xAB:
-                        STACK.Push(new StackParam(SPType.ComparisonType, ComparisonType.TrueFalse));
-                        break;
-                    case 0xAD:
-                        STACK.Push(new StackParam(SPType.Function, (byte)cmd.Parameters[1]));
-                        break;
-                    default:
-                        sb.Append(DecompileCMD(cmd));
-                        break;
-                }
-                loop:
-                if (INDENT_STACK.Contains(cmd.FileOffset-0x30))
-                {
-                    INDENT_STACK.Pop();
+                    INDENT_STACK.Remove(cmd.FileOffset - 0x30);
                     foreach (int i in INDENT_STACK)
                         sb.Append("   ");
+
                     sb.Append("}\n");
-                    goto loop;
+                }
+
+                // If the command is passed to the next add it to the assignment stack
+                if (cmd.Returns)
+                {
+                    ASSIGNMENTS.Push(cmd);
+                    continue;
+                }
+                else
+                {
+                    sb.Append(DecompileCMD(cmd)/*.TrimEnd() + $" \t// 0x{cmd.FileOffset-0x30:X}\n"*/);
                 }
             }
             return sb.ToString();
         }
 
+
+
         private string DecompileCMD(MSCCommand cmd)
         {
             var sb = new StringBuilder();
-            foreach (int i in INDENT_STACK)
-                sb.Append("   ");
+            if (!cmd.Returns)
+            {
+                foreach (int i in INDENT_STACK)
+                {
+                    sb.Append("   ");
+                }
+            }
 
             switch (cmd.Ident)
             {
+                case 0x06:
+                    sb.Append(Decompile_06(cmd));
+                    break;
+                case 0x0A:
+                    sb.Append(Decompile_0A(cmd));
+                    break;
+                case 0x0B:
+                    sb.Append(Decompile_0B(cmd));
+                    break;
+                case 0x0D:
+                    sb.Append(Decompile_0D(cmd));
+                    break;
+                case 0x13:
+                    sb.Append(Decompile_13(cmd));
+                    break;
                 case 0x1C:
                     sb.Append(Decompile_1C(cmd));
+                    break;
+                case 0x26:
+                    sb.Append(Decompile_26(cmd));
+                    break;
+                case 0x2B:
+                    sb.Append(Decompile_2B(cmd));
                     break;
                 case 0x2C:
                     sb.Append(Decompile_2C(cmd));
                     break;
+                case 0x2D:
+                    sb.Append(Decompile_2D(cmd));
+                    break;
+                case 0x31:
+                    sb.Append(Decompile_31(cmd));
+                    break;
                 case 0x34:
                     sb.Append(Decompile_34(cmd));
                     break;
-                case 0x2D:
-                    sb.Append($"func_{cmd.Parameters[1]:X}");
+                case 0x36:
+                    sb.Append(Decompile_36(cmd));
+                    break;
+                case 0x41:
+                    sb.Append(Decompile_41(cmd));
                     break;
                 default:
                     sb.Append(cmd.ToString() + Environment.NewLine);
@@ -101,6 +174,69 @@ namespace SALT.Scripting.MSC
             }
             return sb.ToString();
         }
+
+        private string Decompile_06(MSCCommand cmd)
+        {
+            return $"return_06 {DecompileCMD(ASSIGNMENTS.Pop()).Trim()}\n";
+        } // return_6
+
+        //=========== Stack Manipulation ===========//
+        private string Decompile_0A(MSCCommand cmd)
+        {
+            if (cmd.Returns)
+                return $"0x{cmd.Parameters[0]:X}";
+            else
+                return cmd.ToString();
+        } // pushInt
+        private string Decompile_0B(MSCCommand cmd)
+        {
+            return FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+        } // pushVar
+        private string Decompile_0D(MSCCommand cmd)
+        {
+            return Decompile_0A(cmd);
+        } // pushShort
+
+        private string Decompile_13(MSCCommand cmd)
+        {
+            if (STACK.Count > 0)
+                return $"unk_13({STACK.Pop().Value})\n";
+            else
+                return "unk_13()\n";
+        }
+
+        private string Decompile_1C(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+
+            var arg = ASSIGNMENTS.Pop();
+            if (arg.Ident == 0x1C)
+                return $"{text} = 0x{arg.Parameters[0]:X}\n";
+            else
+                return $"{text} = {DecompileCMD(arg)}\n";
+        } // assign_var
+
+        //============== Comparisons ===============//
+        private string Decompile_26(MSCCommand cmd)
+        {
+            var arg1 = ASSIGNMENTS.Pop();
+            var arg2 = ASSIGNMENTS.Pop();
+
+            return $"{DecompileCMD(arg2)} != {DecompileCMD(arg1)}";
+        } // equals
+        private string Decompile_27(MSCCommand cmd)
+        {
+            var arg1 = ASSIGNMENTS.Pop();
+            var arg2 = ASSIGNMENTS.Pop();
+
+            return $"{DecompileCMD(arg2)} == {DecompileCMD(arg1)}";
+        } // not_equals
+        private string Decompile_2B(MSCCommand cmd)
+        {
+            var arg = ASSIGNMENTS.Pop();
+            return $"{DecompileCMD(arg)}";
+        } // true
+
         private string Decompile_2C(MSCCommand cmd)
         {
             var str = "printf(";
@@ -108,160 +244,135 @@ namespace SALT.Scripting.MSC
 
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
             {
-                var sp = STACK.Pop();
-                switch (sp.Type)
+                var arg = ASSIGNMENTS.Pop();
+                switch (arg.Ident)
                 {
-                    case SPType.Variable:
-                        var variable = ((spVariable)sp.Value);
-                        parameters.Add($"{(variable.Global ? "global" : "local")}Var{((spVariable)sp.Value).ID}");
+                    case 0x1C:
+                        var variable = FormatVariable((byte)arg.Parameters[0], (byte)arg.Parameters[1], (byte)arg.Parameters[2]);
+                        parameters.Add(variable);
                         break;
-                    case SPType.Integer:
-                        parameters.Add($"\"{File.Strings[(int)sp.Value]}\"");
+                    case 0x0A:
+                        parameters.Add($"\"{File.Strings[(int)arg.Parameters[0]]}\"");
                         break;
-                    case SPType.Short:
-                        parameters.Add($"\"{File.Strings[(short)sp.Value]}\"");
+                    case 0x0D:
+                        parameters.Add($"\"{File.Strings[(short)arg.Parameters[0]]}\"");
                         break;
                 }
             }
 
 
             return str + $"{string.Join(", ", parameters)})\n";
-        }
+        } // printf
+        private string Decompile_2D(MSCCommand cmd)
+        {
+
+            var parameters = new List<string>();
+            for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
+            {
+                parameters.Add(DecompileCMD(ASSIGNMENTS.Pop()));
+            }
+            return $"func_{cmd.Parameters[1]:X}({string.Join(", ", parameters)})";
+        } // call_func
+        private string Decompile_31(MSCCommand cmd)
+        {
+            var arg = ASSIGNMENTS.Pop();
+            var str = $"func_{File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
+
+            var parameters = new List<MSCCommand>();
+            for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
+            {
+                parameters.Add(ASSIGNMENTS.Pop());
+            }
+            var pStr = $"({string.Join(", ", parameters)})\n";
+
+            return str + pStr;
+        } // call_func_by_id
+
+        //============== Flow Control ==============//
         private string Decompile_34(MSCCommand cmd)
         {
             var parameters = new List<string>();
-            int paramCount = 0;
-            string cmpSign = "";
+            parameters.Add(DecompileCMD(ASSIGNMENTS.Pop()));
 
-            INDENT_STACK.Push((int)cmd.Parameters[0]);
-            switch ((ComparisonType)STACK.Pop().Value)
-            {
-                case ComparisonType.Equal:
-                    cmpSign = "==";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.Not_equal:
-                    cmpSign = "!=";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.Greater_or_equal:
-                    cmpSign = ">=";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.Less_or_equal:
-                    cmpSign = "<=";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.Less:
-                    cmpSign = "<";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.Greater:
-                    cmpSign = ">";
-                    paramCount = 2;
-                    break;
-                case ComparisonType.TrueFalse:
-                    paramCount = 1;
-                    break;
-            }
-
-            for (int i = 0; i < paramCount; i++)
-            {
-                var sp = STACK.Pop();
-                switch (sp.Type)
-                {
-                    case SPType.Variable:
-                        var variable = ((spVariable)sp.Value);
-                        parameters.Add($"{(variable.Global ? "global" : "local")}Var{variable.ID}");
-                        break;
-                    case SPType.Integer:
-                        parameters.Add(sp.Value.ToString());
-                        break;
-                    case SPType.Short:
-                        parameters.Add(sp.Value.ToString());
-                        break;
-                    case SPType.Function:
-                        parameters.Add($"func_{sp.Value}({STACK.Pop().Value:X})");
-                        break;
-                }
-            }
-
-            parameters.RemoveAll(x => x == "");
-            if (parameters.Count > 1)
-                parameters.Insert(1, cmpSign);
-
-            return $"if({string.Join(" ", parameters)})\n{{\n";
-        }
-        private string Decompile_1C(MSCCommand cmd)
+            var str = $"if({string.Join(" ", parameters)})\n{DoIndent("{")}\n";
+            INDENT_STACK.Add((int)cmd.Parameters[0]);
+            return str;
+        } // if
+        private string Decompile_36(MSCCommand cmd)
         {
+            INDENT_STACK.Add((int)cmd.Parameters[0]);
+            return $"else\n{DoIndent("{")}\n";
+        } // else 
+        private string Decompile_41(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            var arg = ASSIGNMENTS.Pop();
 
-            var text = $"{((byte)cmd.Parameters[0] > 0 ? "global" : "local")}Var{cmd.Parameters[2]}";
-            var final = "";
-            if (STACK.Peek().Value is spVariable)
-                final = $"{text} = {STACK.Pop().Value}\n";
+            if (arg.Ident == 0x41)
+                return $"{text} = {DecompileCMD(arg)}";
             else
-                final = $"{text} = 0x{STACK.Pop().Value:X}\n";
-            
-            return final;
+                return $"{text} = 0x{arg.Parameters[0]:X}\n";
         }
 
-        public struct StackParam
+        private string FormatVariable(byte scope, byte unk, byte id)
         {
-            public StackParam(SPType type, object val)
-            {
-                Type = type;
-                Value = val;
-            }
-            public SPType Type;
-            public object Value;
+            return $"{(scope > 0 ? "Global" : "Local")}Var{id}";
         }
-        public struct spVariable
+        private string DoIndent(string source)
         {
-            public spVariable(bool global, int unk, int id)
-            {
-                Global = global;
-                Unk = (byte)unk;
-                ID = (byte)id;
-            }
-            public bool Global;
-            public byte Unk;
-            public byte ID;
+            var str = source;
+            foreach (int i in INDENT_STACK)
+                str = str.Insert(0, "   ");
+            return str;
+        }
+    }
 
-            public override string ToString()
-            {
-                return $"{(Global ? "global" : "local")}Var{ID}";
-            }
-        }
-        public struct spFunction
+    public struct StackParam
+    {
+        public StackParam(SPType type, object val)
         {
-            public spFunction(int unk, int id)
-            {
-                Unk = (byte)unk;
-                ID = (byte)id;
-            }
-            public byte Unk;
-            public byte ID;
+            Type = type;
+            Value = val;
         }
+        public SPType Type;
+        public object Value;
+    }
+    public struct spVariable
+    {
+        public spVariable(bool global, int unk, int id)
+        {
+            Global = global;
+            Unk = (byte)unk;
+            ID = (byte)id;
+        }
+        public bool Global;
+        public byte Unk;
+        public byte ID;
 
-        public enum SPType
+        public override string ToString()
         {
-            Variable,
-            Integer,
-            Short,
-            Byte,
+            return $"{(Global ? "global" : "local")}Var{ID}";
+        }
+    }
 
-            ComparisonType,
-            Function
-        }
-        public enum ComparisonType
-        {
-            Greater,
-            Greater_or_equal,
-            Less,
-            Less_or_equal,
-            Equal,
-            Not_equal,
-            TrueFalse
-        }
+    public enum SPType
+    {
+        Variable,
+        Integer,
+        Short,
+        Byte,
+
+        ComparisonType,
+        Function
+    }
+    public enum ComparisonType
+    {
+        Greater,
+        Greater_or_equal,
+        Less,
+        Less_or_equal,
+        Equal,
+        Not_equal,
+        TrueFalse
     }
 }

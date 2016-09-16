@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Sm4shCommand</RootNamespace>
+    <AssemblyName>SM4SHCommand</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;__DEMO__</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>s4.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Win32Resource>
+    </Win32Resource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FastColoredTextBox">
+      <HintPath>C:\Users\Husky\Desktop\FastColoredTextBox-master\FastColoredTextBox\bin\Debug\FastColoredTextBox.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Classes\Nodes\ParamListNode.cs" />
+    <Compile Include="GUI\AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Classes\Nodes\BaseNode.cs" />
+    <Compile Include="Classes\Nodes\ScriptNode.cs" />
+    <Compile Include="Classes\Nodes\DataNode.cs" />
+    <Compile Include="GUI\CodeEditor.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GUI\CodeEditor.Designer.cs">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\ParamEditor.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GUI\ParamEditor.Designer.cs">
+      <DependentUpon>ParamEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\ProjectWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\ProjectWizard.Designer.cs">
+      <DependentUpon>ProjectWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Runtime.cs" />
+    <Compile Include="GUI\Rename.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\Rename.Designer.cs">
+      <DependentUpon>Rename.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\WorkspaceWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\WorkspaceWizard.Designer.cs">
+      <DependentUpon>WorkspaceWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WorkspaceManager.cs" />
+    <None Include="GUI\Event Library\Event Library.cs">
+      <SubType>Form</SubType>
+    </None>
+    <None Include="GUI\Event Library\Event Library.Designer.cs">
+      <DependentUpon>Event Library.cs</DependentUpon>
+    </None>
+    <Compile Include="GUI\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\Windows\Components\FolderSelectDialog.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Components\FolderSelectDialog.designer.cs">
+      <DependentUpon>FolderSelectDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="System\Windows\Components\ITSCodeBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="System\Windows\Components\ITSToolTip.cs" />
+    <EmbeddedResource Include="GUI\AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CodeEditor.resx">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\Event Library\Event Library.resx">
+      <DependentUpon>Event Library.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\ParamEditor.resx">
+      <DependentUpon>ParamEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\ProjectWizard.resx">
+      <DependentUpon>ProjectWizard.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\Rename.resx">
+      <DependentUpon>Rename.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\WorkspaceWizard.resx">
+      <DependentUpon>WorkspaceWizard.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="System\Windows\Components\ITSCodeBox.resx">
+      <DependentUpon>ITSCodeBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Events.cfg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="COPYING.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="FastColoredTextBox.dll" />
+    <Content Include="LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\play.png" />
+    <Content Include="s4.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SALT\SALT.csproj">
+      <Project>{90cbd9ab-41e3-4868-9632-f894f5bf5b26}</Project>
+      <Name>SALT</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sm4shCommand", "AnimCmd\Sm4shCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SM4SHCommand", "SM4SHCommand\SM4SHCommand.csproj", "{A79B3C25-FB69-4AF3-BFD2-F9D1451BF2CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PACKManager", "PACKManager\PACKManager.csproj", "{6EB31A51-9898-49FF-A541-7AC576C5297D}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SALT", "SALT\SALT.csproj", "{90CBD9AB-41E3-4868-9632-F894F5BF5B26}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITC", "FITC\FITC.csproj", "{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITD", "FITD\FITD.csproj", "{CA2F70F1-6869-40FC-991F-C1E27DC577EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67416765-5AA1-47BE-BFAA-9186BA2D2AB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

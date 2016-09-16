@@ -88,5 +88,25 @@ namespace SALT.PARAMS
                     return null;
             }
         }
+
+        public override string ToString()
+        {
+            switch (this.Type)
+            {
+                case ParamType.u8:
+                case ParamType.s8:
+                case ParamType.u16:
+                case ParamType.s16:
+                case ParamType.u32:
+                case ParamType.s32:
+                    return $"0x{this.Value:X}";
+                case ParamType.f32:
+                    return $"{this.Value:F}";
+                case ParamType.str:
+                    return this.Value.ToString();
+                default:
+                    return this.Value.ToString();
+            }
+        }
     }
 }

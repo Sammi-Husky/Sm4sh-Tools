@@ -10,7 +10,7 @@ build:
 deploy:
   tag: SM4SHCommand_Nightly
   release: SM4SHCommand [Nightly Build]
-  description: 'This build is updated every time a commit is pushed, or each night at 2:00am PST, and may be unstable.'
+  description: 'This build is updated every time a commit is pushed, or each night at 2:00am PST, and may be unstable.\n Last updated: $(APPVEYOR_REPO_COMMIT_TIMESTAMP)'
   provider: GitHub
   auth_token:
     secure: Usl5KltypyyBnD314CjEavJ7QqWGzchKPCSXuSxoUlN8ubJyTUSuntv1JhbGFfk9
@@ -23,8 +23,8 @@ deploy:
 
   
 after_build:
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\SM4SHCommand.exe
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\Events.cfg
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\*.dll
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\AnimCmd\bin\Release\*.txt
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\SM4SHCommand.exe
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\Events.cfg
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.dll
+  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.txt
   - appveyor PushArtifact AnimCMD-Nightly.zip

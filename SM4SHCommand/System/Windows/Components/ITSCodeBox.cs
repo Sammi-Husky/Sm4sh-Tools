@@ -42,6 +42,14 @@ namespace Sm4shCommand
                 this.AutoIndent = true;
             }
         }
+        public ITS_EDITOR(SALT.Scripting.MSC.MSCScript script, bool legacy):this()
+        {
+            Script = script;
+            if (legacy)
+                Text = script.Deserialize();
+            else
+                Text = script.Decompile();
+        }
         public IScript Script { get; set; }
         public void ApplyChanges()
         {
@@ -56,7 +64,8 @@ namespace Sm4shCommand
             //clear previous highlighting
             e.ChangedRange.ClearStyle(StyleIndex.All);
             //highlight tags
-            e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
+            e.ChangedRange.SetStyle(keywordStyle, @"\b(if|else|try|catch)\b");
+            //e.ChangedRange.SetStyle(keywordStyle, @"(?<=[\(,])+[^=)]+(?==)\b");
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\)\s,\r\n]+");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
             e.ChangedRange.SetStyle(StrStyle, "\"(\\.|[^\"])*\"");

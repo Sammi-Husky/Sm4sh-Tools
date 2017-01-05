@@ -12,6 +12,7 @@ namespace DTLS
         public DataSource CompressedSource { get; set; }
         public RfHeader Header { get; set; }
 
+        public RFFile() { }
         public RFFile(string filepath)
         {
 
@@ -108,46 +109,6 @@ namespace DTLS
                 ResourceEntries.Add(rsobj);
             }
             //ResourceEntries = LinkEntries(entries);
-        }
-        private List<ResourceEntry> LinkEntries(List<ResourceEntry> entries)
-        {
-            entries.Clear();
-            ResourceEntry tmpNode = null;
-
-            foreach (ResourceEntry entry in ResourceEntries)
-            {
-                if (entry == null)
-                    continue;
-
-                if (entry.FolderDepth == 1)
-                {
-                    if (tmpNode?.Root != null)
-                        entries.Add(tmpNode.Root);
-                    tmpNode = entry;
-                    continue;
-                }
-                else if (entry.Directory)
-                {
-
-                    var tmp = entry;
-                    if (entry.FolderDepth > tmpNode.FolderDepth)
-                        tmp.Parent = tmpNode;
-                    else if (entry.FolderDepth < tmpNode.FolderDepth)
-                        tmp.Parent = tmpNode.Parent.Parent;
-                    else
-                        tmp.Parent = tmpNode.Parent;
-                    tmpNode.InsertChild(tmp.FolderDepth - 1, tmp);
-                    tmpNode = tmp;
-                }
-                else
-                {
-                    var tmp = entry;
-                    tmp.Parent = tmpNode;
-                    tmpNode.InsertChild(tmp.FolderDepth - 1, tmp);
-                }
-            }
-            entries.Add(tmpNode.Root);
-            return entries;
         }
         public void UpdateEntries()
         {
@@ -320,72 +281,48 @@ namespace DTLS
 
         public uint extIndex { get { return nameOffsetEtc >> 24; } }
         public uint NameOffset { get { return nameOffsetEtc & 0xfffff; } }
-        public int FolderDepth { get { return (int)flags & 0xff; } }
-        public bool Localized { get { return (flags & 0x800) > 0; } }
-        public bool Packed { get { return (flags & 0x400) > 0; } }
-        public bool Directory { get { return (flags & 0x200) > 0; } }
+
+        public int FolderDepth { get { return (int)_flags & 0xff; } }
+        public bool Localized { get { return (_flags & 0x800) > 0; } }
+        public bool Packed { get { return (_flags & 0x400) > 0; } }
+        public bool IsDirectory { get { return (_flags & 0x200) > 0; } }
+        public bool OverridePackedFile { get { return (_flags & 0x4000) > 0; } }
 
         [Browsable(false)]
-        public uint Flags { get { return flags; } set { flags = value; } }
-        private uint flags;
-
-        [Browsable(false)]
-        public ResourceEntry Parent { get; set; }
-
-        [Browsable(false)]
-        public List<ResourceEntry> Children { get { return _children; } set { _children = value; } }
-        private List<ResourceEntry> _children = new List<ResourceEntry>();
-
-        [Browsable(false)]
-        public ResourceEntry Root
-        {
-            get
-            {
-                if (Parent == null)
-                    return this;
-                ResourceEntry root = Parent;
-                while (root.Parent != null)
-                    root = root.Parent;
-                return root;
-            }
-        }
-        public string Path
-        {
-            get
-            {
-                string str = EntryString;
-                ResourceEntry _entry = this;
-                while ((_entry = _entry.Parent) != null)
-                    str = str.Insert(0, _entry.EntryString);
-                return str;
-            }
-        }
-        public string PackFile
-        {
-            get
-            {
-                string str = Path;
-                var _entry = this;
-                for (; _entry != null && !_entry.Packed; _entry = _entry.Parent)
-                    str = str.Remove(str.IndexOf(_entry.EntryString));
-                return str + "packed";
-            }
-        }
-
-        public void InsertChild(int level, ResourceEntry child)
-        {
-            if (level < FolderDepth)
-                Parent.InsertChild(level, child);
-            else if (level == FolderDepth)
-                Children.Add(child);
-        }
+        public uint Flags { get { return _flags; } set { _flags = value; } }
+        private uint _flags;
 
         public override string ToString()
         {
             return EntryString;
         }
 
+        // Code taken from Dei's SM4SHExplorer.
+        private uint CalculateFlags()
+        {
+            uint flag = 0x00000000;
 
+            flag |= (uint)FolderDepth;
+
+            if (this.Packed)
+                flag |= 0x400;
+
+            if (!this.Localized) //Everything in the main resource has the flag
+                flag |= 0x800;
+
+            if (OverridePackedFile)
+                flag |= 0x4000;
+
+            if (this.IsDirectory)
+            {
+                flag |= 0x200;
+
+                if (this.Packed || this.OffInPack != 0)
+                    flag |= 0x1000;
+            }
+
+            return flag;
+        }
     }
     public struct _s_ResourceEntry
     {

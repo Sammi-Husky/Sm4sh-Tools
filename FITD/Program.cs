@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using SALT.Scripting.AnimCMD;
 using System.IO;
-using SALT.Scripting;
+using SALT.Scripting.MSC;
 using SALT.PARAMS;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 
 
-namespace FITD
+namespace FITDccc
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine($"\n> FITD v0.5.0 - Smash 4 Fighter Decompiler\n" +
+            Console.WriteLine($"\n> FITD v0.77 - Smash 4 Fighter Decompiler\n" +
                                "> Licensed under the MIT License\n" +
                                "> Copyright(c) 2016 Sammi Husky\n");
 
@@ -67,11 +67,19 @@ namespace FITD
                 {
                     target = str;
                 }
+                else if (str.EndsWith(".mscsb"))
+                {
+                    target = str;
+                }
             }
             
             if (!string.IsNullOrEmpty(target) && target.EndsWith(".mtable"))
             {
                 decompile_acmd(target, motion, output);
+            }
+            else if(!string.IsNullOrEmpty(target) && target.EndsWith(".mscsb"))
+            {
+                decompile_msc(target, output);
             }
 
             Console.WriteLine("> All tasks finished");
@@ -103,7 +111,11 @@ namespace FITD
             if (!string.IsNullOrEmpty(motionFolder))
                 animations = ParseAnimations(motionFolder);
 
-            foreach (string path in Directory.EnumerateFiles(Path.GetDirectoryName(mtable), "*.bin"))
+            string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (mtable.Contains(Path.DirectorySeparatorChar))
+                dir = Path.GetDirectoryName(mtable);
+
+            foreach (string path in Directory.EnumerateFiles(dir, "*.bin"))
             {
                 var file = new ACMDFile(path);
                 files.Add(Path.GetFileNameWithoutExtension(path), file);
@@ -153,7 +165,17 @@ namespace FITD
             }
             Console.WriteLine(">\tFinished\n");
         }
-
+        public static void decompile_msc(string file, string output)
+        {
+            MSCFile f = new MSCFile(file);
+            using (var writer = File.CreateText(output + "/out.txt"))
+            {
+                foreach (var script in f.Scripts)
+                {
+                    writer.Write($"func_{script.Key:X}\n"+((MSCScript)script.Value).Decompile() + "\n\n");
+                }
+            }
+        }
         public static Dictionary<uint, string> ParseAnimations(string motionFolder)
         {
             var dict = new Dictionary<uint, string>();

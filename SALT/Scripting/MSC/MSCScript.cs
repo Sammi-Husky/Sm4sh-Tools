@@ -43,8 +43,6 @@ namespace SALT.Scripting.MSC
 
         public string Deserialize()
         {
-            //MSCDecompiler d = new MSCDecompiler(File);
-            //return d.DecompileScript(this);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < Commands.Count; i++)
             {
@@ -52,6 +50,11 @@ namespace SALT.Scripting.MSC
                 sb.Append(cmd.ToString() + $"// {((MSCCommand)cmd).FileOffset - 0x30:X}" + Environment.NewLine);
             }
             return sb.ToString();
+        }
+        public string Decompile()
+        {
+            MSCDecompiler d = new MSCDecompiler(File);
+            return d.Decompile(this);
         }
 
         public void Serialize(string text)

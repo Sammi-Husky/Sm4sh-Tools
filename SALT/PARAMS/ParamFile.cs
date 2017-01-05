@@ -60,9 +60,10 @@ namespace SALT.PARAMS
                                 col.Add(new ParamEntry(new string(reader.ReadChars(len)), type));
                                 break;
                             case ParamType.group:
-                                if (col.Values.Count > 0 && col is ParamGroup)
+                                if (col.Values.Count > 0)
                                 {
-                                    ((ParamGroup)col).Chunk();
+                                    if (col is ParamGroup)
+                                        ((ParamGroup)col).Chunk();
                                     this.Groups.Add(col);
                                 }
 

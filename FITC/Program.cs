@@ -19,7 +19,7 @@ namespace FitCompiler
 
         static void Main(string[] args)
         {
-            Console.WriteLine($"\n> FITC v0.5.0 - Smash 4 Fighter Compiler platform.\n" +
+            Console.WriteLine($"\n> FITC v0.77 - Smash 4 Fighter Compiler platform.\n" +
                                "> Licensed under the MIT License\n" +
                                "> Copyright(c) 2016 Sammi Husky\n");
 
@@ -77,7 +77,6 @@ namespace FitCompiler
                               "> \t-le: Sets the output mode to little endian\n" +
                               "> \t-o --outdir: sets the aplication output directory\n" +
                               "> \t-h --help: Displays this help message");
-
         }
 
         public static void compile_acmd(string mlist, string output)

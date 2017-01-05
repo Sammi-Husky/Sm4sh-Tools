@@ -52,15 +52,12 @@ namespace SALT.Scripting.MSC
             else
                 return data.ToArray();
         }
+
         public override string ToString()
-        {
-            return ToString(false);
-        }
-        public string ToString(bool declaration)
         {
             string str = string.Empty;
             if (this.Name == "unk")
-                str += $"unk_{this.Ident:X}";
+                str += $"unk_{this.Raw:X}";
             else
                 str = this.Name;
             List<string> tmp = new List<string>();
@@ -75,10 +72,7 @@ namespace SALT.Scripting.MSC
                     tmp.Add("0x" + ((short)this.Parameters[i]).ToString("X"));
             }
 
-            if (declaration)
-                str += " = ";
-            else
-                str += $"({string.Join(",", tmp)})";
+            str += $"({string.Join(",", tmp)})";
             return str;
         }
     }

@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITC", "FITC\FITC.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITD", "FITD\FITD.csproj", "{CA2F70F1-6869-40FC-991F-C1E27DC577EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XMBDump", "xmbtests\XMBDump.csproj", "{E86899D7-D46D-470B-BB96-78C1B427384B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA2F70F1-6869-40FC-991F-C1E27DC577EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E86899D7-D46D-470B-BB96-78C1B427384B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E86899D7-D46D-470B-BB96-78C1B427384B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E86899D7-D46D-470B-BB96-78C1B427384B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E86899D7-D46D-470B-BB96-78C1B427384B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,7 +10,7 @@ namespace DTLS
 {
     public static class Util
     {
-        private static uint calc_crc(string filename)
+        public static uint calc_crc(string filename)
         {
             var b = Encoding.ASCII.GetBytes(filename);
             for (var i = 0; i < 4; i++)

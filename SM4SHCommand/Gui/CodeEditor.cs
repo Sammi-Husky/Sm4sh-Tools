@@ -20,9 +20,22 @@ namespace Sm4shCommand.GUI
             InitializeComponent();
             foreach (var pair in node.Scripts)
             {
-                TabPage p = new TabPage(pair.Key);
-                p.Controls.Add(new ITS_EDITOR(pair.Value, autocomplete) { Dock = DockStyle.Fill });
-                tabControl1.TabPages.Add(p);
+                if (pair.Value is SALT.Scripting.MSC.MSCScript)
+                {
+                    TabPage p = new TabPage(pair.Key);
+                    p.Controls.Add(new ITS_EDITOR((SALT.Scripting.MSC.MSCScript)pair.Value,false) { Dock = DockStyle.Fill });
+                    tabControl1.TabPages.Add(p);
+
+                    p = new TabPage(pair.Key);
+                    p.Controls.Add(new ITS_EDITOR((SALT.Scripting.MSC.MSCScript)pair.Value, true) { Dock = DockStyle.Fill });
+                    tabControl1.TabPages.Add(p);
+                }
+                else
+                {
+                    TabPage p = new TabPage(pair.Key);
+                    p.Controls.Add(new ITS_EDITOR((SALT.Scripting.AnimCMD.ACMDScript)pair.Value) { Dock = DockStyle.Fill });
+                    tabControl1.TabPages.Add(p);
+                }
             }
         }
     }

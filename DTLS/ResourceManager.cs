@@ -156,8 +156,7 @@ namespace DTLS
                 if (str.Contains("("))
                     partition += str.Substring(str.IndexOf("("));
 
-                if (!InitializePartition(partition))
-                    return;
+                var rf = new RFFile();
 
                 LSEntry curPacked = null;
                 int pad = 0;

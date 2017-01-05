@@ -31,15 +31,21 @@ namespace xmbtests
         {
             Console.WriteLine($"\n> XMBD v0.5 - Smash 4 xmb file dumper.\n" +
                    "> Licensed under the MIT License\n" +
-                   "> Copyright(c) 2016 Sammi Husky\n");
+                   "> Copyright(c) 2017 Sammi Husky\n");
 
             string output = "output.txt";
             if (args.Length == 2)
+            {
                 output = args[1];
+            }
             else if (args.Length == 0 || args.Length > 2)
+            {
                 print_help();
+                return;
+            }
 
             parseXMB(args[0]);
+            Console.WriteLine($">\t Decompiling {Path.GetFileName(args[0])}.. -> \"{output}\"");
             outputTXT(output);
         }
 
@@ -80,7 +86,7 @@ namespace xmbtests
                         entry.NumChildren = reader.ReadBuint16();
                         entry.FirstPropertyIndex = reader.ReadBuint16();
                         entry.unk1 = reader.ReadBuint16();
-                        entry.ParentIndex = reader.ReadBuint16();
+                        entry.ParentIndex = reader.ReadBint16();
                         entry.unk2 = reader.ReadBuint16();
 
                         stream.Seek(strTable1 + entry.NameOffset, SeekOrigin.Begin);
@@ -109,7 +115,7 @@ namespace xmbtests
                                 entry.Expressions.Add(expressions[entry.FirstPropertyIndex + i]);
                             }
                         }
-                        if (entry.ParentIndex != 0xffff)
+                        if (entry.ParentIndex != -1)
                         {
                             for (int i = 0; i < temp[entry.ParentIndex + i].NumChildren; i++)
                             {
@@ -153,7 +159,7 @@ namespace xmbtests
         public ushort NumChildren;
         public ushort FirstPropertyIndex;
         public ushort unk1;
-        public ushort ParentIndex;
+        public short ParentIndex;
         public ushort unk2;
 
         public int depth = 0;

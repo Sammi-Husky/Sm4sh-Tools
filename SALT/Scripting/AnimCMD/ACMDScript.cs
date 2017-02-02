@@ -132,10 +132,10 @@ namespace SALT.Scripting.AnimCMD
             for (int i = 0; i < this.Count; i++)
             {
                 int amt = 0;
+
                 if ((amt = this.DeserializeCommand(i, this[i].Ident, ref tmplines)) > 0)
                     i += amt;
-
-                if (i < this.Count)
+                else
                     tmplines.Add(this[i].ToString());
             }
 
@@ -200,15 +200,21 @@ namespace SALT.Scripting.AnimCMD
             string str = this[startIndex].ToString();
             int len = (int)this[startIndex].Parameters[0] - 2;
             lines.Add($"{str}{{");
-            int count = 1;
+            int count = 0;
             i++;
 
             while (len > 0)
             {
                 len -= this[i].Size / 4;
 
-                if (this.IsCmdHandled(this[i].Ident))
+                if (this[i].Ident == 0x895B9275) // Break if this is an ELSE
                 {
+                    break;
+                }
+                else if (IsCmdHandled(this[i].Ident))
+                {
+                    i += (count += this.DeserializeCommand(i, this[i].Ident, ref lines));
+                    count++;
                     break;
                 }
                 else
@@ -219,45 +225,44 @@ namespace SALT.Scripting.AnimCMD
                 }
             }
 
-            if (this.IsCmdHandled(this[i].Ident))
-                i += (count += this.DeserializeCommand(i, this[i].Ident, ref lines));
             lines.Add("}");
+            // if we encountered an else, break out of enclosing bracket scope
+            // and then deserialize the else statement
+            if (IsCmdConditional(this[i].Ident))
+            {
+                i += (count += this.DeserializeConditional(i, ref lines));
+                count++;
+            }
             return count;
         }
 
         private int DeserializeLoop(int startIndex, ref List<string> lines)
         {
             int i = startIndex;
-
-            string str = this[startIndex].ToString();
             int len = 0;
-            str += '{';
-            lines.Add(str);
+
+            lines.Add(this[startIndex].ToString() + '{');
             while (this[++i].Ident != 0x38A3EC78)
             {
-                len += this[i].Size / 4;
-                i += this.DeserializeCommand(i, this[i].Ident, ref lines);
-                lines.Add('\t' + this[i].ToString());
+                len += ((ACMDCommand)this[i]).WordSize;
+                if (IsCmdHandled(this[i].Ident))
+                    i += this.DeserializeCommand(i, this[i].Ident, ref lines);
+                else
+                    lines.Add('\t' + this[i].ToString());
             }
 
             lines.Add('\t' + this[i].ToString());
             lines.Add("}");
             return ++i - startIndex;
         }
-
         private int SerializeCommands(int index, uint ident, ref List<string> lines)
         {
-            switch (ident)
-            {
-                case 0xA5BD4F32:
-                case 0x895B9275:
-                case 0x870CF021:
-                    return this.SerializeConditional(index, ref lines);
-                case 0x0EB375E3:
-                    return this.SerializeLoop(index, ref lines);
-            }
-
-            return 0;
+            if (IsCmdConditional(ident))
+                return this.SerializeConditional(index, ref lines);
+            else if (ident == 0x0EB375E3)
+                return this.SerializeLoop(index, ref lines);
+            else
+                return 0;
         }
 
         private int SerializeConditional(int startIndex, ref List<string> lines)
@@ -333,19 +338,24 @@ namespace SALT.Scripting.AnimCMD
 
         private bool IsCmdHandled(uint ident)
         {
+            if (IsCmdConditional(ident))
+                return true;
+            else if (ident == 0x0EB375E3) // loop
+                return true;
+            else
+                return false;
+        }
+        private bool IsCmdConditional(uint ident)
+        {
             switch (ident)
             {
                 case 0xA5BD4F32:
                 case 0x895B9275:
                 case 0x870CF021:
                     return true;
-                case 0x0EB375E3:
-                    return true;
             }
-
             return false;
         }
-
         private void DoFormat(ref List<string> tmplines)
         {
             int curindent = 0;

@@ -7,7 +7,8 @@ using SALT.Scripting.MSC;
 using SALT.PARAMS;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
-
+using System.Threading;
+using System.Globalization;
 
 namespace FITDccc
 {
@@ -15,6 +16,8 @@ namespace FITDccc
     {
         static void Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
             Console.WriteLine($"\n> FITD v0.77 - Smash 4 Fighter Decompiler\n" +
                                "> Licensed under the MIT License\n" +
                                "> Copyright(c) 2016 Sammi Husky\n");
@@ -22,9 +25,7 @@ namespace FITDccc
             string target = "";
             string motion = "";
             string output = "output";
-            string attributes = "";
 
-            int charID = -1;
             if (args.Length == 0)
             {
                 print_help();
@@ -54,13 +55,6 @@ namespace FITDccc
                         case "--help":
                             print_help();
                             return;
-                        //case "-i":
-                        //case "--id":
-                        //    if (i + 1 < args.Length)
-                        //    {
-                        //        charID = Convert.ToInt32(args[++i]);
-                        //    }
-                        //    break;
                     }
                 }
                 else if (str.EndsWith(".mtable"))
@@ -89,8 +83,6 @@ namespace FITDccc
         {
             Console.WriteLine("> S4FC [options] [.mtable file]");
             Console.WriteLine("> Options:\n" +
-                              //"> \t-i --id: Sets the Character ID (required for attributes)\n" +
-                              //"> \t-p: Sets the Fighter Attributes Param file path\n" +
                               "> \t-o: Sets the aplication output directory\n" +
                               "> \t-m: Sets animation folder for parsing animation names\n" +
                               "> \t-h --help: Displays this help message");
@@ -111,9 +103,10 @@ namespace FITDccc
             if (!string.IsNullOrEmpty(motionFolder))
                 animations = ParseAnimations(motionFolder);
 
-            string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            if (mtable.Contains(Path.DirectorySeparatorChar))
-                dir = Path.GetDirectoryName(mtable);
+            //string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            //if (mtable.Contains(Path.DirectorySeparatorChar))
+            //    dir = Path.GetDirectoryName(mtable);
+            string dir = Path.GetDirectoryName(mtable);
 
             foreach (string path in Directory.EnumerateFiles(dir, "*.bin"))
             {

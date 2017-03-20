@@ -50,7 +50,7 @@ namespace SALT.Scripting.AnimCMD
                     move.AnimName = tok.Token;
                     goto end;
                 }
-                if(tok.Token == "Unlisted")
+                if (tok.Token == "Unlisted")
                 {
                     move.Unlisted = true;
                     goto end;
@@ -111,6 +111,8 @@ namespace SALT.Scripting.AnimCMD
             if (move != null)
                 movedefs.Add(move);
 
+            // clean up in case we compile more than one file
+            Commands.Clear();
             return movedefs;
         }
 
@@ -274,7 +276,7 @@ namespace SALT.Scripting.AnimCMD
         private static int Scope = 0;
         private static ACMDScript Script;
 
-        public static string Decompile(ACMDScript script)
+        public static string DecompileCommands(ACMDScript script)
         {
             Script = script;
             for (int i = 0; i < Script.Count; i++)
@@ -288,7 +290,13 @@ namespace SALT.Scripting.AnimCMD
                     lines.Add(cmd.ToString() + '\n');
                 }
             }
-            return string.Join("", lines);
+            var text = string.Join("", lines);
+
+            lines.Clear();
+            Scope = 0;
+            Script = null;
+
+            return text;
         }
         private static int HandleCommand(uint ident, int index)
         {
@@ -379,7 +387,7 @@ namespace SALT.Scripting.AnimCMD
                 return hash;
             }
         }
-        
+
         public bool Unlisted { get; set; }
 
         public List<ACMDCommand> Game { get; set; }

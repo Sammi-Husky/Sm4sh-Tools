@@ -68,7 +68,7 @@ namespace Sm4shCommand
                 Runtime.LogMessage("============================================");
                 Action<object, DoWorkEventArgs> work = (object snd, DoWorkEventArgs arg) =>
                 {
-                    GetCommandInfo(Path.Combine(Application.StartupPath, "Events.cfg"));
+                    ACMD_INFO.OverrideInfo(Path.Combine(Application.StartupPath, "Events.cfg"));
                 };
                 Action<object, RunWorkerCompletedEventArgs> workDone = (object snd, RunWorkerCompletedEventArgs arg) =>
                 {

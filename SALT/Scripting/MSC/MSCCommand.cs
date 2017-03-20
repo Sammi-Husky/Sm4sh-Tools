@@ -22,6 +22,29 @@ namespace SALT.Scripting.MSC
         public int FileOffset { get; set; }
         public string Name { get { return MSC_INFO.NAMES[this.Ident]; } }
         public int Size { get { return MSC_INFO.Sizes[this.Ident]; } }
+        public int TotalSize
+        {
+            get
+            {
+                int size = Size;
+                foreach (var s in ParamSpecifiers)
+                {
+                    switch (s)
+                    {
+                        case "B":
+                            size += 1;
+                            break;
+                        case "I":
+                            size += 4;
+                            break;
+                        case "H":
+                            size += 2;
+                            break;
+                    }
+                }
+                return size;
+            }
+        }
         public List<object> Parameters { get; set; }
         public string[] ParamSyntax { get { return MSC_INFO.SYNTAX[this.Ident].Split(','); } }
         public string[] ParamSpecifiers { get { return MSC_INFO.FORMATS[this.Ident].Split(','); } }

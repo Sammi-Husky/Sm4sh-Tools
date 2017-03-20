@@ -101,7 +101,7 @@ namespace SALT.Scripting.MSC
 
         public MSCScript ParseScript(BinaryReader reader, uint offset, int size)
         {
-            MSCScript script = new MSCScript() { File = this };
+            MSCScript script = new MSCScript(Offsets.IndexOf(offset), offset) { File = this };
             if (offset - HEADER_SIZE == EntryPoint)
                 script.IsEntrypoint = true;
 

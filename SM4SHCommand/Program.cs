@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Threading;
 using Sm4shCommand.Classes;
 using System.Reflection;
+using System.Globalization;
 
 namespace Sm4shCommand
 {
@@ -31,6 +32,7 @@ namespace Sm4shCommand
         [STAThread]
         static void Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Application.Run(Runtime.Instance);
         }
 

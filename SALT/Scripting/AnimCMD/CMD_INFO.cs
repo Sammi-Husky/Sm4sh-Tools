@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Sammi Husky. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace SALT.Scripting.AnimCMD
 {
@@ -2509,6 +2512,25 @@ namespace SALT.Scripting.AnimCMD
                 PARAM_SYNTAX.Add(crc, string.Join(",", syntax));
             else
                 PARAM_SYNTAX[crc] = string.Join(",", syntax);
+        }
+        public static void OverrideInfo(string path)
+        {
+            using (StreamReader stream = new StreamReader(path))
+            {
+                List<string> raw = stream.ReadToEnd().Split('\n').Select(x => x.Trim('\r')).ToList();
+                raw.RemoveAll(x => String.IsNullOrEmpty(x) || String.IsNullOrWhiteSpace(x) || x.Contains("//"));
+
+                for (int i = 0; i < raw.Count; i += 5)
+                {
+                    var crc = uint.Parse(raw[i], System.Globalization.NumberStyles.HexNumber);
+                    var Name = raw[i + 1];
+
+                    string[] paramList = raw[i + 2].Split(',').Where(x => x != "NONE").ToArray();
+                    string[] paramSyntax = raw[i + 3].Split(',').Where(x => x != "NONE").ToArray();
+                    ACMD_INFO.SetCMDInfo(crc, paramList.Length + 1, Name, paramList.Select(x => int.Parse(x)).ToArray(), paramSyntax);
+
+                }
+            }
         }
     }
 }

@@ -16,8 +16,13 @@ namespace SALT.Scripting.MSC
             Strings = new List<string>();
             Commands = new List<ICommand>();
         }
-
+        public MSCScript(int index, uint offset) : this()
+        {
+            ScriptIndex = index;
+            ScriptOffset = offset;
+        }
         public MSCFile File { get; set; }
+
         public int Size
         {
             get
@@ -28,7 +33,9 @@ namespace SALT.Scripting.MSC
                 return total;
             }
         }
-        public bool IsEntrypoint { get; internal set; }
+        public bool IsEntrypoint { get; set; }
+        public int ScriptIndex { get; set; }
+        public uint ScriptOffset { get; set; }
 
         public List<ICommand> Commands { get; set; }
         public List<string> Strings { get; set; }
@@ -53,7 +60,7 @@ namespace SALT.Scripting.MSC
         }
         public string Decompile()
         {
-            MSCDecompiler d = new MSCDecompiler(File);
+            MSCDecompiler d = new MSCDecompiler();
             return d.Decompile(this);
         }
 

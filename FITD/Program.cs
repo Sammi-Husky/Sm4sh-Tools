@@ -10,9 +10,9 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Globalization;
 
-namespace FITDccc
+namespace FITDecompiler
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -25,6 +25,7 @@ namespace FITDccc
             string target = "";
             string motion = "";
             string output = "output";
+            string events = "";
 
             if (args.Length == 0)
             {
@@ -55,6 +56,12 @@ namespace FITDccc
                         case "--help":
                             print_help();
                             return;
+                        case "-e":
+                            if (i + 1 < args.Length)
+                            {
+                                events = args[++i];
+                            }
+                            break;
                     }
                 }
                 else if (str.EndsWith(".mtable"))
@@ -66,7 +73,12 @@ namespace FITDccc
                     target = str;
                 }
             }
-            
+
+            if (!string.IsNullOrWhiteSpace(events))
+            {
+                ACMD_INFO.OverrideInfo(events);
+            }
+
             if (!string.IsNullOrEmpty(target) && target.EndsWith(".mtable"))
             {
                 decompile_acmd(target, motion, output);
@@ -84,6 +96,7 @@ namespace FITDccc
             Console.WriteLine("> S4FC [options] [.mtable file]");
             Console.WriteLine("> Options:\n" +
                               "> \t-o: Sets the aplication output directory\n" +
+                              "> \t-e: Overrides the internal event dictionary with specified events file"+
                               "> \t-m: Sets animation folder for parsing animation names\n" +
                               "> \t-h --help: Displays this help message");
         }
@@ -264,7 +277,7 @@ namespace FITDccc
                 {
                     var commands = game.Deserialize().Split('\n');
                     foreach (string cmd in commands)
-                        writer.WriteLine("\t\t" + cmd.Trim());
+                        writer.WriteLine("\t\t" + cmd.TrimEnd());
                 }
                 writer.WriteLine("\t}\n");
                 writer.WriteLine("\tEffect()\n\t{");
@@ -272,7 +285,7 @@ namespace FITDccc
                 {
                     var commands = effect.Deserialize().Split('\n');
                     foreach (string cmd in commands)
-                        writer.WriteLine("\t\t" + cmd.Trim());
+                        writer.WriteLine("\t\t" + cmd.TrimEnd());
                 }
                 writer.WriteLine("\t}\n");
                 writer.WriteLine("\tSound()\n\t{");
@@ -280,7 +293,7 @@ namespace FITDccc
                 {
                     var commands = sound.Deserialize().Split('\n');
                     foreach (string cmd in commands)
-                        writer.WriteLine("\t\t" + cmd.Trim());
+                        writer.WriteLine("\t\t" + cmd.TrimEnd());
                 }
                 writer.WriteLine("\t}\n");
                 writer.WriteLine("\tExpression()\n\t{");
@@ -288,7 +301,7 @@ namespace FITDccc
                 {
                     var commands = expression.Deserialize().Split('\n');
                     foreach (string cmd in commands)
-                        writer.WriteLine("\t\t" + cmd.Trim());
+                        writer.WriteLine("\t\t" + cmd.TrimEnd());
                 }
                 writer.WriteLine("\t}\n");
                 writer.WriteLine("}");

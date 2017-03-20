@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,23 +8,27 @@ namespace SALT.Scripting.MSC
 {
     public class MSCDecompiler
     {
-        public MSCDecompiler(MSCFile file)
+        public MSCDecompiler()
         {
-            File = file;
             INDENT_STACK = new List<int>();
             COMMANDS = new Stack<MSCCommand>();
         }
 
-        public MSCFile File { get; set; }
+        public MSCScript Target { get; set; }
+
         public MSCCommandManager Manager { get; set; }
 
         public List<int> INDENT_STACK { get; set; }
         public Stack<MSCCommand> COMMANDS = null;
+        public Stack<MSCCommand> TO_PROCESS = null;
 
         public string Decompile(MSCScript script)
         {
+            var analyzer = new MSCAnalyzer(script);
+            analyzer.Analyze_1();
+            Target = script;
+            Manager = new MSCCommandManager(Target);
             StringBuilder sb = new StringBuilder();
-            Manager = new MSCCommandManager(script);
 
             while (!Manager.End)
             {
@@ -41,7 +46,7 @@ namespace SALT.Scripting.MSC
 
                 // If the command is passed to the next add it to the assignment stack
                 if (Manager.Position != script.Count &&
-                    cmd.Ident == 0x0A && (Manager.PeekNext().Ident == 0x36 || INDENT_STACK.Contains(Manager.PeekNext().FileOffset - 0x30)))
+                    cmd.Ident == 0x0A && Manager.PeekNext().Ident == 0x36)
                 {
                     sb.Append(DoIndent(cmd.ToString()) + "\n");
                     continue;
@@ -58,11 +63,6 @@ namespace SALT.Scripting.MSC
             }
             return sb.ToString();
         }
-        //private List<MSCCommand> Analyze(MSCScript script)
-        //{
-
-        //}
-
         private string DecompileCMD(MSCCommand cmd)
         {
             var sb = new StringBuilder();
@@ -98,6 +98,15 @@ namespace SALT.Scripting.MSC
                     break;
                 case 0x26:
                     sb.Append(Decompile_26(cmd));
+                    break;
+                case 0x27:
+                    sb.Append(Decompile_27(cmd));
+                    break;
+                case 0x28:
+                    sb.Append(Decompile_28(cmd));
+                    break;
+                case 0x29:
+                    sb.Append(Decompile_29(cmd));
                     break;
                 case 0x2A:
                     sb.Append(Decompile_2A(cmd));
@@ -135,7 +144,6 @@ namespace SALT.Scripting.MSC
             }
             return sb.ToString();
         }
-
 
         #region CMD Decompilers
         private string Decompile_06(MSCCommand cmd)
@@ -180,20 +188,41 @@ namespace SALT.Scripting.MSC
         } // assign_var
 
         //============== Comparisons ===============//
+        private string Decompile_25(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} < {DecompileCMD(arg1)}";
+        } // less
         private string Decompile_26(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
 
-            return $"{DecompileCMD(arg2)} != {DecompileCMD(arg1)}";
-        } // equals
+            return $"{DecompileCMD(arg2)} <= {DecompileCMD(arg1)}";
+        } // less_or_equals
         private string Decompile_27(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
 
             return $"{DecompileCMD(arg2)} == {DecompileCMD(arg1)}";
+        } // equals
+        private string Decompile_28(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} != {DecompileCMD(arg1)}";
         } // not_equals
+        private string Decompile_29(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} > {DecompileCMD(arg1)}";
+        } // greater
         private string Decompile_2A(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
@@ -219,10 +248,10 @@ namespace SALT.Scripting.MSC
                 switch (arg.Ident)
                 {
                     case 0x0A:
-                        parameters.Add($"\"{File.Strings[(int)arg.Parameters[0]]}\"");
+                        parameters.Add($"\"{Target.File.Strings[(int)arg.Parameters[0]]}\"");
                         break;
                     case 0x0D:
-                        parameters.Add($"\"{File.Strings[(short)arg.Parameters[0]]}\"");
+                        parameters.Add($"\"{Target.File.Strings[(short)arg.Parameters[0]]}\"");
                         break;
                     case 0x0B:
                     case 0x1C:
@@ -268,7 +297,7 @@ namespace SALT.Scripting.MSC
         private string Decompile_31(MSCCommand cmd)
         {
             var arg = COMMANDS.Pop();
-            var str = $"func_{File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
+            var str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
 
             var parameters = new List<MSCCommand>();
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
@@ -333,6 +362,7 @@ namespace SALT.Scripting.MSC
             return str;
         }
     }
+
     public class MSCCommandManager
     {
         public MSCCommandManager(MSCScript script)
@@ -386,5 +416,217 @@ namespace SALT.Scripting.MSC
         {
             Position = 0;
         }
+    }
+
+    public class MSCAnalyzer
+    {
+        public MSCAnalyzer(MSCScript script)
+        {
+            Target = script;
+            _commands = new List<Tuple<int, MSCCommand>>();
+            Manager = new MSCCommandManager(Target);
+        }
+
+        public MSCScript Target { get; set; }
+        MSCCommandManager Manager { get; set; }
+        private readonly List<Tuple<int, MSCCommand>> _commands;
+
+        // Phase 1, record each command's bracket scope.
+        public void Analyze_1()
+        {
+            // add everything with an initial scope of 0;
+            int i = 0;
+            int scopeEnd = -1;
+            while (!Manager.End)
+            {
+                var cmd = Manager.Next();
+
+                // Check if were at the end of the if block and
+                // manually break out of enclosing scope if this
+                // is an else command
+                if (cmd.FileOffset - 0x30 == scopeEnd || cmd.Ident == 0x36)
+                {
+                    if (cmd.FileOffset - 0x30 == scopeEnd)
+                        scopeEnd = -1;
+
+                    i--;
+                }
+
+                _commands.Add(new Tuple<int, MSCCommand>(i, cmd));
+
+                if (RaisesScope(cmd))
+                {
+                    scopeEnd = (int)cmd.Parameters[0];
+                    i++;
+                }
+            }
+            Manager.Rewind();
+        }
+
+        // Phase 2, reverse and decompile to raw output
+        public void Analyze_2()
+        {
+            // traverse list in reverse order, consuming commands above them as needed.
+            var cmd_reversed = new List<Tuple<int, MSCCommand>>(_commands);
+            cmd_reversed.Reverse();
+        }
+        public bool RaisesScope(MSCCommand cmd)
+        {
+            switch (cmd.Ident)
+            {
+                case 0x2E:
+                case 0x34:
+                case 0x36:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    public class AnalyzerStack : IEnumerable<ICommand>
+    {
+        public AnalyzerStack(ICollection<ICommand> col)
+        {
+            _commands = new List<ICommand>(col);
+        }
+        private readonly List<ICommand> _commands;
+
+        public void Push(ICommand cmd)
+        {
+            _commands.Add(cmd);
+        }
+        public void Push(ICommand cmd, int index)
+        {
+            _commands.Insert(index, cmd);
+        }
+
+        public ICommand Pop()
+        {
+            return Pop(_commands.Count - 1);
+        }
+        public ICommand Pop(int index)
+        {
+            var cmd = _commands[index];
+            _commands.RemoveAt(index);
+            return cmd;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        public IEnumerator<ICommand> GetEnumerator()
+        {
+            for (int i = 0; i < this._commands.Count; i++)
+                yield return this._commands[i];
+        }
+
+        public int Count { get { return _commands.Count; } }
+        public ICommand this[int index]
+        {
+            get
+            {
+                return _commands[index];
+            }
+            set
+            {
+                _commands[index] = value;
+            }
+        }
+    }
+    public class MSCConstant
+    {
+        public MSCConstant(int value) { _value = value; }
+        private readonly int _value;
+
+        public static implicit operator MSCConstant(int value)
+        {
+            return new MSCConstant(value);
+        }
+
+        public static MSCConstant operator +(MSCConstant first, MSCConstant second)
+        {
+            return new MSCConstant(first._value + second._value);
+        }
+        public static MSCConstant operator -(MSCConstant first, MSCConstant second)
+        {
+            return new MSCConstant(first._value - second._value);
+        }
+        public static MSCConstant operator /(MSCConstant first, MSCConstant second)
+        {
+            return new MSCConstant(first._value / second._value);
+        }
+        public static MSCConstant operator *(MSCConstant first, MSCConstant second)
+        {
+            return new MSCConstant(first._value + second._value);
+        }
+
+        public int GetValue()
+        {
+            return _value;
+        }
+        public override string ToString()
+        {
+            return _value.ToString();
+        }
+    }
+    public class MSCVariable
+    {
+        public MSCVariable(MSCVariable value, MSCVariableScope variableType, byte unk, byte id)
+        {
+            _value = value;
+            Unk = unk;
+            ID = ID;
+            VarType = variableType;
+        }
+        public MSCVariable(MSCConstant value, MSCVariableScope variableType, byte unk, byte id)
+        {
+            _value = value;
+            Unk = unk;
+            ID = ID;
+            VarType = variableType;
+        }
+        public MSCVariable(MSCFunction value, MSCVariableScope variableType, byte unk, byte id)
+        {
+            _value = value;
+            Unk = unk;
+            ID = ID;
+            VarType = variableType;
+        }
+
+        private readonly object _value;
+
+        public MSCVariableScope VarType { get; set; }
+        public byte Unk { get; set; }
+        public byte ID { get; set; }
+
+        public override string ToString()
+        {
+            return $"{(VarType > 0 ? "Global" : "Local")}Var{ID}";
+        }
+    }
+
+    public class MSCFunction
+    {
+        public MSCFunction(MSCScript target, params object[] parameters)
+        {
+            TargetScript = target;
+            Parameters = parameters;
+        }
+        public MSCScript TargetScript { get; set; }
+        public object[] Parameters { get; set; }
+
+        public override string ToString()
+        {
+            return $"execute script_{TargetScript.ScriptIndex}({string.Join(",", Parameters)})";
+        }
+    }
+
+    public enum MSCVariableScope : byte
+    {
+        Global,
+        Local
     }
 }

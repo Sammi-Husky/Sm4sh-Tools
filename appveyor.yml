@@ -8,13 +8,13 @@ build:
   verbosity: minimal
 
 deploy:
-  tag: SM4SHCommand_Nightly
-  release: SM4SHCommand [Nightly Build]
-  description: 'This build is updated every time a commit is pushed, or each night at 2:00am PST, and may be unstable.\n Last updated: $(APPVEYOR_REPO_COMMIT_TIMESTAMP)'
+  tag: SM4SH-Tools
+  release: SM4SH Tools (Latest Commit)
+  description: 'Latest commit release for all tools in the repo. This build is updated every time a commit is pushed, or each night at 2:00am PST, and may be unstable.\n Last updated: $(APPVEYOR_REPO_COMMIT_TIMESTAMP)'
   provider: GitHub
   auth_token:
     secure: Usl5KltypyyBnD314CjEavJ7QqWGzchKPCSXuSxoUlN8ubJyTUSuntv1JhbGFfk9
-  artifact: AnimCMD-Nightly.zip
+  artifact: SM4SHTOOLS-Latest.zip
   draft: false
   prerelease: false
   force_update: true
@@ -23,8 +23,20 @@ deploy:
 
   
 after_build:
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\SM4SHCommand.exe
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\Events.cfg
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.dll
-  - 7z a AnimCMD-Nightly.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.txt
-  - appveyor PushArtifact AnimCMD-Nightly.zip
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\SM4SHCommand.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\Events.cfg
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.txt
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\XMBDump\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\XMBDump\bin\Release\XMBDump.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITD\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITD\bin\Release\FITD.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITC\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITC\bin\Release\FITC.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PARAM\bin\Release\PARAM.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PARAM\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\DTLS\bin\Release\DTLS.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\DTLS\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PACKManager\bin\Release\PACKManager.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PACKManager\bin\Release\*.dll
+  - appveyor PushArtifact SM4SHTOOLS-Latest.zip

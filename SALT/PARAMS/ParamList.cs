@@ -9,6 +9,11 @@ namespace SALT.PARAMS
     public class ParamList : IParamCollection
     {
         public ParamList() { this.Values = new List<ParamEntry>(); }
+        public ParamList(IEnumerable<ParamEntry> entries)
+        {
+            this.Values = new List<ParamEntry>(entries);
+
+        }
         public List<ParamEntry> Values { get; set; }
         public byte[] GetBytes()
         {

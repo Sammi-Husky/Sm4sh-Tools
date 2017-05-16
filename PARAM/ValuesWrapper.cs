@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SALT.PARAMS;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace Parameters
         private static ContextMenuStrip _menu;
         public ValuesWrapper()
         {
-            Parameters = new List<ParamEntry>();
+            Params = new ParamList();
             labels = new List<string>();
             ContextMenuStrip = _menu;
         }
@@ -24,17 +25,7 @@ namespace Parameters
         }
         public ValuesWrapper(string text) : this() { Text = text; }
 
-        public virtual void Wrap() { }
-        public virtual byte[] GetBytes()
-        {
-            var output = new byte[0];
-            foreach (ParamEntry param in Parameters)
-            {
-                output = output.Concat(param.GetBytes()).ToArray();
-            }
-            return output;
-        }
-        public List<ParamEntry> Parameters { get; set; }
+        public ParamList Params { get; set; }
         public List<string> labels { get; set; }
 
         private static void ApplyLablesAction(object sender, EventArgs e)

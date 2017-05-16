@@ -150,7 +150,7 @@ namespace Sm4shCommand
                     var node = new TreeNode("MSC") { Name = "nMSC" };
                     for (int i = 0; i < f.Scripts.Count; i++)
                     {
-                        var sn = new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]);
+                        var sn = new ScriptNode((uint)i, $"script_{i}", f.Scripts.Values[i]);
                         if (((MSCScript)f.Scripts.Values[i]).IsEntrypoint)
                             sn.Text = "Entrypoint";
                         else if (i == 0)
@@ -357,7 +357,7 @@ namespace Sm4shCommand
                         else
                             file = ParamFile;
 
-                        ((ParamGroup)file.Groups[node.Group]).Chunks[node.Entry] = node.Parameters.ToArray();
+                        ((ParamGroup)file.Groups[node.Group]).Chunks[node.Entry] = node.Parameters;
                     }
                     if (p != null)
                         Viewport.TabPages.Remove(p);

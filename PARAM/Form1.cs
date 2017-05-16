@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Forms;
+using SALT.PARAMS;
 
 namespace Parameters
 {
@@ -24,6 +25,7 @@ namespace Parameters
             dataGridView1.DataSource = tbl;
         }
 
+        private ParamFile OpenedFile { get; set; }
         private string fileLoaded = string.Empty;
         List<object[]> items;
         DataTable tbl;
@@ -48,104 +50,65 @@ namespace Parameters
         }
         private void ParseParams(string filepath)
         {
-            using (FileStream stream = new FileStream(filepath, FileMode.Open, FileAccess.ReadWrite))
+            OpenedFile = new ParamFile(filepath);
+            for (int i = 0; i < OpenedFile.Groups.Count; i++)
             {
-                using (var reader = new BinaryReader(stream))
+                TreeNode node = null;
+                if (OpenedFile.Groups[i] is ParamGroup)
                 {
-                    stream.Seek(0x08, SeekOrigin.Begin);
-                    var wrp = new ValuesWrapper("Group[0]");
-                    int group = 0;
-
-                    while (stream.Position != stream.Length)
+                    var g = (ParamGroup)OpenedFile.Groups[i];
+                    node = new GroupWrapper(i) { Group = g };
+                    for (int x = 0; x < g.Chunks.Length; x++)
                     {
-                        ParameterType type = (ParameterType)stream.ReadByte();
-                        switch (type)
-                        {
-                            case ParameterType.u8:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
-                                break;
-                            case ParameterType.s8:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadByte(), type));
-                                break;
-                            case ParameterType.u16:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadUInt16().Reverse(), type));
-                                break;
-                            case ParameterType.s16:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadInt16().Reverse(), type));
-                                break;
-                            case ParameterType.u32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadUInt32().Reverse(), type));
-                                break;
-                            case ParameterType.s32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadInt32().Reverse(), type));
-                                break;
-                            case ParameterType.f32:
-                                wrp.Parameters.Add(new ParamEntry(reader.ReadSingle().Reverse(), type));
-                                break;
-                            case ParameterType.str:
-                                int tmp = reader.ReadInt32().Reverse();
-                                wrp.Parameters.Add(new ParamEntry(new string(reader.ReadChars(tmp)), type));
-                                break;
-                            case ParameterType.group:
-                                if (wrp.Parameters.Count > 0)
-                                {
-                                    wrp.Wrap();
-                                    treeView1.Nodes.Add(wrp);
-                                }
-                                wrp = new GroupWrapper(++group);
-                                ((GroupWrapper)wrp).EntryCount = reader.ReadInt32().Reverse();
-                                break;
-                            default:
-                                throw new NotImplementedException($"unk typecode: {type} at offset: {stream.Position:X}");
-                        }
+                        node.Nodes.Add(new ValuesWrapper($"Entry[{x}]") { Params = g.Chunks[x] });
                     }
-                    wrp.Wrap();
-                    treeView1.Nodes.Add(wrp);
                 }
+                else
+                {
+                    var g = ((ParamList)OpenedFile.Groups[i]);
+                    node = new ValuesWrapper($"Values[{i}]") { Params = g };
+                }
+                treeView1.Nodes.Add(node);
             }
         }
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            var node = e.Node as ValuesWrapper;
-            if (node is GroupWrapper)
+            if (e.Node.Tag is ParamGroup)
                 return;
 
             tbl.Rows.Clear();
-            for (int i = 0; i < node.Parameters.Count; i++)
-            {
-                // Add row with first column set as index or label
-                if (i < node.labels.Count && !string.IsNullOrWhiteSpace(node.labels[i]))
-                    tbl.Rows.Add(node.labels[i]);
-                else
-                    tbl.Rows.Add(i);
 
-                // Set second column to value
-                var entry = node.Parameters[i];
+            var vals = ((ValuesWrapper)e.Node).Params.Values;
+            for (int i = 0; i < vals.Count; i++)
+            {
+                tbl.Rows.Add(i);
+
+                var entry = vals[i];
                 switch (entry.Type)
                 {
-                    case ParameterType.u8:
+                    case ParamType.u8:
                         tbl.Rows[i][1] = (byte)entry.Value;
                         break;
-                    case ParameterType.s8:
+                    case ParamType.s8:
                         tbl.Rows[i][1] = (byte)entry.Value;
                         break;
-                    case ParameterType.u16:
+                    case ParamType.u16:
                         tbl.Rows[i][1] = (ushort)entry.Value;
                         break;
-                    case ParameterType.s16:
+                    case ParamType.s16:
                         tbl.Rows[i][1] = (short)entry.Value;
                         break;
-                    case ParameterType.u32:
+                    case ParamType.u32:
                         tbl.Rows[i][1] = (uint)entry.Value;
                         break;
-                    case ParameterType.s32:
+                    case ParamType.s32:
                         tbl.Rows[i][1] = (int)entry.Value;
                         break;
-                    case ParameterType.f32:
+                    case ParamType.f32:
                         tbl.Rows[i][1] = (float)entry.Value;
                         break;
-                    case ParameterType.str:
+                    case ParamType.str:
                         tbl.Rows[i][1] = (string)entry.Value;
                         break;
                     default:
@@ -167,86 +130,52 @@ namespace Parameters
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    using (FileStream stream = new FileStream(dlg.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                    {
-                        using (BinaryWriter writer = new BinaryWriter(stream))
-                        {
-                            writer.Write(0x0000FFFF);
-                            writer.Write(0);
-                            foreach (ValuesWrapper node in treeView1.Nodes)
-                            {
-
-                                byte[] data = null;
-                                if (node is ValuesWrapper)
-                                    data = ((ValuesWrapper)node).GetBytes();
-                                else if (node is GroupWrapper)
-                                    data = ((GroupWrapper)node).GetBytes();
-
-                                if (data != null)
-                                    writer.Write(data, 0, data.Length);
-                            }
-                        }
-                    }
+                    OpenedFile.Export(dlg.FileName);
                 }
             }
         }
 
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (treeView1.SelectedNode == null | treeView1.SelectedNode is GroupWrapper)
+            if (treeView1.SelectedNode == null | treeView1.SelectedNode.Tag is ParamGroup)
                 return;
 
-            ValuesWrapper wrp = treeView1.SelectedNode as ValuesWrapper;
+            var vals = treeView1.SelectedNode.Tag as ParamEntry[];
+            int row = e.RowIndex;
 
-            for (int i = 0; i < wrp.Parameters.Count; i++)
+            var t = vals[row].Type;
+            object val = null;
+            switch (t)
             {
-                var t = wrp.Parameters[i].Type;
-                object val = null;
-                switch (t)
-                {
-                    case ParameterType.u8:
-                    case ParameterType.s8:
-                        val = Convert.ToByte(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.u16:
-                        val = Convert.ToUInt16(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.s16:
-                        val = Convert.ToInt16(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.u32:
-                        val = Convert.ToUInt32(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.s32:
-                        val = Convert.ToInt32(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.f32:
-                        val = Convert.ToSingle(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.str:
-                        val = tbl.Rows[i][1];
-                        break;
-                }
-                ((ValuesWrapper)treeView1.SelectedNode).Parameters[i].Value = val;
+                case ParamType.u8:
+                case ParamType.s8:
+                    val = Convert.ToByte(tbl.Rows[row][1]);
+                    break;
+                case ParamType.u16:
+                    val = Convert.ToUInt16(tbl.Rows[row][1]);
+                    break;
+                case ParamType.s16:
+                    val = Convert.ToInt16(tbl.Rows[row][1]);
+                    break;
+                case ParamType.u32:
+                    val = Convert.ToUInt32(tbl.Rows[row][1]);
+                    break;
+                case ParamType.s32:
+                    val = Convert.ToInt32(tbl.Rows[row][1]);
+                    break;
+                case ParamType.f32:
+                    val = Convert.ToSingle(tbl.Rows[row][1]);
+                    break;
+                case ParamType.str:
+                    val = tbl.Rows[row][1];
+                    break;
             }
+            ((ParamEntry[])treeView1.SelectedNode.Tag)[row].Value = val;
         }
 
         private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             treeView1.SelectedNode = e.Node;
         }
-    }
-
-    public enum ParameterType : byte
-    {
-        u8 = 1,
-        s8 = 2,
-        u16 = 3,
-        s16 = 4,
-        u32 = 5,
-        s32 = 6,
-        f32 = 7,
-        str = 8,
-        group = 0x20
     }
 }

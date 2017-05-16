@@ -1725,7 +1725,7 @@ namespace SALT.Scripting.AnimCMD
             { 0x425848C8, "Unknown,Unknown" },
             { 0xAA8826A7, "unknown,unknown" },
             { 0xAE994DAF, "unknown" },
-            { 0xA546845C, "Unknown" },
+            { 0xA546845C, "Rate" },
             { 0x752E6714, "unknown" },
             { 0x2A25155D, "State,Type" },
             { 0x17232732, "Unknown" },
@@ -2315,7 +2315,7 @@ namespace SALT.Scripting.AnimCMD
             {0x425848C8, "NONE"},
             {0xAA8826A7, "NONE"},
             {0xAE994DAF, "NONE"},
-            {0xA546845C, "NONE"},
+            {0xA546845C, "Brawl's Frame Speed Modifier command"},
             {0x752E6714, "NONE"},
             {0x2A25155D, "NONE"},
             {0x17232732, "NONE"},
@@ -2491,6 +2491,7 @@ namespace SALT.Scripting.AnimCMD
             {0x300A0A85, "NONE"},
             };
         #endregion
+
         public static void SetCMDInfo(uint crc, int size, string name, int[] param, string[] syntax)
         {
             if (!CMD_SIZES.ContainsKey(crc))

@@ -7,9 +7,9 @@ using System.Linq;
 
 namespace SALT.PARAMS
 {
-    public class ParamGroup : IParamCollection
+    public class ParamGroup : ParamEntry, IParamCollection
     {
-        public ParamGroup()
+        public ParamGroup(object value, ParamType type) : base(value, ParamType.group)
         {
             this.Values = new List<ParamEntry>();
         }
@@ -36,7 +36,7 @@ namespace SALT.PARAMS
         /// <summary>
         /// Param structures.
         /// </summary>
-        public ParamEntry[][] Chunks { get; set; }
+        public ParamList[] Chunks { get; set; }
         public List<ParamEntry> Values { get; set; }
 
         public byte[] GetBytes()
@@ -44,9 +44,9 @@ namespace SALT.PARAMS
             List<byte> data = new List<byte>();
             data.Add(0x20);
             data.AddRange(BitConverter.GetBytes(this.EntryCount).Reverse());
-            foreach (ParamEntry[] grp in this.Chunks)
+            foreach (ParamList grp in this.Chunks)
             {
-                foreach (ParamEntry ent in grp)
+                foreach (ParamEntry ent in grp.Values)
                     data.AddRange(ent.GetBytes());
             }
 
@@ -55,7 +55,12 @@ namespace SALT.PARAMS
 
         public void Chunk()
         {
-            this.Chunks = (ParamEntry[][])this.Values.Chunk(this.EntryCount);
+            var _chunks = new List<ParamList>();
+            foreach (var chunk in this.Values.Chunk(this.EntryCount))
+            {
+                _chunks.Add(new ParamList(chunk));
+            }
+            this.Chunks = _chunks.ToArray();
         }
 
         public void Add(ParamEntry ent)
@@ -70,7 +75,7 @@ namespace SALT.PARAMS
 
         public int CalcSize() { return Values.Sum(x => x.Size); }
 
-        public ParamEntry[] this[int index]
+        public ParamList this[int index]
         {
             get
             {

@@ -87,7 +87,7 @@ namespace FITDecompiler
             {
                 decompile_acmd(target, motion, output);
             }
-            else if(!string.IsNullOrEmpty(target) && target.EndsWith(".mscsb"))
+            else if (!string.IsNullOrEmpty(target) && target.EndsWith(".mscsb"))
             {
                 decompile_msc(target, output, decompRaw);
             }
@@ -100,15 +100,15 @@ namespace FITDecompiler
             Console.WriteLine("> S4FC [options] [.mtable file / .mscsb file]");
             Console.WriteLine("> Options:\n" +
                               "> \t-o: Sets the aplication output directory\n" +
-                              "> \t-e: Overrides the internal event dictionary with specified events file"+
+                              "> \t-e: Overrides the internal event dictionary with specified events file" +
                               "> \t-m: Sets animation folder for parsing animation names\n" +
-                              "> \t-h --help: Displays this help message"+
+                              "> \t-h --help: Displays this help message" +
                               "> \t--raw: Also decompile MSC to raw commands in addition to intelligent decompilation");
         }
 
         public static void decompile_acmd(string mtable, string motionFolder, string output)
         {
-            
+
             string script_dir = Path.Combine(output, "animcmd");
             Directory.CreateDirectory(script_dir);
 
@@ -182,22 +182,33 @@ namespace FITDecompiler
             if (!Directory.Exists(output))
                 Directory.CreateDirectory(output);
 
+            if (includeRaw)
+            {
+                if (!Directory.Exists(output + "/raw"))
+                    Directory.CreateDirectory(output + "/raw");
+            }
+
             foreach (var script in f.Scripts)
             {
 #if DEBUG
                 Console.WriteLine($"Decompiling script {f.Scripts.IndexOfKey(script.Key)} at offset  0x{script.Key:X8}");
 #endif
-                using (var writer = File.CreateText(output + $"/{f.Scripts.IndexOfKey(script.Key)}.mscript"))
+                string path = output + $"/{f.Scripts.IndexOfKey(script.Key)}.mscript";
+                if (f.EntryPoint == script.Key)
+                    path = output + "/entrypoint.mscript";
+
+                using (var writer = File.CreateText(path))
                 {
                     writer.Write(((MSCScript)script.Value).Decompile());
                 }
 
                 if (includeRaw)
                 {
-                    if (!Directory.Exists(output + "/raw"))
-                        Directory.CreateDirectory(output + "/raw");
+                    path = output + $"/{f.Scripts.IndexOfKey(script.Key)}_raw.mscript";
+                    if (f.EntryPoint == script.Key)
+                        path = output + "/entrypoint_raw.mscript";
 
-                    using (var writer = File.CreateText(output + $"/raw/{f.Scripts.IndexOfKey(script.Key)}_raw.mscript"))
+                    using (var writer = File.CreateText(path))
                     {
                         writer.Write(((MSCScript)script.Value).Deserialize());
                     }

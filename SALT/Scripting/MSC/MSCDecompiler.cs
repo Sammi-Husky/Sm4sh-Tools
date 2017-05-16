@@ -285,14 +285,14 @@ namespace SALT.Scripting.MSC
         } // Try? No parameter code block
         private string Decompile_2F(MSCCommand cmd)
         {
-            //return Decompile_31(cmd);
-            var parameters = new List<string>();
-            var arg1 = COMMANDS.Pop();
-            for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
-            {
-                parameters.Add(DecompileCMD(COMMANDS.Pop()));
-            }
-            return $"func_{DecompileCMD(arg1)}({string.Join(", ", parameters)})";
+            return Decompile_31(cmd);
+            //var parameters = new List<string>();
+            //var arg1 = COMMANDS.Pop();
+            //for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
+            //{
+            //    parameters.Add(DecompileCMD(COMMANDS.Pop()));
+            //}
+            //return $"func_{Target.File.Scripts.IndexOfKey((uint)(int)arg1.Parameters[0])}({string.Join(", ", parameters)})";
         } // same as 2D but always comes after 2F?
         private string Decompile_31(MSCCommand cmd)
         {
@@ -304,7 +304,7 @@ namespace SALT.Scripting.MSC
             }
             else
             {
-                str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
+                str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0])}";
             }
             var parameters = new List<MSCCommand>();
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)

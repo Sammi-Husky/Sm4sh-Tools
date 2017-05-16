@@ -54,7 +54,7 @@ namespace SALT.Scripting.MSC
             for (int i = 0; i < Commands.Count; i++)
             {
                 var cmd = Commands[i];
-                sb.Append(cmd.ToString() + $"// {((MSCCommand)cmd).FileOffset - 0x30:X}" + Environment.NewLine);
+                sb.Append((((MSCCommand)cmd).FileOffset - 0x30).ToString("X8") + "        " + cmd.ToString() + Environment.NewLine);
             }
             return sb.ToString();
         }

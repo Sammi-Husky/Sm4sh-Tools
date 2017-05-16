@@ -26,6 +26,7 @@ namespace FITDecompiler
             string motion = "";
             string output = "output";
             string events = "";
+            bool decompRaw = false;
 
             if (args.Length == 0)
             {
@@ -62,6 +63,9 @@ namespace FITDecompiler
                                 events = args[++i];
                             }
                             break;
+                        case "--raw":
+                            decompRaw = true;
+                            break;
                     }
                 }
                 else if (str.EndsWith(".mtable"))
@@ -85,7 +89,7 @@ namespace FITDecompiler
             }
             else if(!string.IsNullOrEmpty(target) && target.EndsWith(".mscsb"))
             {
-                decompile_msc(target, output);
+                decompile_msc(target, output, decompRaw);
             }
 
             Console.WriteLine("> All tasks finished");
@@ -93,12 +97,13 @@ namespace FITDecompiler
 
         public static void print_help()
         {
-            Console.WriteLine("> S4FC [options] [.mtable file]");
+            Console.WriteLine("> S4FC [options] [.mtable file / .mscsb file]");
             Console.WriteLine("> Options:\n" +
                               "> \t-o: Sets the aplication output directory\n" +
                               "> \t-e: Overrides the internal event dictionary with specified events file"+
                               "> \t-m: Sets animation folder for parsing animation names\n" +
-                              "> \t-h --help: Displays this help message");
+                              "> \t-h --help: Displays this help message"+
+                              "> \t--raw: Also decompile MSC to raw commands in addition to intelligent decompilation");
         }
 
         public static void decompile_acmd(string mtable, string motionFolder, string output)
@@ -171,14 +176,31 @@ namespace FITDecompiler
             }
             Console.WriteLine(">\tFinished\n");
         }
-        public static void decompile_msc(string file, string output)
+        public static void decompile_msc(string file, string output, bool includeRaw)
         {
             MSCFile f = new MSCFile(file);
-            using (var writer = File.CreateText(output + "/out.txt"))
+            if (!Directory.Exists(output))
+                Directory.CreateDirectory(output);
+
+            foreach (var script in f.Scripts)
             {
-                foreach (var script in f.Scripts)
+#if DEBUG
+                Console.WriteLine($"Decompiling script {f.Scripts.IndexOfKey(script.Key)} at offset  0x{script.Key:X8}");
+#endif
+                using (var writer = File.CreateText(output + $"/{f.Scripts.IndexOfKey(script.Key)}.mscript"))
                 {
-                    writer.Write($"func_{script.Key:X}\n"+((MSCScript)script.Value).Decompile() + "\n\n");
+                    writer.Write(((MSCScript)script.Value).Decompile());
+                }
+
+                if (includeRaw)
+                {
+                    if (!Directory.Exists(output + "/raw"))
+                        Directory.CreateDirectory(output + "/raw");
+
+                    using (var writer = File.CreateText(output + $"/raw/{f.Scripts.IndexOfKey(script.Key)}_raw.mscript"))
+                    {
+                        writer.Write(((MSCScript)script.Value).Deserialize());
+                    }
                 }
             }
         }

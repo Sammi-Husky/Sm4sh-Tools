@@ -297,8 +297,15 @@ namespace SALT.Scripting.MSC
         private string Decompile_31(MSCCommand cmd)
         {
             var arg = COMMANDS.Pop();
-            var str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
-
+            string str = "";
+            if (arg.Ident == 0x0B) // if it's a variable containing a funciton pointer
+            {
+                str = $"func_{DecompileCMD(arg):X}";
+            }
+            else
+            {
+                str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0]):X}";
+            }
             var parameters = new List<MSCCommand>();
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
             {

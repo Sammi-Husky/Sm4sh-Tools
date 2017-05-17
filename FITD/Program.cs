@@ -182,12 +182,6 @@ namespace FITDecompiler
             if (!Directory.Exists(output))
                 Directory.CreateDirectory(output);
 
-            if (includeRaw)
-            {
-                if (!Directory.Exists(output + "/raw"))
-                    Directory.CreateDirectory(output + "/raw");
-            }
-
             foreach (var script in f.Scripts)
             {
 #if DEBUG

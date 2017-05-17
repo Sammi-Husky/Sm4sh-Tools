@@ -248,7 +248,7 @@ namespace SALT.Scripting.MSC
                 switch (arg.Ident)
                 {
                     case 0x0A:
-                        parameters.Add($"\"{Target.File.Strings[(int)arg.Parameters[0]]}\"");
+                        parameters.Add(Decompile_0A(arg)/*$"\"{Target.File.Strings[(int)arg.Parameters[0]]}\""*/);
                         break;
                     case 0x0D:
                         parameters.Add($"\"{Target.File.Strings[(short)arg.Parameters[0]]}\"");
@@ -306,10 +306,10 @@ namespace SALT.Scripting.MSC
             {
                 str = $"func_{Target.File.Offsets.IndexOf((uint)(int)arg.Parameters[0])}";
             }
-            var parameters = new List<MSCCommand>();
+            var parameters = new List<string>();
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
             {
-                parameters.Add(COMMANDS.Pop());
+                parameters.Add(DecompileCMD(COMMANDS.Pop()));
             }
             var pStr = $"({string.Join(", ", parameters)})";
 

@@ -88,7 +88,7 @@ namespace SALT.Scripting.MSC
                     // Scripts
                     for (int i = 0; i < this.Offsets.Count; i++)
                     {
-                        this.Scripts.Add(this.Offsets[i], this.ParseScript(reader, this.Offsets[i] + HEADER_SIZE, this.Sizes[this.Offsets[i]]));
+                        this.Scripts.Add(this.Offsets[i], this.ParseScript(reader, this.Offsets[i], this.Sizes[this.Offsets[i]]));
                     }
 
                     // Strings
@@ -102,12 +102,12 @@ namespace SALT.Scripting.MSC
         public MSCScript ParseScript(BinaryReader reader, uint offset, int size)
         {
             MSCScript script = new MSCScript(Offsets.IndexOf(offset), offset) { File = this };
-            if (offset - HEADER_SIZE == EntryPoint)
+            if (offset == EntryPoint)
                 script.IsEntrypoint = true;
 
-            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+            reader.BaseStream.Seek(offset + HEADER_SIZE, SeekOrigin.Begin);
             uint ident;
-            while (reader.BaseStream.Position != offset + size)
+            while (reader.BaseStream.Position != offset + HEADER_SIZE + size)
             {
                 ident = reader.ReadByte();
                 var cmd = new MSCCommand(ident);

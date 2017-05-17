@@ -34,7 +34,7 @@ namespace SALT.Scripting.MSC
             }
         }
         public bool IsEntrypoint { get; set; }
-        public int ScriptIndex { get; set; }
+        public int ScriptIndex { get;  set; }
         public uint ScriptOffset { get; set; }
 
         public List<ICommand> Commands { get; set; }
@@ -54,7 +54,7 @@ namespace SALT.Scripting.MSC
             for (int i = 0; i < Commands.Count; i++)
             {
                 var cmd = Commands[i];
-                sb.Append((((MSCCommand)cmd).FileOffset - 0x30).ToString("X8") + "        " + cmd.ToString() + Environment.NewLine);
+                sb.Append((((MSCCommand)cmd).FileOffset).ToString("X8") + "        " + cmd.ToString() + Environment.NewLine);
             }
             return sb.ToString();
         }

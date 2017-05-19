@@ -93,6 +93,9 @@ namespace SALT.Scripting.MSC
                 case 0x13:
                     sb.Append(Decompile_13(cmd));
                     break;
+                case 0x16:
+                    sb.Append(Decompile_16(cmd));
+                    break;
                 case 0x1C:
                     sb.Append(Decompile_1C(cmd));
                     break;
@@ -175,7 +178,12 @@ namespace SALT.Scripting.MSC
             else
                 return "unk_13()";
         }
-
+        private string Decompile_16(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+            return $"{DecompileCMD(arg2)} & {DecompileCMD(arg1)}";
+        }
         private string Decompile_1C(MSCCommand cmd)
         {
             var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
@@ -476,6 +484,8 @@ namespace SALT.Scripting.MSC
             // traverse list in reverse order, consuming commands above them as needed.
             var cmd_reversed = new List<Tuple<int, MSCCommand>>(_commands);
             cmd_reversed.Reverse();
+
+
         }
         public bool RaisesScope(MSCCommand cmd)
         {

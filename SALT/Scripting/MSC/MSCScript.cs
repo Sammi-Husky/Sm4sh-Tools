@@ -50,12 +50,15 @@ namespace SALT.Scripting.MSC
 
         public string Deserialize()
         {
+            MSCAnalyzer an = new MSCAnalyzer(this);
+            an.Analyze_1();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < Commands.Count; i++)
             {
-                var cmd = Commands[i];
-                sb.Append((((MSCCommand)cmd).FileOffset).ToString("X8"));
-                if (((MSCCommand)cmd).Returns)
+                var cmd = (MSCCommand)Commands[i];
+                sb.Append(cmd.FileOffset.ToString("X8"));
+                sb.Append(" : " + (cmd.FileOffset - 0x30).ToString("X8"));
+                if (cmd.Returns)
                 {
                     sb.Append(" ->");
                     sb.Append("     " + cmd.ToString() + Environment.NewLine);

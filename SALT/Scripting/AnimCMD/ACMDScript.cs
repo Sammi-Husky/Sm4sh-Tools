@@ -253,7 +253,7 @@ namespace SALT.Scripting.AnimCMD
 
             lines.Add('\t' + this[i].ToString());
             lines.Add("}");
-            return ++i - startIndex;
+            return i - startIndex;
         }
         private int SerializeCommands(int index, uint ident, ref List<string> lines)
         {

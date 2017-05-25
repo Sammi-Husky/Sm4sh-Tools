@@ -99,19 +99,40 @@ namespace SALT.Scripting.MSC
                 case 0x1C:
                     sb.Append(Decompile_1C(cmd));
                     break;
+                case 0x1D:
+                    sb.Append(Decompile_1D(cmd));
+                    break;
+                case 0x1E:
+                    sb.Append(Decompile_1E(cmd));
+                    break;
+                case 0x1F:
+                    sb.Append(Decompile_1F(cmd));
+                    break;
+                case 0x23:
+                    sb.Append(Decompile_23(cmd));
+                    break;
+                case 0x25:
+                case 0x46:
+                    sb.Append(Decompile_25(cmd));
+                    break;
                 case 0x26:
+                case 0x47:
                     sb.Append(Decompile_26(cmd));
                     break;
                 case 0x27:
+                case 0x48:
                     sb.Append(Decompile_27(cmd));
                     break;
                 case 0x28:
+                case 0x49:
                     sb.Append(Decompile_28(cmd));
                     break;
                 case 0x29:
+                case 0x4A:
                     sb.Append(Decompile_29(cmd));
                     break;
                 case 0x2A:
+                case 0x4B:
                     sb.Append(Decompile_2A(cmd));
                     break;
                 case 0x2B:
@@ -129,6 +150,9 @@ namespace SALT.Scripting.MSC
                 case 0x2F:
                     sb.Append(Decompile_2F(cmd));
                     break;
+                case 0x30:
+                    sb.Append(Decompile_30(cmd));
+                    break;
                 case 0x31:
                     sb.Append(Decompile_31(cmd));
                     break;
@@ -140,6 +164,18 @@ namespace SALT.Scripting.MSC
                     break;
                 case 0x41:
                     sb.Append(Decompile_41(cmd));
+                    break;
+                case 0x42:
+                    sb.Append(Decompile_42(cmd));
+                    break;
+                case 0x43:
+                    sb.Append(Decompile_43(cmd));
+                    break;
+                case 0x44:
+                    sb.Append(Decompile_44(cmd));
+                    break;
+                case 0x45:
+                    sb.Append(Decompile_45(cmd));
                     break;
                 default:
                     sb.Append(cmd.ToString());
@@ -194,7 +230,25 @@ namespace SALT.Scripting.MSC
             else
                 return $"{text} = {DecompileCMD(arg)}";
         } // assign_var
-
+        private string Decompile_1D(MSCCommand cmd)
+        {
+            return $"variable_manipulation1({FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2])})";
+        }
+        private string Decompile_1E(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"variable_manipilation2({variable_str}, {DecompileCMD(COMMANDS.Pop())}";
+        }
+        private string Decompile_1F(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"variable_manipulation3({variable_str},{DecompileCMD(COMMANDS.Pop())})";
+        }
+        private string Decompile_23(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"variable_manipulation4({variable_str},{DecompileCMD(COMMANDS.Pop())})";
+        }
         //============== Comparisons ===============//
         private string Decompile_25(MSCCommand cmd)
         {
@@ -302,6 +356,10 @@ namespace SALT.Scripting.MSC
             //}
             //return $"func_{Target.File.Scripts.IndexOfKey((uint)(int)arg1.Parameters[0])}({string.Join(", ", parameters)})";
         } // same as 2D but always comes after 2F?
+        private string Decompile_30(MSCCommand cmd)
+        {
+            return Decompile_31(cmd);
+        }
         private string Decompile_31(MSCCommand cmd)
         {
             var arg = COMMANDS.Pop();
@@ -353,6 +411,38 @@ namespace SALT.Scripting.MSC
             return str;
         } // else
         private string Decompile_41(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            var arg = COMMANDS.Pop();
+
+
+            return $"{text} = {DecompileCMD(arg)}";
+        }
+        private string Decompile_42(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            var arg = COMMANDS.Pop();
+
+
+            return $"{text} = {DecompileCMD(arg)}";
+        }
+        private string Decompile_43(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            var arg = COMMANDS.Pop();
+
+
+            return $"{text} = {DecompileCMD(arg)}";
+        }
+        private string Decompile_44(MSCCommand cmd)
+        {
+            var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            var arg = COMMANDS.Pop();
+
+
+            return $"{text} = {DecompileCMD(arg)}";
+        }
+        private string Decompile_45(MSCCommand cmd)
         {
             var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
             var arg = COMMANDS.Pop();
@@ -444,7 +534,7 @@ namespace SALT.Scripting.MSC
 
         public MSCScript Target { get; set; }
         MSCCommandManager Manager { get; set; }
-        private readonly List<Tuple<int, MSCCommand>> _commands;
+        public readonly List<Tuple<int, MSCCommand>> _commands;
 
         // Phase 1, record each command's bracket scope.
         public void Analyze_1()
@@ -459,6 +549,7 @@ namespace SALT.Scripting.MSC
                 // Check if were at the end of the if block and
                 // manually break out of enclosing scope if this
                 // is an else command
+
                 if (cmd.FileOffset - 0x30 == scopeEnd || cmd.Ident == 0x36)
                 {
                     if (cmd.FileOffset - 0x30 == scopeEnd)
@@ -471,7 +562,7 @@ namespace SALT.Scripting.MSC
 
                 if (RaisesScope(cmd))
                 {
-                    scopeEnd = (int)cmd.Parameters[0];
+                    scopeEnd = (int)cmd.Parameters[0] - 4 - cmd.TotalSize;
                     i++;
                 }
             }

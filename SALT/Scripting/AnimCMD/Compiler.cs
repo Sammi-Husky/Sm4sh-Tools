@@ -284,8 +284,9 @@ namespace SALT.Scripting.AnimCMD
                 var cmd = Script.Commands[i];
                 var cmdIdent = cmd.Ident;
                 var cmdline = cmd.ToString();
-
-                if (HandleCommand(cmdIdent, i) == 0)
+                var it = HandleCommand(cmdIdent, i);
+                i += it; //This is to avoid repeating lines contained in the loop after the loop condition is closed
+                if (it == 0)
                 {
                     lines.Add(cmd.ToString() + '\n');
                 }
@@ -328,7 +329,7 @@ namespace SALT.Scripting.AnimCMD
             while ((cmd = Script.Commands[++index]).Ident != 0x38A3EC78)
             {
                 int amt = HandleCommand(Script[index].Ident, index);
-                handledCommands += amt;
+                handledCommands += amt+1;
                 if (amt == 0)
                 {
                     lines.Add($"{tabs}{cmd.ToString()}\n");
@@ -338,7 +339,7 @@ namespace SALT.Scripting.AnimCMD
             lines.Add($"{tabs}{cmd.ToString()}\n");
             tabs = tabs.Remove(0, 1);
             lines.Add($"{tabs}}}\n");
-            return handledCommands + 2;
+            return handledCommands+1;
         }
 
         //private static int HandleConditional(int index)

@@ -3,11 +3,11 @@ Sm4sh-Tools
 [Bug Tracker](http://www.github.com/sammi-husky/sm4sh-tools/issues) | [Request a feature or tool.](https://github.com/Sammi-Husky/Sm4sh-Tools/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) | [![Build status](https://ci.appveyor.com/api/projects/status/e6q6vbdgjs4eoop5?svg=true)](https://ci.appveyor.com/project/Sammi-Husky/sm4sh-tools)
 
 Miscellaneous tools for dealing with Smash 4 files.
-##Requirements##
+## Requirements
 - .NET Framework 4.0
 - Visual Studio 2015
 
-##Contents##
+## Contents
 - **[SM4SHCommand](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/SM4SHCommand)**
   - Aims to be a fully fledged moveset editor including features like syntax highlighting and a model/animation/hitbox previewer.
 
@@ -39,9 +39,9 @@ Miscellaneous tools for dealing with Smash 4 files.
   - Checkout the repo: `git checkout https://github.com/Sammi-Husky/Sm4sh-Tools.git`
   - Use the Solution file to build the projects.
   
-## Credits ##
+## Credits 
   - All code is Copyright (c) 2017 - Sammi Husky, unless otherwise stated in project READMEs
   - Some projects make use of Open Source components; See COPYING in the respective project's project directory for more information.
   
-## License ##
+## License 
   - For specific License information please refer to the LICENSE file in each project's project directory. If one does not exist, the code is licensed to the public domain.

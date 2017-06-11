@@ -5,185 +5,141 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Text;
+using SALT.Graphics;
 
 namespace xmbtests
 {
     class Program
     {
-        public static int count1;
-        public static int count2;
-        public static int count3;
-        public static int count4;
-
-        public static int strOffsets;
-        public static int entriesTable;
-        public static int fieldsTable;
-        public static int strTable1;
-        public static int strTable2;
-        public static int extraEntry;
-
-        public static List<string> strings1 = new List<string>();
-        public static List<string> strings2 = new List<string>();
-        public static List<XMBEntry> entries = new List<XMBEntry>();
-        public static List<string> expressions = new List<string>();
-
         static void Main(string[] args)
         {
             Console.WriteLine($"\n> XMBD v0.5 - Smash 4 xmb file dumper.\n" +
                    "> Licensed under the MIT License\n" +
                    "> Copyright(c) 2017 Sammi Husky\n");
 
-            string output = "output.txt";
-            if (args.Length == 2)
+            string output = "output.xms";
+            bool decomp = false;
+            bool recomp = false;
+            string target = "";
+            for (int i = 0; i < args.Length; i++)
             {
-                output = args[1];
-            }
-            else if (args.Length == 0 || args.Length > 2)
-            {
-                print_help();
-                return;
-            }
-
-            parseXMB(args[0]);
-            Console.WriteLine($">\t Decompiling {Path.GetFileName(args[0])}.. -> \"{output}\"");
-            outputTXT(output);
-        }
-
-        static void parseXMB(string filename)
-        {
-            List<XMBEntry> temp = new List<XMBEntry>();
-            using (var stream = File.Open(filename, FileMode.Open))
-            {
-                using (var reader = new BinaryReader(stream))
+                string arg = args[i];
+                if (arg.Equals("-o", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    stream.Seek(4, SeekOrigin.Begin);
-                    count1 = reader.ReadBint32();
-                    count2 = reader.ReadBint32();
-                    count3 = reader.ReadBint32();
-                    count4 = reader.ReadBint32();
-
-                    strOffsets = reader.ReadBint32();
-                    entriesTable = reader.ReadBint32();
-                    fieldsTable = reader.ReadBint32();
-                    extraEntry = reader.ReadBint32();
-                    strTable1 = reader.ReadBint32();
-                    strTable2 = reader.ReadBint32();
-
-                    for (int i = 0; i < count3; i++)
-                    {
-                        stream.Seek(strOffsets + i * 4, SeekOrigin.Begin);
-                        var stroff = reader.ReadBint32();
-                        stream.Seek(strTable1 + stroff, SeekOrigin.Begin);
-                        strings1.Add(reader.ReadStringNT());
-                    }
-                    for (int i = 0; i < count1; i++)
-                    {
-                        stream.Seek(entriesTable + i * 0x10, SeekOrigin.Begin);
-
-                        var entry = new XMBEntry();
-                        entry.NameOffset = reader.ReadBint32();
-                        entry.NumProperties = reader.ReadBuint16();
-                        entry.NumChildren = reader.ReadBuint16();
-                        entry.FirstPropertyIndex = reader.ReadBuint16();
-                        entry.unk1 = reader.ReadBuint16();
-                        entry.ParentIndex = reader.ReadBint16();
-                        entry.unk2 = reader.ReadBuint16();
-
-                        stream.Seek(strTable1 + entry.NameOffset, SeekOrigin.Begin);
-                        entry.Name = reader.ReadStringNT();
-                        temp.Add(entry);
-                    }
-                    for (int i = 0; i < count2; i++)
-                    {
-                        stream.Seek(fieldsTable + i * 8, SeekOrigin.Begin);
-                        var stroff1 = reader.ReadBint32();
-                        var stroff2 = reader.ReadBint32();
-                        var str = "";
-                        stream.Seek(strTable1 + stroff1, SeekOrigin.Begin);
-                        str += $"{reader.ReadStringNT()} = ";
-                        stream.Seek(strTable2 + stroff2, SeekOrigin.Begin);
-                        str += $"{reader.ReadStringNT()}";
-                        expressions.Add(str);
-                    }
-                    for (int x = 0; x < temp.Count; x++)
-                    {
-                        var entry = temp[x];
-                        if (entry.NumProperties > 0)
-                        {
-                            for (int i = 0; i < entry.NumProperties; i++)
-                            {
-                                entry.Expressions.Add(expressions[entry.FirstPropertyIndex + i]);
-                            }
-                        }
-                        if (entry.ParentIndex != -1)
-                        {
-                            for (int i = 0; i < temp[entry.ParentIndex + i].NumChildren; i++)
-                            {
-                                entry.depth = temp[entry.ParentIndex + i].depth + 1; // for indent stuff and things
-                                temp[entry.ParentIndex + i].Children.Add(entry);
-
-                            }
-                        }
-                        else
-                            entries.Add(entry);
-                    }
+                    output = args[++i];
+                }
+                else if (arg.EndsWith(".xms",StringComparison.InvariantCultureIgnoreCase))
+                {
+                    recomp = true;
+                    target = arg;
+                    output = Path.GetFileNameWithoutExtension(arg) + ".xmb";
+                }
+                else if (arg.EndsWith(".xmb", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    decomp = true;
+                    target = arg;
+                    output = Path.GetFileNameWithoutExtension(arg) + ".xms";
                 }
             }
-        }
-        static void outputTXT(string filename)
-        {
-            using (var writer = File.CreateText(filename))
+            if (decomp && !recomp)
             {
-                foreach (var entry in entries)
+                Console.WriteLine($">\t Decompiling {Path.GetFileName(target)}.. -> \"{output}\"");
+                XMBFile f = new XMBFile(target);
+                f.Deserialize(output);
+            }
+            else if(recomp)
+            {
+                Console.WriteLine($">\t Compiling {Path.GetFileName(target)}.. -> \"{output}\"");
+                XMBFile f = from_text(target);
+                //f.Export(output);
+
+            }
+        }
+        static XMBFile from_text(string filepath)
+        {
+            var file = new XMBFile();
+            using (var reader = File.OpenText(filepath))
+            {
+                List<XMBEntry> tmp = new List<XMBEntry>();
+                int index = 0;
+                while (!reader.EndOfStream)
                 {
-                    writer.Write(entry.deserialize());
+                    var line = reader.ReadLine().Trim();
+                    if (string.IsNullOrEmpty(line))
+                        continue;
+
+                    var entry = new XMBEntry();
+                    entry.Name = line.TrimEnd('{');
+                    entry.ParentIndex = -1;
+                    entry.Index = index;
+                    if (line.EndsWith("{") | reader.ReadLine().EndsWith("{"))
+                    {
+                        bool endScope = false;
+                        while (!endScope)
+                        {
+                            line = reader.ReadLine().Trim();
+                            if (string.IsNullOrEmpty(line) | line.EndsWith("{"))
+                                continue;
+
+                            if (line.Contains('='))
+                            {
+                                entry.Expressions.Add(line.Trim());
+                            }
+                            else if (line.EndsWith("}"))
+                            {
+                                endScope = true;
+                                continue;
+                            }
+                            else
+                            {
+                                var child = parse_entry(reader, line, ref index);
+                                child.ParentIndex = (short)entry.Index;
+                                entry.Children.Add(child);
+                            }
+                        }
+                    }
+                    file.Entries.Add(entry);
                 }
             }
+            return file;
+        }
+        static XMBEntry parse_entry(StreamReader reader, string name, ref int index)
+        {
+            index++;
+            int index2 = -1; // children indexes are relative to parent
+            var ret = new XMBEntry();
+            ret.Index = index;
+            ret.Name = name;
+
+            bool endScope = false;
+            while (!endScope)
+            {
+                var line = reader.ReadLine().Trim();
+                if (string.IsNullOrEmpty(line) | line.EndsWith("{"))
+                    continue;
+
+                if (line.Contains('='))
+                {
+                    ret.Expressions.Add(line.Trim());
+                }
+                else if (line.EndsWith("}"))
+                {
+                    endScope = true;
+                    continue;
+                }
+                else
+                {
+
+                    var child = parse_entry(reader, line, ref index2);
+                    child.ParentIndex = (short)ret.Index;
+                    ret.Children.Add(child);
+                }
+            }
+            return ret;
         }
         static void print_help()
         {
             Console.WriteLine("> XMBD [xmb file] [output file]");
-        }
-    }
-    public class XMBEntry
-    {
-        public XMBEntry()
-        {
-            Expressions = new List<string>();
-            Children = new List<XMBEntry>();
-        }
-        public string Name { get; set; }
-
-        public int NameOffset;
-        public ushort NumProperties;
-        public ushort NumChildren;
-        public ushort FirstPropertyIndex;
-        public ushort unk1;
-        public short ParentIndex;
-        public ushort unk2;
-
-        public int depth = 0;
-
-        public List<string> Expressions { get; set; }
-        public List<XMBEntry> Children { get; set; }
-
-        public string deserialize()
-        {
-            var sb = new StringBuilder();
-            var indent = "";
-            for (int i = 0; i < depth; i++)
-                indent += "\t";
-            sb.AppendLine($"{indent}{Name}:");
-            foreach (var e in Expressions)
-            {
-                sb.AppendLine($"{indent}\t{e}");
-            }
-            foreach (var child in Children)
-            {
-                sb.AppendLine($"{child.deserialize()}");
-            }
-
-            return sb.ToString();
         }
     }
 }

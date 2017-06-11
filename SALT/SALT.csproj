@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\PACFile.cs" />
+    <Compile Include="Graphics\XMBFile.cs" />
     <Compile Include="PARAMS\IParamCollection.cs" />
     <Compile Include="PARAMS\ParamEntry.cs" />
     <Compile Include="PARAMS\ParamGroup.cs" />
@@ -86,7 +87,11 @@
     <Compile Include="System\Type Extensions\UInt32Extension.cs" />
     <Compile Include="System\Type Extensions\VoidPtr.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Graphics\Animation\" />
+    <Folder Include="Graphics\Models\" />
+    <Folder Include="Graphics\Textures\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

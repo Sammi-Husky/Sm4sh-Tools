@@ -10,7 +10,7 @@ namespace SALT.Scripting.MSC
         #region Sizes
         public static Dictionary<uint, int> Sizes = new Dictionary<uint, int>()
         {
-	          {0x00, 0},
+	    {0x00, 0},
             {0x02, 4},
             {0x03, 0},
             {0x04, 4},
@@ -21,7 +21,7 @@ namespace SALT.Scripting.MSC
             {0x09, 0},
             {0x0a, 4},
             {0x0b, 3},
-	          {0x0c, 0},
+	    {0x0c, 0},
             {0x0d, 2},
             {0x0e, 0},
             {0x0f, 0},
@@ -36,16 +36,16 @@ namespace SALT.Scripting.MSC
             {0x18, 0},
             {0x19, 0},
             {0x1a, 0},
-	          {0x1b, 0},
+	    {0x1b, 0},
             {0x1c, 3},
             {0x1d, 3},
             {0x1e, 3},
             {0x1f, 3},
-	          {0x20, 3},
-	          {0x21, 3},
-	          {0x22, 3},
+	    {0x20, 3},
+	    {0x21, 3},
+	    {0x22, 3},
             {0x23, 3},
-	          {0x24, 3},
+	    {0x24, 3},
             {0x25, 0},
             {0x26, 0},
             {0x27, 0},
@@ -59,8 +59,8 @@ namespace SALT.Scripting.MSC
             {0x2f, 1},
             {0x30, 1},
             {0x31, 1},
-	          {0x32, 0},
-	          {0x33, 0},
+	    {0x32, 0},
+	    {0x33, 0},
             {0x34, 4},
             {0x35, 4},
             {0x36, 4},
@@ -72,8 +72,8 @@ namespace SALT.Scripting.MSC
             {0x3c, 0},
             {0x3d, 0},
             {0x3e, 0},
-	          {0x3f, 3},
-	          {0x40, 3},
+	    {0x3f, 3},
+	    {0x40, 3},
             {0x41, 3},
             {0x42, 3},
             {0x43, 3},
@@ -92,7 +92,7 @@ namespace SALT.Scripting.MSC
         #region Names
         public static Dictionary<uint, string> NAMES = new Dictionary<uint, string>()
         {
-	          {0x00, "nop"},
+	    {0x00, "nop"},
             {0x02, "BeginSub"},
             {0x03, "End"},
             {0x04, "jump4"},
@@ -103,7 +103,7 @@ namespace SALT.Scripting.MSC
             {0x09, "return9"},
             {0x0a, "pushInt"},
             {0x0b, "pushVar"},
-	          {0x0c, "assert"},
+	    {0x0c, "assert"},
             {0x0d, "pushShort"},
             {0x0e, "addi"},
             {0x0f, "subi"},
@@ -141,12 +141,12 @@ namespace SALT.Scripting.MSC
             {0x2f, "Call2"},
             {0x30, "call3"},
             {0x31, "Call4"},
-	          {0x32, "push"},
-	          {0x33, "pop"},
+	    {0x32, "push"},
+	    {0x33, "pop"},
             {0x34, "if"},
             {0x35, "ifNot"},
             {0x36, "else"},
-	          {0x37, "assert_37"}
+	    {0x37, "assert_37"}
             {0x38, "intToFloat"},
             {0x39, "floatToInt"},
             {0x3a, "addf"},
@@ -168,7 +168,7 @@ namespace SALT.Scripting.MSC
             {0x4a, "fEquals"},
             {0x4b, "fGreaterOrEqual"},
             {0x4c, "assert_4C"},
-	          {0x4d, "exit"}
+	    {0x4d, "exit"}
         };
         #endregion
         #region Params

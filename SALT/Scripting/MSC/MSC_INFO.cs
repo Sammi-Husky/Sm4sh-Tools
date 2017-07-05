@@ -103,7 +103,7 @@ namespace SALT.Scripting.MSC
             {0x09, "return9"},
             {0x0a, "pushInt"},
             {0x0b, "pushVar"},
-	    {0x0c, "assert"},
+	        {0x0c, "assert"},
             {0x0d, "pushShort"},
             {0x0e, "addi"},
             {0x0f, "subi"},
@@ -141,12 +141,12 @@ namespace SALT.Scripting.MSC
             {0x2f, "Call2"},
             {0x30, "call3"},
             {0x31, "Call4"},
-	    {0x32, "push"},
-	    {0x33, "pop"},
+	        {0x32, "push"},
+	        {0x33, "pop"},
             {0x34, "if"},
             {0x35, "ifNot"},
             {0x36, "else"},
-	    {0x37, "assert_37"}
+    	    {0x37, "assert_37"},
             {0x38, "intToFloat"},
             {0x39, "floatToInt"},
             {0x3a, "addf"},
@@ -168,7 +168,7 @@ namespace SALT.Scripting.MSC
             {0x4a, "fEquals"},
             {0x4b, "fGreaterOrEqual"},
             {0x4c, "assert_4C"},
-	    {0x4d, "exit"}
+	        {0x4d, "exit"}
         };
         #endregion
         #region Params
@@ -176,7 +176,7 @@ namespace SALT.Scripting.MSC
         #region Formats
         public static Dictionary<uint, string> FORMATS = new Dictionary<uint, string>()
         {
-            {0x00, string.Empty}
+            {0x00, string.Empty},
             {0x02, "B,B,B,B"},
             {0x03, string.Empty},
             {0x04, "I"},
@@ -187,7 +187,7 @@ namespace SALT.Scripting.MSC
             {0x09, string.Empty},
             {0x0a, "I"},
             {0x0b, "B,B,B"},
-            {0x0c, string.Empty}
+            {0x0c, string.Empty},
             {0x0d, "H"},
             {0x0e, string.Empty},
             {0x0f, string.Empty},
@@ -230,7 +230,7 @@ namespace SALT.Scripting.MSC
             {0x34, "I"},
             {0x35, "I"},
             {0x36, "I"},
-            {0x37, string.Empty}
+            {0x37, string.Empty},
             {0x38, "B"},
             {0x39, "B"},
             {0x3a, string.Empty},
@@ -239,7 +239,7 @@ namespace SALT.Scripting.MSC
             {0x3d, string.Empty},
             {0x3e, string.Empty},
             {0x3f, "B,B,B"},
-            {0x40, "B,B,B"}
+            {0x40, "B,B,B"},
             {0x41, "B,B,B"},
             {0x42, "B,B,B"},
             {0x43, "B,B,B"},

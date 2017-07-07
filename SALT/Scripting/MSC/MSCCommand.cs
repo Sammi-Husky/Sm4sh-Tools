@@ -52,7 +52,6 @@ namespace SALT.Scripting.MSC
             }
         }
         public List<object> Parameters { get; set; }
-        public string[] ParamSyntax { get { return MSC_INFO.SYNTAX[this.Ident].Split(','); } }
         public string[] ParamSpecifiers { get { return MSC_INFO.FORMATS[this.Ident].Split(','); } }
 
         public byte[] GetBytes(System.IO.Endianness endian)

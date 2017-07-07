@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XMBEditor")]
+[assembly: AssemblyTitle("mscsb-ds")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("XMBEditor")]
+[assembly: AssemblyProduct("mscsb-ds")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("60354c92-149f-43fe-b70d-20bd11b8b81f")]
+[assembly: Guid("cf600f70-8e64-4b2e-84d7-32f4538d3a69")]
 
 // Version information for an assembly consists of the following four values:
 //

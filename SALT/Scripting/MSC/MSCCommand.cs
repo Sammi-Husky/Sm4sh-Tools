@@ -21,12 +21,18 @@ namespace SALT.Scripting.MSC
         public bool Returns { get { return (Raw & 0x80) > 0; } set { Raw ^= (uint)(value ? 0x80 : 0); } }
         public int FileOffset { get; set; }
         public string Name { get { return MSC_INFO.NAMES[this.Ident]; } }
-        public int Size { get { return MSC_INFO.Sizes[this.Ident]; } }
+        public int Size
+        {
+            get
+            {
+                return TotalSize;
+            }
+        }
         public int TotalSize
         {
             get
             {
-                int size = Size;
+                int size = 0;
                 foreach (var s in ParamSpecifiers)
                 {
                     switch (s)

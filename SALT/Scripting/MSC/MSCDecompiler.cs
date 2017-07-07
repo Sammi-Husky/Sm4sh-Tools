@@ -112,27 +112,21 @@ namespace SALT.Scripting.MSC
                     sb.Append(Decompile_23(cmd));
                     break;
                 case 0x25:
-                case 0x46:
                     sb.Append(Decompile_25(cmd));
                     break;
                 case 0x26:
-                case 0x47:
                     sb.Append(Decompile_26(cmd));
                     break;
                 case 0x27:
-                case 0x48:
                     sb.Append(Decompile_27(cmd));
                     break;
                 case 0x28:
-                case 0x49:
                     sb.Append(Decompile_28(cmd));
                     break;
                 case 0x29:
-                case 0x4A:
                     sb.Append(Decompile_29(cmd));
                     break;
                 case 0x2A:
-                case 0x4B:
                     sb.Append(Decompile_2A(cmd));
                     break;
                 case 0x2B:
@@ -176,6 +170,24 @@ namespace SALT.Scripting.MSC
                     break;
                 case 0x45:
                     sb.Append(Decompile_45(cmd));
+                    break;
+                case 0x46:
+                    sb.Append(Decompile_46(cmd));
+                    break;
+                case 0x47:
+                    sb.Append(Decompile_47(cmd));
+                    break;
+                case 0x48:
+                    sb.Append(Decompile_48(cmd));
+                    break;
+                case 0x49:
+                    sb.Append(Decompile_49(cmd));
+                    break;
+                case 0x4a:
+                    sb.Append(Decompile_4a(cmd));
+                    break;
+                case 0x4b:
+                    sb.Append(Decompile_4b(cmd));
                     break;
                 default:
                     sb.Append(cmd.ToString());
@@ -450,6 +462,49 @@ namespace SALT.Scripting.MSC
 
             return $"{text} = {DecompileCMD(arg)}";
         }
+        private string Decompile_46(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} > {DecompileCMD(arg1)}";
+        } // greater
+        private string Decompile_47(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} <= {DecompileCMD(arg1)}";
+        } // less or equal
+        private string Decompile_48(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} < {DecompileCMD(arg1)}";
+        } // less
+        private string Decompile_49(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} != {DecompileCMD(arg1)}";
+        } // not equal
+        private string Decompile_4a(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            var str = DecompileCMD(arg1);
+            return $"{DecompileCMD(arg2)} == {DecompileCMD(arg1)}";
+        } // not equal
+        private string Decompile_4b(MSCCommand cmd)
+        {
+            var arg1 = COMMANDS.Pop();
+            var arg2 = COMMANDS.Pop();
+
+            return $"{DecompileCMD(arg2)} >= {DecompileCMD(arg1)}";
+        } // not equal
         #endregion
 
         #region CMD Analyzers

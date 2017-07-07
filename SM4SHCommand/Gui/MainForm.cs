@@ -150,7 +150,7 @@ namespace Sm4shCommand
                     var node = new TreeNode("MSC") { Name = "nMSC" };
                     for (int i = 0; i < f.Scripts.Count; i++)
                     {
-                        var sn = new ScriptNode((uint)i, $"{i:X8}", f.Scripts.Values[i]);
+                        var sn = new ScriptNode((uint)i, $"{i:D8}", f.Scripts.Values[i]);
                         if (((MSCScript)f.Scripts.Values[i]).IsEntrypoint)
                             sn.Text = "Entrypoint";
                         else if (i == 0)

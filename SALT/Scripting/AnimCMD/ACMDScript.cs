@@ -289,8 +289,10 @@ namespace SALT.Moveset.AnimCMD
                 if (ParseCMD(lines[Index + 1]).Ident == 0x895B9275 && cmd.Ident == 0xA5BD4F32)
                 {
                     ACMDCommand tmp = this.ParseCMD(lines[++Index]);
-                    this[this.IndexOf(cmd)].Parameters[0] = len + tmp.Size / 4;
-                    this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                    len += tmp.Size / 4;
+                    this[this.IndexOf(cmd)].Parameters[0] = len;
+                    len -= tmp.Size / 4;
+                    len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
                 }
             }
             else
@@ -310,13 +312,19 @@ namespace SALT.Moveset.AnimCMD
             while (this.ParseCMD(lines[++Index]).Ident != 0x38A3EC78)
             {
                 ACMDCommand tmp = this.ParseCMD(lines[Index]);
-                len += (tmp.Size / 4);
-                len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
-                this.Add(tmp);
+                if (IsCmdHandled(tmp.Ident))
+                {
+                    len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                }
+                else
+                {
+                    len += (tmp.Size / 4);
+                    this.Add(tmp);
+                }
             }
 
             ACMDCommand endLoop = this.ParseCMD(lines[Index]);
-            endLoop.Parameters[0] = len / -1;
+            endLoop.Parameters[0] = (len - 2) / -1;
             this.Add(endLoop);
 
             while (lines[Index+1].Trim() == "}")

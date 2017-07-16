@@ -251,23 +251,33 @@ namespace SALT.Moveset.AnimCMD
         private static int CompileLoop(ref int Index, ref List<string> lines)
         {
             Commands.Add(CompileSingleCommand(lines[Index]));
+
             decimal len = 0;
             while (CompileSingleCommand(lines[++Index]).Ident != 0x38A3EC78)
             {
                 ACMDCommand tmp = CompileSingleCommand(lines[Index]);
-                len += (tmp.Size / 4);
-                len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
-                Commands.Add(tmp);
+                if (IsCmdHandled(tmp.Ident))
+                {
+                    len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                }
+                else
+                {
+                    len += (tmp.Size / 4);
+                    Commands.Add(tmp);
+                }
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);
-            endLoop.Parameters[0] = len / -1;
+
+            // since we jump backwards here, don't count the begin_loop command
+            // in calculating the offset.
+            endLoop.Parameters[0] = (len - 2) / -1;
             Commands.Add(endLoop);
 
-            // Eat brackets
             while (lines[Index + 1].Trim() == "}")
                 Index++;
 
+            // Next line should be closing bracket, ignore and skip it
             return (int)len;
         }
 

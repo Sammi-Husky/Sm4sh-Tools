@@ -29,7 +29,7 @@ Miscellaneous tools for dealing with Smash 4 files.
   - Editor used to open / edit / view smash 4's param files. 
   - Due to the way the game handles param files, it's near impossible to fully rebuild or properly display some files. However, around 80%+ or more of them will work fine. Includes standard templates used to label entries. (right click a group to open the file and apply lables to all entries in a group)
 
-- **FITX ([FITD](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/FITD)/[FITC](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/FITC))**
+- **[FITX](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/FITX)**
   - Smash 4 Fighter (de)compiler platform. Decompiles and recompiles ACMD scripts into plaintext .acm files which can be edited with any text editor and recompiled for either 3ds (little endian) or WiiU (big endian, default).
   
 - **[XMBDump](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/XMBDump)**

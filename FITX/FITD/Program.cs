@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SALT.Scripting.AnimCMD;
+using SALT.Moveset.AnimCMD;
 using System.IO;
-using SALT.Scripting.MSC;
+using SALT.Moveset.MSC;
 using SALT.PARAMS;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
@@ -20,7 +20,7 @@ namespace FITDecompiler
 
             Console.WriteLine($"\n> FITD v0.77 - Smash 4 Fighter Decompiler\n" +
                                "> Licensed under the MIT License\n" +
-                               "> Copyright(c) 2016 Sammi Husky\n");
+                               "> Copyright(c) 2017 Sammi Husky\n");
 
             string target = "";
             string motion = "";
@@ -102,7 +102,7 @@ namespace FITDecompiler
                               "> \t-o: Sets the aplication output directory\n" +
                               "> \t-e: Overrides the internal event dictionary with specified events file" +
                               "> \t-m: Sets animation folder for parsing animation names\n" +
-                              "> \t-h --help: Displays this help message" +
+                              "> \t-h --help: Displays this help message\n" +
                               "> \t--raw: Also decompile MSC to raw commands in addition to intelligent decompilation");
         }
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Sm4shCommand.Classes;
-using SALT.Scripting;
+using SALT.Moveset;
 
 namespace Sm4shCommand.Nodes
 {

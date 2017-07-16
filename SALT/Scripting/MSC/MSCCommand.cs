@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SALT.Scripting.MSC
+namespace SALT.Moveset.MSC
 {
     public class MSCCommand : ICommand
     {
@@ -88,6 +88,16 @@ namespace SALT.Scripting.MSC
                 str += $"unk_{this.Raw:X}";
             else
                 str = this.Name;
+
+            if (this.Returns)
+                str += ".";
+            
+            var str2 = $"\t{string.Join(", ", GetParamsAsString())}";
+            
+            return string.Format("{0,-10} {1,-10}", str, str2);
+        }
+        public string[] GetParamsAsString()
+        {
             List<string> tmp = new List<string>();
             for (int i = 0; i < this.ParamSpecifiers.Length; i++)
             {
@@ -99,9 +109,7 @@ namespace SALT.Scripting.MSC
                 else if (this.ParamSpecifiers[i] == "H")
                     tmp.Add("0x" + ((short)this.Parameters[i]).ToString("X"));
             }
-
-            str += $"({string.Join(",", tmp)})";
-            return str;
+            return tmp.ToArray();
         }
     }
 }

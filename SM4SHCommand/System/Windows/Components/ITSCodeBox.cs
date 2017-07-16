@@ -1,11 +1,11 @@
 ﻿using FastColoredTextBoxNS;
-using SALT.Scripting.AnimCMD;
+using SALT.Moveset.AnimCMD;
 using Sm4shCommand.Classes;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SALT.Scripting;
+using SALT.Moveset;
 
 namespace Sm4shCommand
 {
@@ -42,7 +42,7 @@ namespace Sm4shCommand
                 this.AutoIndent = true;
             }
         }
-        public ITS_EDITOR(SALT.Scripting.MSC.MSCScript script, bool legacy):this()
+        public ITS_EDITOR(SALT.Moveset.MSC.MSCScript script, bool legacy) : this()
         {
             Script = script;
             if (legacy)
@@ -53,11 +53,7 @@ namespace Sm4shCommand
         public IScript Script { get; set; }
         public void ApplyChanges()
         {
-            try
-            {
-                Script.Serialize(Text);
-            }
-            catch {; }
+            Script.Serialize(Text);
         }
         private void NewBox_TextChanged(object sender, TextChangedEventArgs e)
         {

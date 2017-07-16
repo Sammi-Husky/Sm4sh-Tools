@@ -3,13 +3,14 @@
 
 using System.Collections.Generic;
 
-namespace SALT.Scripting
+namespace SALT.Moveset
 {
     public interface ICommand
     {
         List<object> Parameters { get; set; }
         uint Ident { get; set; }
         int Size { get; }
+        string Name { get; }
 
         string ToString();
         byte[] GetBytes(System.IO.Endianness endian);

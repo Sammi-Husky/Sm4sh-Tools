@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SALT.Scripting.MSC
+namespace SALT.Moveset.MSC
 {
     public class MSCScript : IEnumerable<ICommand>, IScript
     {

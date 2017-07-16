@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SALT.Scripting.AnimCMD;
+using SALT.Moveset.AnimCMD;
 using System.IO;
-using SALT.Scripting;
+using SALT.Moveset;
 using SALT.PARAMS;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;

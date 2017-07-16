@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace SALT.Scripting
+namespace SALT.Moveset
 {
     public interface IScript : IEnumerable<ICommand>
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SALT.Scripting.MSC
+namespace SALT.Moveset.MSC
 {
     public class MSCDecompiler
     {
@@ -38,27 +38,17 @@ namespace SALT.Scripting.MSC
                 while (INDENT_STACK.Contains(cmd.FileOffset - 0x30))
                 {
                     INDENT_STACK.Remove(cmd.FileOffset - 0x30);
-                    foreach (int off in INDENT_STACK)
-                        sb.Append("   ");
-
-                    sb.Append("}\n");
+                    sb.Append(DoIndent("}\n"));
                 }
 
                 // If the command is passed to the next add it to the assignment stack
-                if (Manager.Position != script.Count &&
-                    cmd.Ident == 0x0A && Manager.PeekNext().Ident == 0x36)
-                {
-                    sb.Append(DoIndent(cmd.ToString()) + "\n");
-                    continue;
-
-                }
-                else if (cmd.Returns)
+                if (cmd.Returns)
                 {
                     COMMANDS.Push(cmd);
                     continue;
                 }
 
-                sb.Append(DecompileCMD(cmd)/*.TrimEnd() + $" \t// 0x{cmd.FileOffset - 0x30:X}*/+ "\n");
+                sb.Append(DecompileCMD(cmd)+ "\n");
 
             }
             return sb.ToString();
@@ -307,7 +297,7 @@ namespace SALT.Scripting.MSC
         private string Decompile_2B(MSCCommand cmd)
         {
             var arg = COMMANDS.Pop();
-            return $"{DecompileCMD(arg)}";
+            return $"{DecompileCMD(arg)} == 0";
         } // true
 
         //============== Functions? ================//
@@ -413,11 +403,10 @@ namespace SALT.Scripting.MSC
         } // if
         private string Decompile_36(MSCCommand cmd)
         {
-            var str = $"{DoIndent("}\n")}";
+            var str = "";
 
-            if (INDENT_STACK.Contains(cmd.FileOffset - 0x30))
-                INDENT_STACK.Remove(cmd.FileOffset - 0x30);
-
+            INDENT_STACK.RemoveAt(INDENT_STACK.Count-1);
+            //str += DoIndent("}\n");
             str += $"{DoIndent("else\n")}{DoIndent("{")}";
             INDENT_STACK.Add((int)cmd.Parameters[0]);
             return str;
@@ -466,44 +455,49 @@ namespace SALT.Scripting.MSC
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            return $"{DecompileCMD(arg2)} > {DecompileCMD(arg1)}";
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} > {f}";
         } // greater
         private string Decompile_47(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            return $"{DecompileCMD(arg2)} <= {DecompileCMD(arg1)}";
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} <= {f}";
         } // less or equal
         private string Decompile_48(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            return $"{DecompileCMD(arg2)} < {DecompileCMD(arg1)}";
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} < {f}";
         } // less
         private string Decompile_49(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            return $"{DecompileCMD(arg2)} != {DecompileCMD(arg1)}";
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} != {f}";
         } // not equal
         private string Decompile_4a(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            var str = DecompileCMD(arg1);
-            return $"{DecompileCMD(arg2)} == {DecompileCMD(arg1)}";
-        } // not equal
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} == {f}";
+        } // equal
         private string Decompile_4b(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
-
-            return $"{DecompileCMD(arg2)} >= {DecompileCMD(arg1)}";
+            var val = BitConverter.GetBytes(int.Parse(DecompileCMD(arg1).Substring(2), System.Globalization.NumberStyles.HexNumber));
+            var f = BitConverter.ToSingle(val, 0);
+            return $"{DecompileCMD(arg2)} >= {f}";
         } // not equal
         #endregion
 

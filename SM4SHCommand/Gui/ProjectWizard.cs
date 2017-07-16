@@ -1,6 +1,6 @@
 ﻿using SALT.PARAMS;
-using SALT.Scripting.AnimCMD;
-using SALT.Scripting.MSC;
+using SALT.Moveset.AnimCMD;
+using SALT.Moveset.MSC;
 using System;
 using System.Data;
 using System.IO;

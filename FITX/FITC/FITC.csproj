@@ -51,7 +51,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SALT\SALT.csproj">
+    <ProjectReference Include="..\..\SALT\SALT.csproj">
       <Project>{90cbd9ab-41e3-4868-9632-f894f5bf5b26}</Project>
       <Name>SALT</Name>
     </ProjectReference>

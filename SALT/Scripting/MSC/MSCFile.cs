@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SALT.Scripting.MSC
+namespace SALT.Moveset.MSC
 {
     public class MSCFile : IScriptCollection
     {
@@ -75,14 +75,16 @@ namespace SALT.Scripting.MSC
                     stream.Seek(baseAddr, SeekOrigin.Begin);
                     for (int i = 0; i < this.EntryCount; i++)
                         this.Offsets.Add(reader.ReadUInt32());
-                    this.Offsets.Sort();
 
-                    for (int i = 0; i < this.Offsets.Count; i++)
+                    List<uint> sortedOffs = new List<uint>(Offsets);
+                    sortedOffs.Sort();
+
+                    for (int i = 0; i < sortedOffs.Count; i++)
                     {
-                        if (i + 1 != this.Offsets.Count)
-                            this.Sizes.Add(this.Offsets[i], (int)(this.Offsets[i + 1] - this.Offsets[i]));
+                        if (i + 1 != sortedOffs.Count)
+                            this.Sizes.Add(sortedOffs[i], (int)(sortedOffs[i + 1] - sortedOffs[i]));
                         else
-                            this.Sizes.Add(this.Offsets[i], (int)(this.EntryOffsets - this.Offsets[i]));
+                            this.Sizes.Add(sortedOffs[i], (int)(this.EntryOffsets - sortedOffs[i]));
                     }
 
                     // Scripts

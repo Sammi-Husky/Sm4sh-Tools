@@ -8,10 +8,10 @@ using System.IO;
 using System.Windows.Forms;
 using static Sm4shCommand.Runtime;
 using SALT.PARAMS;
-using SALT.Scripting;
-using SALT.Scripting.AnimCMD;
+using SALT.Moveset;
+using SALT.Moveset.AnimCMD;
 using System.ComponentModel;
-using SALT.Scripting.MSC;
+using SALT.Moveset.MSC;
 
 namespace Sm4shCommand
 {

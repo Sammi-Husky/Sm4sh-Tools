@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace SALT.Scripting.AnimCMD
+namespace SALT.Moveset.AnimCMD
 {
     public class ACMDCommand : ICommand
     {

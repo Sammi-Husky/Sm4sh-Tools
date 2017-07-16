@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace SALT.Scripting.MSC
+namespace SALT.Moveset.MSC
 {
     public static class MSC_INFO
     {

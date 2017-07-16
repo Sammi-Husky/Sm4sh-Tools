@@ -7,7 +7,7 @@ using System.Linq;
 using System.IO;
 using System.Collections;
 
-namespace SALT.Scripting.AnimCMD
+namespace SALT.Moveset.AnimCMD
 {
     public unsafe class ACMDScript : IEnumerable<ICommand>, IScript
     {
@@ -165,10 +165,8 @@ namespace SALT.Scripting.AnimCMD
                 uint ident = cmd.Ident;
 
 
-                int amt = 0;
-                if ((amt = this.SerializeCommands(i, ident, ref lines)) > 0)
+                if (this.SerializeCommands(ref i, ident, ref lines) > 0)
                 {
-                    i += amt;
                     continue;
                 }
                 else
@@ -198,6 +196,7 @@ namespace SALT.Scripting.AnimCMD
             int i = startIndex;
 
             string str = this[startIndex].ToString();
+
             int len = (int)this[startIndex].Parameters[0] - 2;
             lines.Add($"{str}{{");
             int count = 0;
@@ -255,55 +254,78 @@ namespace SALT.Scripting.AnimCMD
             lines.Add("}");
             return i - startIndex;
         }
-        private int SerializeCommands(int index, uint ident, ref List<string> lines)
+        private int SerializeCommands(ref int index, uint ident, ref List<string> lines)
         {
             if (IsCmdConditional(ident))
-                return this.SerializeConditional(index, ref lines);
+                return this.SerializeConditional(ref index, ref lines);
             else if (ident == 0x0EB375E3)
-                return this.SerializeLoop(index, ref lines);
+                return this.SerializeLoop(ref index, ref lines);
             else
                 return 0;
         }
 
-        private int SerializeConditional(int startIndex, ref List<string> lines)
+        private int SerializeConditional(ref int Index, ref List<string> lines)
         {
-            ACMDCommand cmd = this.ParseCMD(lines[startIndex]);
-            int i = startIndex;
+            ACMDCommand cmd = this.ParseCMD(lines[Index]);
             int len = 2;
             this.Add(cmd);
-            while (lines[++i].Trim() != "}")
+
+            while (lines[++Index].Trim() != "}")
             {
-                ACMDCommand tmp = this.ParseCMD(lines[i]);
-                len += tmp.Size / 4;
+                ACMDCommand tmp = this.ParseCMD(lines[Index]);
                 if (this.IsCmdHandled(tmp.Ident))
-                    i += this.SerializeCommands(i, tmp.Ident, ref lines);
+                {
+                    len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                }
                 else
+                {
+                    len += tmp.Size / 4;
                     this.Add(tmp);
+                }
+            }
+            // if current command is TRUE and the next command after the bracket
+            // is a false, include it in the jump calculation so we skip it.
+            //while (lines[Index].Trim().StartsWith("}"))
+            //{
+            //    Index++;
+            //}
+            if (lines[Index + 1] != "}")
+            {
+                if (ParseCMD(lines[Index + 1]).Ident == 0x895B9275 && cmd.Ident == 0xA5BD4F32)
+                {
+                    ACMDCommand tmp = this.ParseCMD(lines[++Index]);
+                    this[this.IndexOf(cmd)].Parameters[0] = len + tmp.Size / 4;
+                    this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                }
+            }
+            else
+            {
+                this[this.IndexOf(cmd)].Parameters[0] = len;
             }
 
-            this[this.IndexOf(cmd)].Parameters[0] = len;
             // Next line should be closing bracket, ignore and skip it
-            return i - startIndex;
+            return len;
         }
 
-        private int SerializeLoop(int index, ref List<string> lines)
+        private int SerializeLoop(ref int Index, ref List<string> lines)
         {
-            int i = index;
-            this.Add(this.ParseCMD(lines[i]));
+            this.Add(this.ParseCMD(lines[Index]));
+
             decimal len = 0;
-            while (this.ParseCMD(lines[++i]).Ident != 0x38A3EC78)
+            while (this.ParseCMD(lines[++Index]).Ident != 0x38A3EC78)
             {
-                ACMDCommand tmp = this.ParseCMD(lines[i]);
+                ACMDCommand tmp = this.ParseCMD(lines[Index]);
                 len += (tmp.Size / 4);
-                i += this.SerializeCommands(i, tmp.Ident, ref lines);
+                len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
                 this.Add(tmp);
             }
 
-            ACMDCommand endLoop = this.ParseCMD(lines[i]);
+            ACMDCommand endLoop = this.ParseCMD(lines[Index]);
             endLoop.Parameters[0] = len / -1;
             this.Add(endLoop);
+
             // Next line should be closing bracket, ignore and skip it
-            return ++i - index;
+            return (int)len;
         }
 
         private ACMDCommand ParseCMD(string line)

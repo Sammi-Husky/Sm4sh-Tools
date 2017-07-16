@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.IO;
 
-namespace SALT.Scripting.AnimCMD
+namespace SALT.Moveset.AnimCMD
 {
     /// <summary>
     /// Animation name CRC table.

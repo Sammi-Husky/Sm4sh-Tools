@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace SALT.Scripting.AnimCMD
+namespace SALT.Moveset.AnimCMD
 {
     public static class ACMDCompiler
     {

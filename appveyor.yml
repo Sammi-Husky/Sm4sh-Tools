@@ -29,10 +29,10 @@ after_build:
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\SM4SHCommand\bin\Release\*.txt
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\XMBDump\bin\Release\*.dll
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\XMBDump\bin\Release\XMBDump.exe
-  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITD\bin\Release\*.dll
-  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITD\bin\Release\FITD.exe
-  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITC\bin\Release\*.dll
-  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITC\bin\Release\FITC.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITX\FITD\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITX\FITD\bin\Release\FITD.exe
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITX\FITC\bin\Release\*.dll
+  - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\FITX\FITC\bin\Release\FITC.exe
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PARAM\bin\Release\PARAM.exe
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\PARAM\bin\Release\*.dll
   - 7z a SM4SHTOOLS-Latest.zip %APPVEYOR_BUILD_FOLDER%\DTLS\bin\Release\DTLS.exe

@@ -157,7 +157,7 @@ namespace SALT.Moveset.AnimCMD
         /// <returns></returns>
         public static ACMDCommand[] CompileCommands(string[] lines)
         {
-            var tmpList = lines.ToList();
+            var tmpList = lines.ToList().Select(x => x.Trim()).ToList();
             tmpList.RemoveAll(x => string.IsNullOrWhiteSpace(x));
             Commands.Clear();
             for (int i = 0; i < tmpList.Count; i++)
@@ -183,11 +183,8 @@ namespace SALT.Moveset.AnimCMD
                 ACMDCommand cmd = CompileSingleCommand(tmpList[i]);
                 uint ident = cmd.Ident;
 
-
-                int amt = 0;
-                if ((amt = HandleSpecialCommands(i, ident, ref tmpList)) > 0)
+                if (HandleSpecialCommands(ref i, ident, ref tmpList) > 0)
                 {
-                    i += amt;
                     continue;
                 }
                 else
@@ -198,60 +195,80 @@ namespace SALT.Moveset.AnimCMD
             return Commands.ToArray();
         }
 
-        private static int HandleSpecialCommands(int index, uint ident, ref List<string> lines)
+        private static int HandleSpecialCommands(ref int index, uint ident, ref List<string> lines)
         {
             switch (ident)
             {
                 case 0xA5BD4F32:
                 case 0x895B9275:
                 case 0x870CF021:
-                    return CompileConditional(index, ref lines);
+                    return CompileConditional(ref index, ref lines);
                 case 0x0EB375E3:
-                    return CompileLoop(index, ref lines);
+                    return CompileLoop(ref index, ref lines);
             }
 
             return 0;
         }
 
-        private static int CompileConditional(int startIndex, ref List<string> lines)
+        private static int CompileConditional(ref int Index, ref List<string> lines)
         {
-            ACMDCommand cmd = CompileSingleCommand(lines[startIndex]);
-            int i = startIndex;
+            ACMDCommand cmd = CompileSingleCommand(lines[Index]);
             int len = 2;
             Commands.Add(cmd);
-            while (lines[++i].Trim() != "}")
+
+            while (lines[++Index].Trim() != "}")
             {
-                ACMDCommand tmp = CompileSingleCommand(lines[i]);
-                len += tmp.Size / 4;
+                ACMDCommand tmp = CompileSingleCommand(lines[Index]);
                 if (IsCmdHandled(tmp.Ident))
-                    i += HandleSpecialCommands(i, tmp.Ident, ref lines);
+                {
+                    len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                }
                 else
+                {
+                    len += tmp.Size / 4;
                     Commands.Add(tmp);
+                }
             }
 
-            Commands[Commands.IndexOf(cmd)].Parameters[0] = len;
+            if (lines[Index + 1] != "}")
+            {
+                if (CompileSingleCommand(lines[Index + 1]).Ident == 0x895B9275 && cmd.Ident == 0xA5BD4F32)
+                {
+                    ACMDCommand tmp = CompileSingleCommand(lines[++Index]);
+                    Commands[Commands.IndexOf(cmd)].Parameters[0] = len + tmp.Size / 4;
+                    HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                }
+            }
+            else
+            {
+                Commands[Commands.IndexOf(cmd)].Parameters[0] = len;
+            }
+
             // Next line should be closing bracket, ignore and skip it
-            return i - startIndex;
+            return len;
         }
 
-        private static int CompileLoop(int index, ref List<string> lines)
+        private static int CompileLoop(ref int Index, ref List<string> lines)
         {
-            int i = index;
-            Commands.Add(CompileSingleCommand(lines[i]));
+            Commands.Add(CompileSingleCommand(lines[Index]));
             decimal len = 0;
-            while (CompileSingleCommand(lines[++i]).Ident != 0x38A3EC78)
+            while (CompileSingleCommand(lines[++Index]).Ident != 0x38A3EC78)
             {
-                ACMDCommand tmp = CompileSingleCommand(lines[i]);
+                ACMDCommand tmp = CompileSingleCommand(lines[Index]);
                 len += (tmp.Size / 4);
-                i += HandleSpecialCommands(i, tmp.Ident, ref lines);
+                len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
                 Commands.Add(tmp);
             }
 
-            ACMDCommand endLoop = CompileSingleCommand(lines[i]);
+            ACMDCommand endLoop = CompileSingleCommand(lines[Index]);
             endLoop.Parameters[0] = len / -1;
             Commands.Add(endLoop);
-            // Next line should be closing bracket, ignore and skip it
-            return ++i - index;
+
+            // Eat brackets
+            while (lines[Index + 1].Trim() == "}")
+                Index++;
+
+            return (int)len;
         }
 
         private static bool IsCmdHandled(uint ident)
@@ -329,7 +346,7 @@ namespace SALT.Moveset.AnimCMD
             while ((cmd = Script.Commands[++index]).Ident != 0x38A3EC78)
             {
                 int amt = HandleCommand(Script[index].Ident, index);
-                handledCommands += amt+1;
+                handledCommands += amt + 1;
                 if (amt == 0)
                 {
                     lines.Add($"{tabs}{cmd.ToString()}\n");
@@ -339,7 +356,7 @@ namespace SALT.Moveset.AnimCMD
             lines.Add($"{tabs}{cmd.ToString()}\n");
             tabs = tabs.Remove(0, 1);
             lines.Add($"{tabs}}}\n");
-            return handledCommands+1;
+            return handledCommands + 1;
         }
 
         //private static int HandleConditional(int index)

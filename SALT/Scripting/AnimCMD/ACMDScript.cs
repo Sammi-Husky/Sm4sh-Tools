@@ -283,12 +283,7 @@ namespace SALT.Moveset.AnimCMD
                     this.Add(tmp);
                 }
             }
-            // if current command is TRUE and the next command after the bracket
-            // is a false, include it in the jump calculation so we skip it.
-            //while (lines[Index].Trim().StartsWith("}"))
-            //{
-            //    Index++;
-            //}
+
             if (lines[Index + 1] != "}")
             {
                 if (ParseCMD(lines[Index + 1]).Ident == 0x895B9275 && cmd.Ident == 0xA5BD4F32)
@@ -323,6 +318,9 @@ namespace SALT.Moveset.AnimCMD
             ACMDCommand endLoop = this.ParseCMD(lines[Index]);
             endLoop.Parameters[0] = len / -1;
             this.Add(endLoop);
+
+            while (lines[Index+1].Trim() == "}")
+                Index++;
 
             // Next line should be closing bracket, ignore and skip it
             return (int)len;

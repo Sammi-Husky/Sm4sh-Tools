@@ -270,10 +270,8 @@ namespace SALT.Moveset.AnimCMD
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);
-
-            // since we jump backwards here, don't count the begin_loop command
-            // in calculating the offset.
-            endLoop.Parameters[0] = (len - 2) / -1;
+            
+            endLoop.Parameters[0] = len / -1;
             Commands.Add(endLoop);
 
             while (lines[Index + 1].Trim() == "}")

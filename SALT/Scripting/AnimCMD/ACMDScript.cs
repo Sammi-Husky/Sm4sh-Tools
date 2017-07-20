@@ -324,7 +324,7 @@ namespace SALT.Moveset.AnimCMD
             }
 
             ACMDCommand endLoop = this.ParseCMD(lines[Index]);
-            endLoop.Parameters[0] = (len - 2) / -1;
+            endLoop.Parameters[0] = len / -1;
             this.Add(endLoop);
 
             while (lines[Index+1].Trim() == "}")

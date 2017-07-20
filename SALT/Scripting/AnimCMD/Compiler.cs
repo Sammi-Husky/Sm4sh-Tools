@@ -235,8 +235,10 @@ namespace SALT.Moveset.AnimCMD
                 if (CompileSingleCommand(lines[Index + 1]).Ident == 0x895B9275 && cmd.Ident == 0xA5BD4F32)
                 {
                     ACMDCommand tmp = CompileSingleCommand(lines[++Index]);
-                    Commands[Commands.IndexOf(cmd)].Parameters[0] = len + tmp.Size / 4;
-                    HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                    len += tmp.Size / 4;
+                    Commands[Commands.IndexOf(cmd)].Parameters[0] = len;
+                    len -= tmp.Size / 4;
+                    len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
                 }
             }
             else

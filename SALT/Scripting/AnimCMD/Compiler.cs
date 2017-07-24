@@ -270,15 +270,15 @@ namespace SALT.Moveset.AnimCMD
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);
-            
+
             endLoop.Parameters[0] = len / -1;
             Commands.Add(endLoop);
 
-            while (lines[Index + 1].Trim() == "}")
+            if (lines[Index + 1].Trim() == "}")
                 Index++;
 
             // Next line should be closing bracket, ignore and skip it
-            return (int)len;
+            return (int)len+4;
         }
 
         private static bool IsCmdHandled(uint ident)

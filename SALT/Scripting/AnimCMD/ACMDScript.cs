@@ -294,13 +294,16 @@ namespace SALT.Moveset.AnimCMD
                     len -= tmp.Size / 4;
                     len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
                 }
+                else
+                {
+                    this[this.IndexOf(cmd)].Parameters[0] = len;
+                }
             }
             else
             {
                 this[this.IndexOf(cmd)].Parameters[0] = len;
             }
 
-            // Next line should be closing bracket, ignore and skip it
             return len;
         }
 
@@ -330,7 +333,7 @@ namespace SALT.Moveset.AnimCMD
             if(lines[Index + 1].Trim() == "}")
                 Index++;
 
-            // Next line should be closing bracket, ignore and skip it
+            // Compensate for len not counting the begin_loop and goto command sizes
             return (int)len+4;
         }
 

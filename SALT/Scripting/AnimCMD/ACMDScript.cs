@@ -327,11 +327,11 @@ namespace SALT.Moveset.AnimCMD
             endLoop.Parameters[0] = len / -1;
             this.Add(endLoop);
 
-            while (lines[Index+1].Trim() == "}")
+            if(lines[Index + 1].Trim() == "}")
                 Index++;
 
             // Next line should be closing bracket, ignore and skip it
-            return (int)len;
+            return (int)len+4;
         }
 
         private ACMDCommand ParseCMD(string line)

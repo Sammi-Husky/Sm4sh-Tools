@@ -131,10 +131,10 @@ namespace SALT.Moveset.AnimCMD
             var tmplines = new List<string>(this.Count);
             for (int i = 0; i < this.Count; i++)
             {
-                int amt = 0;
-
-                if ((amt = this.DeserializeCommand(i, this[i].Ident, ref tmplines)) > 0)
-                    i += amt;
+                if (IsCmdHandled(this[i].Ident))
+                {
+                    i += this.DeserializeCommand(i, this[i].Ident, ref tmplines);
+                }
                 else
                     tmplines.Add(this[i].ToString());
             }

@@ -212,7 +212,9 @@ namespace SALT.Moveset.AnimCMD
                 }
                 else if (IsCmdHandled(this[i].Ident))
                 {
-                    i += (count += this.DeserializeCommand(i, this[i].Ident, ref lines));
+                    int amt = this.DeserializeCommand(i, this[i].Ident, ref lines);
+                    i += amt;
+                    count += amt;
                     count++;
                     break;
                 }
@@ -229,7 +231,9 @@ namespace SALT.Moveset.AnimCMD
             // and then deserialize the else statement
             if (IsCmdConditional(this[i].Ident))
             {
-                i += (count += this.DeserializeConditional(i, ref lines));
+                int amt = this.DeserializeConditional(i, ref lines);
+                i += amt;
+                count += amt;
                 count++;
             }
             return count;
@@ -252,6 +256,7 @@ namespace SALT.Moveset.AnimCMD
 
             lines.Add('\t' + this[i].ToString());
             lines.Add("}");
+            i++;
             return i - startIndex;
         }
         private int SerializeCommands(ref int index, uint ident, ref List<string> lines)
@@ -292,7 +297,7 @@ namespace SALT.Moveset.AnimCMD
                     len += tmp.Size / 4;
                     this[this.IndexOf(cmd)].Parameters[0] = len;
                     len -= tmp.Size / 4;
-                    len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                    this.SerializeCommands(ref Index, tmp.Ident, ref lines);
                 }
                 else
                 {

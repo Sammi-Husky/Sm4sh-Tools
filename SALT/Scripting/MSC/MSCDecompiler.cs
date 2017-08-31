@@ -48,7 +48,7 @@ namespace SALT.Moveset.MSC
                     continue;
                 }
 
-                sb.Append(DecompileCMD(cmd)+ "\n");
+                sb.Append(DecompileCMD(cmd) + "\n");
 
             }
             return sb.ToString();
@@ -83,6 +83,12 @@ namespace SALT.Moveset.MSC
                 case 0x13:
                     sb.Append(Decompile_13(cmd));
                     break;
+                case 0x14:
+                    sb.Append(Decompile_14(cmd));
+                    break;
+                case 0x15:
+                    sb.Append(Decompile_15(cmd));
+                    break;
                 case 0x16:
                     sb.Append(Decompile_16(cmd));
                     break;
@@ -98,8 +104,20 @@ namespace SALT.Moveset.MSC
                 case 0x1F:
                     sb.Append(Decompile_1F(cmd));
                     break;
+                case 0x20:
+                    sb.Append(Decompile_20(cmd));
+                    break;
+                case 0x21:
+                    sb.Append(Decompile_21(cmd));
+                    break;
+                case 0x22:
+                    sb.Append(Decompile_22(cmd));
+                    break;
                 case 0x23:
                     sb.Append(Decompile_23(cmd));
+                    break;
+                case 0x24:
+                    sb.Append(Decompile_24(cmd));
                     break;
                 case 0x25:
                     sb.Append(Decompile_25(cmd));
@@ -211,17 +229,22 @@ namespace SALT.Moveset.MSC
 
         private string Decompile_13(MSCCommand cmd)
         {
-            if (COMMANDS.Count > 0)
-                return $"unk_13({DecompileCMD(COMMANDS.Pop())})";
-            else
-                return "unk_13()";
-        }
+            return $"!{DecompileCMD(COMMANDS.Pop())}";
+        } // negate
+        private string Decompile_14(MSCCommand cmd)
+        {
+            return $"{DecompileCMD(COMMANDS.Pop())}++";
+        } // ++
+        private string Decompile_15(MSCCommand cmd)
+        {
+                return $"{DecompileCMD(COMMANDS.Pop())}--";
+        } // --
         private string Decompile_16(MSCCommand cmd)
         {
             var arg1 = COMMANDS.Pop();
             var arg2 = COMMANDS.Pop();
             return $"{DecompileCMD(arg2)} & {DecompileCMD(arg1)}";
-        }
+        } // &
         private string Decompile_1C(MSCCommand cmd)
         {
             var text = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
@@ -234,23 +257,44 @@ namespace SALT.Moveset.MSC
         } // assign_var
         private string Decompile_1D(MSCCommand cmd)
         {
-            return $"variable_manipulation1({FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2])})";
-        }
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"{variable_str} += {DecompileCMD(COMMANDS.Pop())}";
+        } // +=
         private string Decompile_1E(MSCCommand cmd)
         {
             var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
-            return $"variable_manipilation2({variable_str}, {DecompileCMD(COMMANDS.Pop())}";
-        }
+            return $"{variable_str} -= {DecompileCMD(COMMANDS.Pop())}";
+        } // -=
         private string Decompile_1F(MSCCommand cmd)
         {
             var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
-            return $"variable_manipulation3({variable_str},{DecompileCMD(COMMANDS.Pop())})";
-        }
+            return $"{variable_str} *= {DecompileCMD(COMMANDS.Pop())}";
+        } // *=
+        private string Decompile_20(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"{variable_str} /= {DecompileCMD(COMMANDS.Pop())}";
+        } // /=
+        private string Decompile_21(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"{variable_str} %= {DecompileCMD(COMMANDS.Pop())}";
+        } // %=
+        private string Decompile_22(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"{variable_str} &= {DecompileCMD(COMMANDS.Pop())}";
+        } // &=
         private string Decompile_23(MSCCommand cmd)
         {
             var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
-            return $"variable_manipulation4({variable_str},{DecompileCMD(COMMANDS.Pop())})";
-        }
+            return $"{variable_str} |= {DecompileCMD(COMMANDS.Pop())}";
+        } // |=
+        private string Decompile_24(MSCCommand cmd)
+        {
+            var variable_str = FormatVariable((byte)cmd.Parameters[0], (byte)cmd.Parameters[1], (byte)cmd.Parameters[2]);
+            return $"{variable_str} ^= {DecompileCMD(COMMANDS.Pop())}";
+        } // ^=
         //============== Comparisons ===============//
         private string Decompile_25(MSCCommand cmd)
         {
@@ -333,13 +377,14 @@ namespace SALT.Moveset.MSC
         } // printf
         private string Decompile_2D(MSCCommand cmd)
         {
-            var parameters = new List<string>();
+            string[] parameters = new string[(byte)cmd.Parameters[0]];
             for (int i = 0; i < (byte)cmd.Parameters[0]; i++)
             {
-                parameters.Add(DecompileCMD(COMMANDS.Pop()));
+                parameters[i] = DecompileCMD(COMMANDS.Pop());
             }
+            transform_syscall_params((byte)cmd.Parameters[1], ref parameters);
             return $"global_{cmd.Parameters[1]:X}({string.Join(", ", parameters)})";
-        } // call_func
+        } // syscall
         private string Decompile_2E(MSCCommand cmd)
         {
 
@@ -405,7 +450,7 @@ namespace SALT.Moveset.MSC
         {
             var str = "";
 
-            INDENT_STACK.RemoveAt(INDENT_STACK.Count-1);
+            INDENT_STACK.RemoveAt(INDENT_STACK.Count - 1);
             //str += DoIndent("}\n");
             str += $"{DoIndent("else\n")}{DoIndent("{")}";
             INDENT_STACK.Add((int)cmd.Parameters[0]);
@@ -499,6 +544,25 @@ namespace SALT.Moveset.MSC
             var f = BitConverter.ToSingle(val, 0);
             return $"{DecompileCMD(arg2)} >= {f}";
         } // not equal
+
+
+        private void transform_syscall_params(int syscall, ref string[] parameters)
+        {
+            switch (syscall)
+            {
+                case 3:
+                    transform_sys_3(ref parameters);
+                    break;
+            }
+        }
+        private void transform_sys_3(ref string[] parameters)
+        {
+            uint offset = uint.Parse(parameters[0].Substring(2), System.Globalization.NumberStyles.HexNumber);
+            if (Target.File.Offsets.Contains(offset))
+            {
+                parameters[0] = $"script_{Target.File.Offsets.IndexOf(offset)}";
+            }
+        }
         #endregion
 
         #region CMD Analyzers

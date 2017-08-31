@@ -238,7 +238,7 @@ namespace SALT.Moveset.AnimCMD
                     len += tmp.Size / 4;
                     Commands[Commands.IndexOf(cmd)].Parameters[0] = len;
                     len -= tmp.Size / 4;
-                    len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                    HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
                 }
                 else
                 {

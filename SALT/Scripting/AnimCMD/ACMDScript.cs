@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Collections;
+using System.Globalization;
 
 namespace SALT.Moveset.AnimCMD
 {
@@ -358,13 +359,13 @@ namespace SALT.Moveset.AnimCMD
                 switch (cmd.ParamSpecifiers[i])
                 {
                     case 0:
-                        cmd.Parameters.Add(int.Parse(parameters[i].Substring(2), System.Globalization.NumberStyles.HexNumber));
+                        cmd.Parameters.Add(int.Parse(parameters[i].Substring(2), NumberStyles.HexNumber));
                         break;
                     case 1:
-                        cmd.Parameters.Add(float.Parse(parameters[i]));
+                        cmd.Parameters.Add(float.Parse(parameters[i], CultureInfo.InvariantCulture));
                         break;
                     case 2:
-                        cmd.Parameters.Add(decimal.Parse(parameters[i]));
+                        cmd.Parameters.Add(decimal.Parse(parameters[i], CultureInfo.InvariantCulture));
                         break;
                 }
             }

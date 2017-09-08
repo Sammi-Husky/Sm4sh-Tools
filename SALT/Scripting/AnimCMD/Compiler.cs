@@ -127,9 +127,13 @@ namespace SALT.Moveset.AnimCMD
             string s = line.TrimStart();
             s = s.Substring(0, s.IndexOf(')'));
             var name = s.Substring(0, s.IndexOf('('));
-            var parameters =
-                s.Substring(s.IndexOf('(')).TrimEnd(')').Split(',').Select(x =>
-                x.Remove(0, x.IndexOf('=') + 1)).ToArray();
+            var parameters = s.Substring(s.IndexOf('(') + 1).TrimEnd(')').Split(',');
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                string param = parameters[i];
+                if (param.Contains("="))
+                    parameters[i] = param.Remove(0, param.IndexOf("=") + 1).Trim();
+            }
 
             var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value == name).Key;
             ACMDCommand cmd = new ACMDCommand(crc);
@@ -138,7 +142,14 @@ namespace SALT.Moveset.AnimCMD
                 switch (cmd.ParamSpecifiers[i])
                 {
                     case 0:
-                        cmd.Parameters.Add(int.Parse(parameters[i].Substring(2), NumberStyles.HexNumber));
+                        if (parameters[i].StartsWith("0x"))
+                        {
+                            cmd.Parameters.Add(int.Parse(parameters[i].Substring(2), NumberStyles.HexNumber));
+                        }
+                        else
+                        {
+                            cmd.Parameters.Add(int.Parse(parameters[i]));
+                        }
                         break;
                     case 1:
                         cmd.Parameters.Add(float.Parse(parameters[i], CultureInfo.InvariantCulture));

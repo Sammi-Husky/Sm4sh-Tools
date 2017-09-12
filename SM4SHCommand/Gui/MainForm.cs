@@ -378,7 +378,7 @@ namespace Sm4shCommand
                     foreach (ScriptNode node in n.Nodes)
                     {
                         if (dict.ContainsKey(node.Identifier))
-                            node.Text = dict[node.Identifier];
+                            node.Text = $"{node.Index:X} - {dict[node.Identifier]}";
                     }
                 }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -557,7 +558,8 @@ namespace SALT.Moveset.MSC
         }
         private void transform_sys_3(ref string[] parameters)
         {
-            uint offset = uint.Parse(parameters[0].Substring(2), System.Globalization.NumberStyles.HexNumber);
+            uint offset = 0;
+            uint.TryParse(parameters[0].Substring(2), NumberStyles.HexNumber, CultureInfo.CurrentCulture, out offset);
             if (Target.File.Offsets.Contains(offset))
             {
                 parameters[0] = $"script_{Target.File.Offsets.IndexOf(offset)}";

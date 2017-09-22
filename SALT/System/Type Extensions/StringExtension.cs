@@ -2,6 +2,11 @@
 {
     public static class StringExtension
     {
+        public static bool Contains(this string source, string value, StringComparison comp)
+        {
+            return source.IndexOf(value, comp) >= 0;
+        }
+
         public static string TruncateAndFill(this string s, int length, char fillChar)
         {
             int min = length;

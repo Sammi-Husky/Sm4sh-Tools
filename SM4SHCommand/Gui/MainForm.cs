@@ -429,7 +429,8 @@ namespace Sm4shCommand
             Manager = new WorkspaceManager();
             MotionTable = null;
             IDEMode = IDE_MODE.NONE;
- 
+            _nodeCache = null;
+
         }
 
         public enum IDE_MODE
@@ -443,6 +444,37 @@ namespace Sm4shCommand
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Reset();
+        }
+
+        TreeNode[] _nodeCache;
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            if (_nodeCache == null)
+            {
+                _nodeCache = new TreeNode[FileTree.Nodes.Count];
+                FileTree.Nodes.CopyTo(_nodeCache, 0);
+            }
+            bool addAll = string.IsNullOrEmpty(textBox1.Text);
+
+            FileTree.BeginUpdate();
+            FileTree.Nodes.Clear();
+
+            foreach (TreeNode root in _nodeCache)
+            {
+                TreeNode n = (TreeNode)root.Clone();
+                n.Nodes.Clear();
+                foreach (TreeNode leaf in root.Nodes)
+                {
+                    if (addAll || leaf.Text.Contains(textBox1.Text, StringComparison.OrdinalIgnoreCase))
+                    {
+                        n.Nodes.Add(leaf);
+                    }
+                }
+                FileTree.Nodes.Add(n);
+            }
+            FileTree.ExpandAll();
+            FileTree.EndUpdate();
+
         }
     }
 }

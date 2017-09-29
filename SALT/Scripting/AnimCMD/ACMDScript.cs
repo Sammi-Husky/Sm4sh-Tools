@@ -228,8 +228,9 @@ namespace SALT.Moveset.AnimCMD
             }
 
             lines.Add("}");
-            // if we encountered an else, break out of enclosing bracket scope
-            // and then deserialize the else statement
+
+            //  if we encountered an else, break out of enclosing bracket scope
+            //  and then deserialize the else statement
             if (IsCmdConditional(this[i].Ident))
             {
                 int amt = this.DeserializeConditional(i, ref lines);
@@ -315,32 +316,47 @@ namespace SALT.Moveset.AnimCMD
 
         private int SerializeLoop(ref int Index, ref List<string> lines)
         {
-            this.Add(this.ParseCMD(lines[Index]));
+            int start = Index;
 
-            decimal len = 0;
+            // Serialize all commands without counting len first
+            // Then walk backwards to count len for goto comamnds.
+            // This avoids problems with counting commands in conditional blocks
+            this.Add(this.ParseCMD(lines[Index]));
             while (this.ParseCMD(lines[++Index]).Ident != 0x38A3EC78)
             {
                 ACMDCommand tmp = this.ParseCMD(lines[Index]);
                 if (IsCmdHandled(tmp.Ident))
                 {
-                    len += this.SerializeCommands(ref Index, tmp.Ident, ref lines);
+                    this.SerializeCommands(ref Index, tmp.Ident, ref lines);
                 }
                 else
                 {
-                    len += (tmp.Size / 4);
                     this.Add(tmp);
                 }
             }
 
+            decimal len = 0;
+            int gotoIndex = Index;
+            while (gotoIndex > start)
+            {
+                if (lines[gotoIndex] == "}")
+                {
+                    gotoIndex--;
+                    continue;
+                }
+                var cmd = this.ParseCMD(lines[gotoIndex]);
+                len += cmd.Size / 4;
+                gotoIndex--;
+            }
             ACMDCommand endLoop = this.ParseCMD(lines[Index]);
-            endLoop.Parameters[0] = len / -1;
+            endLoop.Parameters[0] = (len - 2) / -1;
             this.Add(endLoop);
 
             if (lines[Index + 1].Trim() == "}")
                 Index++;
 
             // Compensate for len not counting the begin_loop and goto command sizes
-            return (int)len + 4;
+            return (int)len - 4;
         }
 
         private ACMDCommand ParseCMD(string line)

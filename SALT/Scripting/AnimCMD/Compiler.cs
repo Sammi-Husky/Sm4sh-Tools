@@ -268,21 +268,34 @@ namespace SALT.Moveset.AnimCMD
 
         private static int CompileLoop(ref int Index, ref List<string> lines)
         {
-            Commands.Add(CompileSingleCommand(lines[Index]));
+            int start = Index;
 
-            decimal len = 0;
+            Commands.Add(CompileSingleCommand(lines[Index]));
             while (CompileSingleCommand(lines[++Index]).Ident != 0x38A3EC78)
             {
                 ACMDCommand tmp = CompileSingleCommand(lines[Index]);
                 if (IsCmdHandled(tmp.Ident))
                 {
-                    len += HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
+                    HandleSpecialCommands(ref Index, tmp.Ident, ref lines);
                 }
                 else
                 {
-                    len += (tmp.Size / 4);
                     Commands.Add(tmp);
                 }
+            }
+
+            decimal len = 0;
+            int gotoIndex = Index;
+            while (gotoIndex > start)
+            {
+                if (lines[gotoIndex] == "}")
+                {
+                    gotoIndex--;
+                    continue;
+                }
+                var cmd = CompileSingleCommand(lines[gotoIndex]);
+                len += cmd.Size / 4;
+                gotoIndex--;
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);
@@ -294,7 +307,7 @@ namespace SALT.Moveset.AnimCMD
                 Index++;
 
             // Next line should be closing bracket, ignore and skip it
-            return (int)len+4;
+            return (int)len + 4;
         }
 
         private static bool IsCmdHandled(uint ident)

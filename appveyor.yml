@@ -3,7 +3,7 @@ configuration: Release
 branches:
   only:
     - master
-
+    
 build:
   verbosity: minimal
 

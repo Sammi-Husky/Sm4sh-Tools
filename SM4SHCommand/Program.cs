@@ -13,17 +13,20 @@ namespace Sm4shCommand
     static class Program
     {
         public static readonly string Version = "v1.3.0";
-        public static readonly string AssemblyTitle;
-        public static readonly string AssemblyDescription;
-        public static readonly string AssemblyCopyright;
+        public static readonly string Title;
+        public static readonly string Description;
+        public static readonly string Copyright;
+        public static readonly string InformationalVersion;
 
         static Program()
         {
             Application.EnableVisualStyles();
-
-            AssemblyTitle = ((AssemblyTitleAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false)[0]).Title;
-            AssemblyDescription = ((AssemblyDescriptionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false)[0]).Description;
-            AssemblyCopyright = ((AssemblyCopyrightAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false)[0]).Copyright;
+            
+            Title = ((AssemblyTitleAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false)[0]).Title;
+            Description = ((AssemblyDescriptionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false)[0]).Description;
+            Copyright = ((AssemblyCopyrightAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false)[0]).Copyright;
+            InformationalVersion = ((AssemblyInformationalVersionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)[0]).InformationalVersion;
+            Title = $"{Title} v{InformationalVersion}";
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace Sm4shCommand
         public AcmdMain()
         {
             InitializeComponent();
-            this.Text = $"{Program.AssemblyTitle} {Program.Version} - ";
+            this.Text = $"{Program.Title} - ";
             Manager = new WorkspaceManager();
             ScriptFiles = new SortedList<string, IScriptCollection>();
         }
@@ -421,7 +421,7 @@ namespace Sm4shCommand
         }
         public void Reset()
         {
-            this.Text = $"{Program.AssemblyTitle} {Program.Version} - ";
+            this.Text = $"{Program.Title} - ";
             FileTree.Nodes.Clear();
             ScriptFiles.Clear();
             Viewport.TabPages.Clear();

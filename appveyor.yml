@@ -7,7 +7,7 @@ clone_script:
   - ps: $env:GIT_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0, 5)
 assembly_info:
   patch: true
-  file: 'SM4SHCommand\Properties\AssemblyInfo.cs'
+  file: '**\\AssemblyInfo.*'
   assembly_version: 1.3.0.{build}
   assembly_file_version: 1.3.0.{build}
   assembly_informational_version: "1.3.0.{build} $(GIT_HASH)"

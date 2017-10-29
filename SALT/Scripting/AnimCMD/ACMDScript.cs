@@ -373,7 +373,7 @@ namespace SALT.Moveset.AnimCMD
             }
 
 
-            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value == name).Key;
+            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase)).Key;
             ACMDCommand cmd = new ACMDCommand(crc);
             for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
             {

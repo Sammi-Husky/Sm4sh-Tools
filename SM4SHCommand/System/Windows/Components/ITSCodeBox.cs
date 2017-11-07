@@ -15,6 +15,7 @@ namespace Sm4shCommand
         TextStyle HexStyle = new TextStyle(Brushes.DarkCyan, null, FontStyle.Regular);
         TextStyle DecStyle = new TextStyle(Brushes.Red, null, FontStyle.Regular);
         TextStyle StrStyle = new TextStyle(Brushes.Chocolate, null, FontStyle.Regular);
+        TextStyle ArrStyle = new TextStyle(Brushes.Blue, null, FontStyle.Regular);
         TextStyle CommentStyle = new TextStyle(Brushes.DarkGreen, null, FontStyle.Regular);
 
         public AutocompleteMenu AutocompleteMenu { get; set; }
@@ -65,6 +66,7 @@ namespace Sm4shCommand
             e.ChangedRange.SetStyle(HexStyle, @"0x[^\)\s,\r\n]+");
             e.ChangedRange.SetStyle(DecStyle, @"\b(?:[0-9]*\\.)?[0-9]+\b");
             e.ChangedRange.SetStyle(StrStyle, "\"(\\.|[^\"])*\"");
+            e.ChangedRange.SetStyle(ArrStyle, @"([A-Za-z\x5F\x2D]+)-.{1,5}\[[0-F0-f]+\]");
         }
     }
 }

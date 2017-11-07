@@ -244,6 +244,9 @@ namespace SALT.Moveset.AnimCMD
                         case 2:
                             c.Parameters.Add((decimal)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), this.Endian));
                             break;
+                        case 3:
+                            c.Parameters.Add(new FighterVariable((uint)Util.GetWordUnsafe(0x04 + (addr + (i * 4)), this.Endian)));
+                            break;
                         default:
                             goto case 0;
                     }

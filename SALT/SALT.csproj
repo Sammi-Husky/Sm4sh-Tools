@@ -54,6 +54,7 @@
     <Compile Include="Scripting\AnimCMD\ACMDScript.cs" />
     <Compile Include="Scripting\AnimCMD\CMD_INFO.cs" />
     <Compile Include="Scripting\AnimCMD\Compiler.cs" />
+    <Compile Include="Scripting\FighterVariable.cs" />
     <Compile Include="Scripting\ICommand.cs" />
     <Compile Include="Scripting\IScript.cs" />
     <Compile Include="Scripting\IScriptCollection.cs" />

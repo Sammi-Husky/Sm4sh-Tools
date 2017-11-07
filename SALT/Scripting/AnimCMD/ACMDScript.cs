@@ -395,6 +395,9 @@ namespace SALT.Moveset.AnimCMD
                     case 2:
                         cmd.Parameters.Add(decimal.Parse(parameters[i], CultureInfo.InvariantCulture));
                         break;
+                    case 3:
+                        cmd.Parameters.Add(new FighterVariable(parameters[i]));
+                        break;
                 }
             }
 

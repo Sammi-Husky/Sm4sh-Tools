@@ -55,6 +55,8 @@ namespace SALT.Moveset.AnimCMD
                     param += string.Format("{0}{1}", this.Parameters[i], i + 1 != this.Parameters.Count ? ", " : string.Empty);
                 else if (this.Parameters[i] is decimal)
                     param += string.Format("{0}{1}", this.Parameters[i], i + 1 != this.Parameters.Count ? ", " : string.Empty);
+                else if (this.Parameters[i] is FighterVariable)
+                    param += $"{this.Parameters[i]}{(i + 1 != this.Parameters.Count ? ", " : string.Empty)}";
             }
 
             return $"{this.Name}({param})";
@@ -83,6 +85,10 @@ namespace SALT.Moveset.AnimCMD
                 else if (this.ParamSpecifiers[i] == 2)
                 {
                     Util.SetWord(ref tmp, (long)Convert.ToDecimal(this.Parameters[i]), (i + 1) * 4, endian);
+                }
+                else if (this.ParamSpecifiers[i] == 3)
+                {
+                    Util.SetWord(ref tmp, ((FighterVariable)this.Parameters[i]).Raw, (i + 1) * 4, endian);
                 }
             }
 

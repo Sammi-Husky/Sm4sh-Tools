@@ -16,17 +16,17 @@ namespace SALT.Graphics
         {
             parseXMB(filepath);
         }
-        public int StringCount { get; set; }
-        public int EntryCount { get; set; }
-        public int NumValues { get; set; }
-        public int Count4 { get; set; }
+        private int StringCount { get; set; }
+        private int EntryCount { get; set; }
+        private int NumValues { get; set; }
+        private int Count4 { get; set; }
 
-        public int pStrOffsets { get; set; }
-        public int pEntriesTable { get; set; }
-        public int pPropertiesTable { get; set; }
-        public int extraEntry { get; set; }
-        public int pStrTable1 { get; set; }
-        public int pStrTable2 { get; set; }
+        private int pStrOffsets { get; set; }
+        private int pEntriesTable { get; set; }
+        private int pPropertiesTable { get; set; }
+        private int extraEntry { get; set; }
+        private int pStrTable1 { get; set; }
+        private int pStrTable2 { get; set; }
 
         public List<string> Properties = new List<string>();
         public List<string> Values = new List<string>();
@@ -66,7 +66,7 @@ namespace SALT.Graphics
                         stream.Seek(pEntriesTable + i * 0x10, SeekOrigin.Begin);
 
                         var entry = new XMBEntry();
-                        entry.NameOffset = reader.ReadBint32();
+                        int NameOffset = reader.ReadBint32();
                         entry.NumExpressions = reader.ReadBuint16();
                         entry.NumChildren = reader.ReadBuint16();
                         entry.FirstPropertyIndex = reader.ReadBuint16();
@@ -74,7 +74,7 @@ namespace SALT.Graphics
                         entry.ParentIndex = reader.ReadBint16();
                         entry.unk2 = reader.ReadBuint16();
 
-                        stream.Seek(pStrTable1 + entry.NameOffset, SeekOrigin.Begin);
+                        stream.Seek(pStrTable1 + NameOffset, SeekOrigin.Begin);
                         entry.Name = reader.ReadStringNT();
                         temp.Add(entry);
                     }
@@ -104,6 +104,7 @@ namespace SALT.Graphics
                         }
                         if (entry.ParentIndex != -1)
                         {
+                            entry.Parent = temp[entry.ParentIndex];
                             for (int i = 0; i < temp[entry.ParentIndex + i].NumChildren; i++)
                             {
                                 entry.depth = temp[entry.ParentIndex + i].depth + 1; // for indent stuff and things
@@ -144,7 +145,6 @@ namespace SALT.Graphics
         }
         public string Name { get; set; }
 
-        public int NameOffset;
         public ushort NumExpressions;
         public ushort NumChildren;
         public ushort FirstPropertyIndex;
@@ -157,6 +157,8 @@ namespace SALT.Graphics
         public List<string> Expressions { get; set; }
         public List<XMBEntry> Children { get; set; }
 
+        public XMBEntry Parent { get; set; }
+
         public string deserialize()
         {
             var sb = new StringBuilder();
@@ -165,7 +167,7 @@ namespace SALT.Graphics
             for (int i = 0; i < depth; i++)
                 indent += "\t";
             
-            sb.AppendLine($"{indent}{Name}({NameOffset:X}, {NumExpressions:X}, {NumChildren:X}, {FirstPropertyIndex:X}, {unk1:X}, {ParentIndex:X}, {unk2:X})");
+            sb.AppendLine($"{indent}{Name}({NumExpressions:X}, {NumChildren:X}, {FirstPropertyIndex:X}, {unk1:X}, {ParentIndex:X}, {unk2:X})");
             //sb.AppendLine($"{indent}{Name}");
             sb.AppendLine($"{indent}{{");
             foreach (var e in Expressions)

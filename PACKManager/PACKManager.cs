@@ -79,15 +79,14 @@ namespace DPack
         {
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
+            int count = *(int*)(_source.Address + 0x08);
 
-            int count = *(bint*)(_source.Address + 0x08);
-
             for (int i = 0; i < count; i++)
-                stringOffsets.Add(*(bint*)(_source.Address + (i * 0x04) + 0x10));
+                stringOffsets.Add(*(int*)(_source.Address + (i * 0x04) + 0x10));
             for (int i = 0; i < count; i++)
-                dataOffsets.Add(*(bint*)(_source.Address + (stringOffsets.Count * 4) + (i * 4) + 0x10));
+                dataOffsets.Add(*(int*)(_source.Address + (stringOffsets.Count * 4) + (i * 4) + 0x10));
             for (int i = 0; i < count; i++)
-                sizes.Add(*(bint*)(_source.Address + (stringOffsets.Count * 4) + (dataOffsets.Count * 4) + (i * 4) + 0x10));
+                sizes.Add(*(int*)(_source.Address + (stringOffsets.Count * 4) + (dataOffsets.Count * 4) + (i * 4) + 0x10));
 
 
             foreach (int off in stringOffsets)

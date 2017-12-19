@@ -31,7 +31,7 @@ namespace DPack
                     {
                         if (args.Length == 2)
                             new PACKManager(args[0]).Unpack(args[1]);
-                        else { new PACKManager(args[0]).Unpack("Output"); }
+                        else { new PACKManager(args[0]).Unpack(args[0].Replace(".pac","\\")); }
 
                         Console.WriteLine("Files successfully unpacked.");
                     }

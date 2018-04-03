@@ -5,12 +5,12 @@ namespace SALT.PARAMS
 {
     public enum ParamType : byte
     {
-        u8 = 1,
-        s8 = 2,
-        u16 = 3,
-        s16 = 4,
-        u32 = 5,
-        s32 = 6,
+        s8 = 1,
+        u8 = 2,
+        s16 = 3,
+        u16 = 4,
+        s32 = 5,
+        u32 = 6,
         f32 = 7,
         str = 8,
         group = 0x20

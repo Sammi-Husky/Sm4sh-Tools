@@ -24,14 +24,14 @@ namespace SALT.PARAMS
             {
                 switch (this.Type)
                 {
-                    case ParamType.u8:
                     case ParamType.s8:
+                    case ParamType.u8:
                         return 2;
-                    case ParamType.u16:
                     case ParamType.s16:
+                    case ParamType.u16:
                         return 3;
-                    case ParamType.u32:
                     case ParamType.s32:
+                    case ParamType.u32:
                     case ParamType.f32:
                         return 5;
                     case ParamType.str:
@@ -45,43 +45,35 @@ namespace SALT.PARAMS
         public byte[] GetBytes()
         {
             List<byte> data = new List<byte>();
+            data.Add((byte)this.Type);
             switch (this.Type)
             {
-                case ParamType.u8:
-                    data.Add(1);
-                    data.Add((byte)this.Value);
-                    return data.ToArray();
                 case ParamType.s8:
-                    data.Add(2);
                     data.Add((byte)this.Value);
                     return data.ToArray();
-                case ParamType.u16:
-                    data.Add(3);
-                    data.AddRange(BitConverter.GetBytes((ushort)this.Value).Reverse());
+                case ParamType.u8:
+                    data.Add((byte)this.Value);
                     return data.ToArray();
                 case ParamType.s16:
-                    data.Add(4);
                     data.AddRange(BitConverter.GetBytes((short)this.Value).Reverse());
                     return data.ToArray();
-                case ParamType.u32:
-                    data.Add(5);
-                    data.AddRange(BitConverter.GetBytes((uint)this.Value).Reverse());
+                case ParamType.u16:
+                    data.AddRange(BitConverter.GetBytes((ushort)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.s32:
-                    data.Add(6);
                     data.AddRange(BitConverter.GetBytes((int)this.Value).Reverse());
                     return data.ToArray();
+                case ParamType.u32:
+                    data.AddRange(BitConverter.GetBytes((uint)this.Value).Reverse());
+                    return data.ToArray();
                 case ParamType.f32:
-                    data.Add(7);
                     data.AddRange(BitConverter.GetBytes((float)this.Value).Reverse());
                     return data.ToArray();
                 case ParamType.str:
-                    data.Add(8);
                     data.AddRange(BitConverter.GetBytes(((string)this.Value).Length).Reverse());
                     data.AddRange(Encoding.ASCII.GetBytes((string)this.Value));
                     return data.ToArray();
                 case ParamType.group:
-                    data.Add(0x20);
                     data.AddRange(((ParamGroup)this.Value).GetBytes());
                     return data.ToArray();
                 default:
@@ -93,12 +85,12 @@ namespace SALT.PARAMS
         {
             switch (this.Type)
             {
-                case ParamType.u8:
                 case ParamType.s8:
-                case ParamType.u16:
+                case ParamType.u8:
                 case ParamType.s16:
-                case ParamType.u32:
+                case ParamType.u16:
                 case ParamType.s32:
+                case ParamType.u32:
                     return $"0x{this.Value:X}";
                 case ParamType.f32:
                     return $"{this.Value:F}";

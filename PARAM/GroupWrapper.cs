@@ -94,8 +94,10 @@ namespace Parameters
                     object value = null;
                     switch (type)
                     {
-                        case ParameterType.u8:
                         case ParameterType.s8:
+                            value = (sbyte)int.Parse(dlg.TextVal);
+                            break;
+                        case ParameterType.u8:
                             value = (byte)int.Parse(dlg.TextVal);
                             break;
                         case ParameterType.s16:
@@ -104,11 +106,11 @@ namespace Parameters
                         case ParameterType.u16:
                             value = ushort.Parse(dlg.TextVal);
                             break;
-                        case ParameterType.u32:
-                            value = uint.Parse(dlg.TextVal);
-                            break;
                         case ParameterType.s32:
                             value = int.Parse(dlg.TextVal);
+                            break;
+                        case ParameterType.u32:
+                            value = uint.Parse(dlg.TextVal);
                             break;
                         case ParameterType.f32:
                             value = float.Parse(dlg.TextVal);
@@ -130,23 +132,23 @@ namespace Parameters
             foreach (var t in types)
                 switch (t)
                 {
+                    case ParameterType.s8:
+                        entries.Add(new ParamEntry((sbyte)0, t));
+                        break;
                     case ParameterType.u8:
                         entries.Add(new ParamEntry((byte)0, t));
-                        break;
-                    case ParameterType.s8:
-                        entries.Add(new ParamEntry((byte)0, t));
-                        break;
-                    case ParameterType.u16:
-                        entries.Add(new ParamEntry((ushort)0, t));
                         break;
                     case ParameterType.s16:
                         entries.Add(new ParamEntry((short)0, t));
                         break;
-                    case ParameterType.u32:
-                        entries.Add(new ParamEntry((uint)0, t));
+                    case ParameterType.u16:
+                        entries.Add(new ParamEntry((ushort)0, t));
                         break;
                     case ParameterType.s32:
                         entries.Add(new ParamEntry(0, t));
+                        break;
+                    case ParameterType.u32:
+                        entries.Add(new ParamEntry((uint)0, t));
                         break;
                     case ParameterType.f32:
                         entries.Add(new ParamEntry((float)0, t));

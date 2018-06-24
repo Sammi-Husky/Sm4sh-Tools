@@ -49,7 +49,7 @@ namespace SALT.PARAMS
             switch (this.Type)
             {
                 case ParamType.s8:
-                    data.Add((byte)this.Value);
+                    data.Add((byte)((sbyte)this.Value));
                     return data.ToArray();
                 case ParamType.u8:
                     data.Add((byte)this.Value);

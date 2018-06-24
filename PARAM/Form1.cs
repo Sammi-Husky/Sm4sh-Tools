@@ -198,38 +198,45 @@ namespace Parameters
 
             ValuesWrapper wrp = treeView1.SelectedNode as ValuesWrapper;
 
-            for (int i = 0; i < wrp.Parameters.Count; i++)
+            for (int i = 0; i < wrp.Parameters.Count; ++i)
             {
                 var t = wrp.Parameters[i].Type;
-                object val = null;
-                switch (t)
+                object val = wrp.Parameters[i].Value;
+                try
                 {
-                    case ParameterType.s8:
-                        val = Convert.ToSByte(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.u8:
-                        val = Convert.ToByte(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.s16:
-                        val = Convert.ToInt16(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.u16:
-                        val = Convert.ToUInt16(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.s32:
-                        val = Convert.ToInt32(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.u32:
-                        val = Convert.ToUInt32(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.f32:
-                        val = Convert.ToSingle(tbl.Rows[i][1]);
-                        break;
-                    case ParameterType.str:
-                        val = tbl.Rows[i][1];
-                        break;
+                    switch (t)
+                    {
+                        case ParameterType.s8:
+                            val = Convert.ToSByte(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.u8:
+                            val = Convert.ToByte(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.s16:
+                            val = Convert.ToInt16(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.u16:
+                            val = Convert.ToUInt16(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.s32:
+                            val = Convert.ToInt32(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.u32:
+                            val = Convert.ToUInt32(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.f32:
+                            val = Convert.ToSingle(tbl.Rows[i][1]);
+                            break;
+                        case ParameterType.str:
+                            val = tbl.Rows[i][1];
+                            break;
+                    }
                 }
-                ((ValuesWrapper)treeView1.SelectedNode).Parameters[i].Value = val;
+                catch (Exception)
+                {
+                }
+                wrp.Parameters[i].Value = val;
+                tbl.Rows[i][1] = val;
             }
         }
 

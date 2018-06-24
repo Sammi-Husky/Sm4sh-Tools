@@ -45,7 +45,7 @@ namespace Parameters
             switch (this.Type)
             {
                 case ParameterType.s8:
-                    data.Add((byte)this.Value);
+                    data.Add((byte)((sbyte)this.Value));
                     return data.ToArray();
                 case ParameterType.u8:
                     data.Add((byte)this.Value);

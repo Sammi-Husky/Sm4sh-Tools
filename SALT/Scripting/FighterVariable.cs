@@ -102,11 +102,12 @@ namespace SALT.Moveset
         // parameter file groups //
         fighter_param_common = 2,
         fighter_param = 3,
-        unk4 = 4,
+        unk4 = 4, //share the same param group as SpecialLw, but no customs and more generic usage
         SpecialN = 5,
         SpecialS = 6,
         SpecialHi = 7,
         SpecialLw = 8,
+        fighter_param_equipment_ability = 9,
 
         // uncomfirmed
         ActionStatus1 = 14,

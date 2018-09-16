@@ -100,7 +100,7 @@ namespace FITDecompiler
             Console.WriteLine("> S4FC [options] [.mtable file / .mscsb file]");
             Console.WriteLine("> Options:\n" +
                               "> \t-o: Sets the aplication output directory\n" +
-                              "> \t-e: Overrides the internal event dictionary with specified events file" +
+                              "> \t-e: Overrides the internal event dictionary with specified events file\n" +
                               "> \t-m: Sets animation folder for parsing animation names\n" +
                               "> \t-h --help: Displays this help message\n" +
                               "> \t--raw: Also decompile MSC to raw commands in addition to intelligent decompilation");
@@ -108,7 +108,6 @@ namespace FITDecompiler
 
         public static void decompile_acmd(string mtable, string motionFolder, string output)
         {
-
             string script_dir = Path.Combine(output, "animcmd");
             Directory.CreateDirectory(script_dir);
 
@@ -144,38 +143,39 @@ namespace FITDecompiler
                         hashes.Add(s.Key);
 
 
-            foreach (uint u in hashes)
+            foreach (uint hash in hashes)
             {
-                string animName = $"0x{u:X8}";
-                if (animations.ContainsKey(u))
-                    animName = animations[u];
+                string animName = $"0x{hash:X8}";
+                if (animations.ContainsKey(hash))
+                    animName = animations[hash];
 
 #if DEBUG
                 Console.WriteLine($">\tDecompiling {animName}..");
 #endif
 
                 ACMDScript game = null, effect = null, sound = null, expression = null;
-                if (files.ContainsKey("game") && files["game"].Scripts.ContainsKey(u))
+                if (files.ContainsKey("game") && files["game"].Scripts.ContainsKey(hash))
                 {
-                    game = (ACMDScript)files["game"].Scripts[u];
+                    game = (ACMDScript)files["game"].Scripts[hash];
                 }
-                if (files.ContainsKey("effect") && files["effect"].Scripts.ContainsKey(u))
+                if (files.ContainsKey("effect") && files["effect"].Scripts.ContainsKey(hash))
                 {
-                    effect = (ACMDScript)files["effect"].Scripts[u];
+                    effect = (ACMDScript)files["effect"].Scripts[hash];
                 }
-                if (files.ContainsKey("sound") && files["sound"].Scripts.ContainsKey(u))
+                if (files.ContainsKey("sound") && files["sound"].Scripts.ContainsKey(hash))
                 {
-                    sound = (ACMDScript)files["sound"].Scripts[u];
+                    sound = (ACMDScript)files["sound"].Scripts[hash];
                 }
-                if (files.ContainsKey("expression") && files["expression"].Scripts.ContainsKey(u))
+                if (files.ContainsKey("expression") && files["expression"].Scripts.ContainsKey(hash))
                 {
-                    expression = (ACMDScript)files["expression"].Scripts[u];
+                    expression = (ACMDScript)files["expression"].Scripts[hash];
                 }
 
-                write_movedef(game, effect, sound, expression, animName, !table.Contains(u), script_dir);
+                write_movedef(game, effect, sound, expression, animName, !table.Contains(hash), script_dir);
             }
             Console.WriteLine(">\tFinished\n");
         }
+
         public static void decompile_msc(string file, string output, bool includeRaw)
         {
             MSCFile f = new MSCFile(file);
@@ -209,6 +209,7 @@ namespace FITDecompiler
                 }
             }
         }
+
         public static Dictionary<uint, string> ParseAnimations(string motionFolder)
         {
             var dict = new Dictionary<uint, string>();

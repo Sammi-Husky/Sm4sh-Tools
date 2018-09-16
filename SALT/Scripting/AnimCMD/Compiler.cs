@@ -135,7 +135,7 @@ namespace SALT.Moveset.AnimCMD
                     parameters[i] = param.Remove(0, param.IndexOf("=") + 1).Trim();
             }
 
-            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase)).Key;
+            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value.Equals(name, StringComparison.InvariantCulture)).Key;
             ACMDCommand cmd = new ACMDCommand(crc);
             for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
             {

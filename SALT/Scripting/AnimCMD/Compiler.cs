@@ -135,7 +135,7 @@ namespace SALT.Moveset.AnimCMD
                     parameters[i] = param.Remove(0, param.IndexOf("=") + 1).Trim();
             }
 
-            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase)).Key;
+            var crc = ACMD_INFO.CMD_NAMES.Single(x => x.Value.Equals(name, StringComparison.InvariantCulture)).Key;
             ACMDCommand cmd = new ACMDCommand(crc);
             for (int i = 0; i < cmd.ParamSpecifiers.Length; i++)
             {
@@ -289,7 +289,7 @@ namespace SALT.Moveset.AnimCMD
 
             decimal len = 0;
             int gotoIndex = Index;
-            while (gotoIndex > start)
+            while (--gotoIndex > start)
             {
                 if (lines[gotoIndex] == "}")
                 {
@@ -298,7 +298,6 @@ namespace SALT.Moveset.AnimCMD
                 }
                 var cmd = CompileSingleCommand(lines[gotoIndex]);
                 len += cmd.Size / 4;
-                gotoIndex--;
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);

@@ -289,7 +289,7 @@ namespace SALT.Moveset.AnimCMD
 
             decimal len = 0;
             int gotoIndex = Index;
-            while (gotoIndex > start)
+            while (--gotoIndex > start)
             {
                 if (lines[gotoIndex] == "}")
                 {
@@ -298,7 +298,6 @@ namespace SALT.Moveset.AnimCMD
                 }
                 var cmd = CompileSingleCommand(lines[gotoIndex]);
                 len += cmd.Size / 4;
-                gotoIndex--;
             }
 
             ACMDCommand endLoop = CompileSingleCommand(lines[Index]);

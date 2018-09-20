@@ -45,28 +45,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IO\DataSource.cs" />
-    <Compile Include="IO\FileMap.cs" />
-    <Compile Include="IO\Win32.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Type Extensions\BigEndianTypes.cs" />
-    <Compile Include="Type Extensions\ByteExtension.cs" />
-    <Compile Include="Type Extensions\DoubleExtension.cs" />
-    <Compile Include="Type Extensions\EncodingExtension.cs" />
-    <Compile Include="Type Extensions\Int16Extension.cs" />
-    <Compile Include="Type Extensions\Int32Extension.cs" />
-    <Compile Include="Type Extensions\Int64Extension.cs" />
-    <Compile Include="Type Extensions\RoundingExtensions.cs" />
-    <Compile Include="Type Extensions\ShortExtension.cs" />
-    <Compile Include="Type Extensions\StringExtension.cs" />
-    <Compile Include="Type Extensions\UInt16Extension.cs" />
-    <Compile Include="Type Extensions\UInt32Extension.cs" />
-    <Compile Include="Type Extensions\VoidPtr.cs" />
     <Compile Include="PACKManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SALT\SALT\SALT.csproj">
+      <Project>{6038e0a4-4140-43c6-bcaa-1344a7cacdb2}</Project>
+      <Name>SALT</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -49,19 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions\BigEndianTypes.cs" />
-    <Compile Include="Extensions\ByteExtension.cs" />
-    <Compile Include="Extensions\DoubleExtension.cs" />
-    <Compile Include="Extensions\EncodingExtension.cs" />
-    <Compile Include="Extensions\Int16Extension.cs" />
-    <Compile Include="Extensions\Int32Extension.cs" />
-    <Compile Include="Extensions\Int64Extension.cs" />
-    <Compile Include="Extensions\RoundingExtensions.cs" />
-    <Compile Include="Extensions\ShortExtension.cs" />
-    <Compile Include="Extensions\StringExtension.cs" />
-    <Compile Include="Extensions\UInt16Extension.cs" />
-    <Compile Include="Extensions\UInt32Extension.cs" />
-    <Compile Include="Extensions\VoidPtr.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,7 +56,6 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="FormProvider.cs" />
-    <Compile Include="Extensions\LinqExtension.cs" />
     <Compile Include="GroupWrapper.cs" />
     <Compile Include="ParamEntry.cs" />
     <Compile Include="popupTextbox.cs">
@@ -120,6 +106,12 @@
     <Content Include="templates\ui_character_db.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SALT\SALT\SALT.csproj">
+      <Project>{6038e0a4-4140-43c6-bcaa-1344a7cacdb2}</Project>
+      <Name>SALT</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

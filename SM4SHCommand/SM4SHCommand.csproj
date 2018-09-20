@@ -193,6 +193,12 @@
     <None Include="Resources\play.png" />
     <Content Include="s4.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SALT\SALT\SALT.csproj">
+      <Project>{6038e0a4-4140-43c6-bcaa-1344a7cacdb2}</Project>
+      <Name>SALT</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

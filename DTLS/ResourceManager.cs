@@ -175,7 +175,8 @@ namespace DTLS
                             curPacked.Size = (int)packstrm.Length;
                             LS.TrySetValue(packKey, curPacked);
 
-                            packstrm.WriteTo(dtstrm);
+                            packstrm.Position = 0;
+                            packstrm.CopyTo(dtstrm);
                             packstrm.Close();
                             packstrm = File.Open(tmpfile, FileMode.Truncate);
                         }
@@ -208,7 +209,8 @@ namespace DTLS
                 {
                     curPacked.Size = (int)packstrm.Length;
                     LS.TrySetValue(packKey, curPacked);
-                    packstrm.WriteTo(dtstrm);
+                    packstrm.Position = 0;
+                    packstrm.CopyTo(dtstrm);
                 }
                 RF.UpdateEntries();
 

@@ -1,0 +1,3 @@
+[submodule "SALT"]
+	path = SALT
+	url = https://github.com/Sammi-Husky/SALT.git

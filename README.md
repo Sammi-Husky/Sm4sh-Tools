@@ -11,7 +11,7 @@ Miscellaneous tools for dealing with Smash 4 files.
 - **[SM4SHCommand](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/SM4SHCommand)**
   - Aims to be a fully fledged moveset editor including features like syntax highlighting and a model/animation/hitbox previewer.
 
-- **[SALT](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/SALT)**
+- **[SALT](https://github.com/Sammi-Husky/SALT)**
   - Smash 4 modding library containing useful classes and function that greatly aid in editing new files, as well as full support for many files already completed such as params, ACMD, MSC, and PAC archives.
 
 - **[DTLS](https://github.com/Sammi-Husky/Sm4sh-Tools/tree/master/DTLS)**

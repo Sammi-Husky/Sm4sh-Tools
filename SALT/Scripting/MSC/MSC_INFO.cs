@@ -10,8 +10,8 @@ namespace SALT.Moveset.MSC
         public static Dictionary<uint, string> NAMES = new Dictionary<uint, string>()
         {
             {0x00, "nop"},
-            {0x02, "BeginSub"},
-            {0x03, "End"},
+            {0x02, "begin"},
+            {0x03, "end"},
             {0x04, "jump4"},
             {0x05, "jump5"},
             {0x06, "return6"},
@@ -78,11 +78,11 @@ namespace SALT.Moveset.MSC
             {0x43, "subfu"},
             {0x44, "multfu"},
             {0x45, "divfu"},
-            {0x46, "fGreaterThan"},
-            {0x47, "fLessOrEqual"},
+            {0x46, "fEquals"},
+            {0x47, "fNotEqual"},
             {0x48, "fLessThan"},
-            {0x49, "fNotEqual"},
-            {0x4a, "fEquals"},
+            {0x49, "fLessOrEqual"},
+            {0x4a, "fGreaterThan"},
             {0x4b, "fGreaterOrEqual"},
             {0x4c, "assert_4C"},
             {0x4d, "exit"}

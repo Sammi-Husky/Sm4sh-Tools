@@ -12,6 +12,7 @@ clone_script:
      git submodule update --init --recursive
 
 build:
+  project: '%APPVEYOR_BUILD_FOLDER%/Sm4sh-Tools.sln'
   verbosity: minimal
 
 deploy:

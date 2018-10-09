@@ -3,7 +3,7 @@ Sm4sh-Tools
 [Bug Tracker](http://www.github.com/sammi-husky/sm4sh-tools/issues) | [Request a feature or tool.](https://github.com/Sammi-Husky/Sm4sh-Tools/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) | [![Build status](https://ci.appveyor.com/api/projects/status/e6q6vbdgjs4eoop5?svg=true)](https://ci.appveyor.com/project/Sammi-Husky/sm4sh-tools)
 
 Miscellaneous tools for dealing with Smash 4 files.
-## Requirements
+## Minimum Requirements
 - .NET Framework 4.0
 - Visual Studio 2015
 
@@ -33,11 +33,12 @@ Miscellaneous tools for dealing with Smash 4 files.
   - CLI application for dumping (and in the future rebuilding) Smash 4 .XMB files (used for lighting and effect processing for nearly every model)
 
 ## Building
-  - Checkout the repo: `git checkout https://github.com/Sammi-Husky/Sm4sh-Tools.git`
+  - Clone the repo: `git clone https://github.com/Sammi-Husky/Sm4sh-Tools.git`
+  - In the cloned directory, run `git submodule --init --recursive`
   - Use the Solution file to build the projects.
   
 ## Credits 
-  - All code is Copyright (c) 2017 - Sammi Husky, unless otherwise stated in project READMEs
+  - Copyright (c) 2018 - Sammi Husky, unless otherwise stated in project READMEs
   - Some projects make use of Open Source components; See COPYING in the respective project's project directory for more information.
   
 ## License 
